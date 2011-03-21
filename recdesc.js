@@ -14,6 +14,9 @@ const OPPOSITE = {1: S, 2: N, 4: W, 8: E}
 const NAMES = ["X", "N", "S", "NS", "E", "NE", "SE", "NSE", "W",
                "NW", "SW", "NSW", "EW", "NEW", "SEW", "NSEW"];
 
+var mu = require("./lib/mu");
+mu.templateRoot = "./templates";
+
 function newArray(length, val) {
   var array = [];
   for (var i = 0; i < length; i++) {
@@ -24,6 +27,7 @@ function newArray(length, val) {
 
 maze.name = "Recursive Descent";
 maze.link = "<a href='http://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking'>explanation</a>";
+maze.handlesOwnEnd = true;
 
 maze.carve_passages_from = function(cx, cy, grid) {
   // work, work, work
@@ -64,13 +68,36 @@ maze.asciify_grid = function(grid) {
   return rv;
 };
 
+maze.draw_grid = function(grid, res) {
+  const size = 25;
+  var context = {
+    "name": maze.name,
+    "length": grid.length,
+    "width": (grid.length + 1) * size,
+    "height": (grid.length + 1) * size,
+    "size": size,
+    "offset": size / 2,
+    "grid": grid,
+    "S": S,
+    "E": E,
+    "ascii": maze.asciify_grid(grid),
+  };
+  mu.render("nsew.html", context, {}, function (err, output) {
+    if (err) {
+      throw err;
+    }
+    output.addListener("data", function(c) { res.write(c); })
+          .addListener("end", function() { res.end(); });
+  });
+  return;
+};
+
 maze.process = function(req, res) {
   var size = parseInt(req.params[0]);
   var grid = [];
   for (var i = 0; i < size; i++) {
     grid.push(newArray(size, 0));
   }
-  res.write(grid.length + "<br>");
   maze.carve_passages_from(0, 0, grid);
-  res.write(maze.asciify_grid(grid));
+  maze.draw_grid(grid, res);
 }

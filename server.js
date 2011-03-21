@@ -20,12 +20,13 @@ var sidewinder = require("./sidewinder");
 
 // Utility Functions.
 
-function timedResponse(f) {
+function timedResponse(module, handlesOwnEnd) {
   function g(req, res) {
     var startTime = Date.now();
     res.writeHead(200, {"Content-Type": "text/html"});
-    f(req, res);
-    res.end();
+    module.process(req, res);
+    if (!module.handlesOwnEnd)
+      res.end();
     var now = Date.now();
     console.log(req.url + ", t="+(now-startTime)+"ms");
   };
@@ -34,7 +35,7 @@ function timedResponse(f) {
 
 var app = express.createServer();
 
-app.get("/", timedResponse(function(req, res) {
+app.get("/", timedResponse({"process": function(req, res) {
   res.write("<html><head><title>Mazes</title></head><body>\n");
   res.write("<ul>\n");
   res.write("<li><a href='recdesc/10'>"+recdesc.name+"</a>: "+recdesc.link+"</li>\n");
@@ -49,19 +50,19 @@ app.get("/", timedResponse(function(req, res) {
   res.write("<li><a href='binarytree/10'>"+binarytree.name+"</a>: "+binarytree.link+"</li>\n");
   res.write("<li><a href='sidewinder/10'>"+sidewinder.name+"</a>: "+sidewinder.link+"</li>\n");
   res.write("</ul>\n</body></html>");
-}));
+}}));
 
-app.get("/recdesc/*", timedResponse(recdesc.process));
-app.get("/eller/*", timedResponse(eller.process));
-app.get("/kruskal/*", timedResponse(kruskal.process));
-app.get("/prim/*", timedResponse(prim.process));
-app.get("/recdiv/*", timedResponse(recdiv.process));
-app.get("/aldous/*", timedResponse(aldous.process));
-app.get("/wilson/*", timedResponse(wilson.process));
-app.get("/huntandkill/*", timedResponse(huntandkill.process));
-app.get("/growingtree/*", timedResponse(growingtree.process));
-app.get("/binarytree/*", timedResponse(binarytree.process));
-app.get("/sidewinder/*", timedResponse(sidewinder.process));
+app.get("/recdesc/*", timedResponse(recdesc));
+app.get("/eller/*", timedResponse(eller));
+app.get("/kruskal/*", timedResponse(kruskal));
+app.get("/prim/*", timedResponse(prim));
+app.get("/recdiv/*", timedResponse(recdiv));
+app.get("/aldous/*", timedResponse(aldous));
+app.get("/wilson/*", timedResponse(wilson));
+app.get("/huntandkill/*", timedResponse(huntandkill));
+app.get("/growingtree/*", timedResponse(growingtree));
+app.get("/binarytree/*", timedResponse(binarytree));
+app.get("/sidewinder/*", timedResponse(sidewinder));
 
 app.listen(8123);
 
