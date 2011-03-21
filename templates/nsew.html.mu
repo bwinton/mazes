@@ -44,6 +44,5 @@ function draw() {
 </head>
 <body onload="draw()">{{length}}<br/>
   <canvas id="canvas" width="{{width}}" height="{{height}}"></canvas>
-  {{{ascii}}}
 </body>
 </html>

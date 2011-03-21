@@ -49,12 +49,13 @@ var sets = {
     return 0;
   },
 
-  merge: function(x, cb) {
+  merge: function(x) {
     var newSet = sets.setForCell(x);
     var oldSet = sets.setForCell(x+1);
-    cb(x);
-    sets.removeFromSet(x+1, oldSet);
-    sets.addToSet(x+1, newSet);
+    for (var i in sets.allSets[oldSet]) {
+      sets.removeFromSet(i, oldSet);
+      sets.addToSet(i, newSet);
+    }
   },
 
   clear: function() {
@@ -83,22 +84,14 @@ maze.carve_passages_from = function(cx, cy, grid) {
     }
 
     // Randomly merge adjacent sets.
-    var temp = [];
     for (var x = 0; x < size-1; x++) {
-      temp.push(sets.setForCell(x));
-      temp.push("|");
       if (((Math.random() > 0.5) ||
            (y == size - 1)) &&
          (sets.setForCell(x) != sets.setForCell(x+1))) {
-        sets.merge(x, function(i) {
-          grid[y][i] |= E;
-          temp.pop();
-          temp.push(" ");
-        });
+        grid[y][x] |= E;
+        sets.merge(x);
       }
     }
-    temp.push(sets.setForCell(size-1));
-    console.log(temp.join(""));
 
     var prevSets = sets.allSets;
     sets.clear();
@@ -120,7 +113,6 @@ maze.carve_passages_from = function(cx, cy, grid) {
     for (var x = 0; x < size; x++) {
       temp.push(sets.setForCell(x) == 0 ? "-" : " ");
     }
-    console.log(temp.join("+"));
   }
 };
 
