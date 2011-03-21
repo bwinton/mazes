@@ -4,15 +4,11 @@
 
 var maze = exports;
 
-const N = 1;
 const S = 2;
 const E = 4;
-const W = 8;
-const DX = {1: 0, 2: 0, 4: 1, 8: -1}
-const DY = {1: -1, 2: 1, 4: 0, 8: 0}
-const OPPOSITE = {1: S, 2: N, 4: W, 8: E}
-const NAMES = ["X", "N", "S", "NS", "E", "NE", "SE", "NSE", "W",
-               "NW", "SW", "NSW", "EW", "NEW", "SEW", "NSEW"];
+
+var mu = require("./lib/mu");
+mu.templateRoot = "./templates";
 
 function newArray(length, val) {
   var array = [];
@@ -22,46 +18,147 @@ function newArray(length, val) {
   return array;
 };
 
+var sets = {
+  current: 1,
+  allSets: {},
+
+  next: function() {
+    return sets.current++;
+  },
+
+  addToSet: function(x, set) {
+    if (!sets.allSets[set])
+      sets.allSets[set] = {};
+    sets.allSets[set][x] = true;
+  },
+
+  removeFromSet: function(x, set) {
+    delete sets.allSets[set][x];
+    if (Object.keys(sets.allSets[set]).length == 0) {
+      delete sets.allSets[set];
+    }
+  },
+
+  setForCell: function(x) {
+    for (var i in sets.allSets) {
+      var set = sets.allSets[i];
+      if (set[x]) {
+        return i;
+      }
+    }
+    return 0;
+  },
+
+  merge: function(x, cb) {
+    var newSet = sets.setForCell(x);
+    var oldSet = sets.setForCell(x+1);
+    cb(x);
+    sets.removeFromSet(x+1, oldSet);
+    sets.addToSet(x+1, newSet);
+  },
+
+  clear: function() {
+    sets.allSets = {};
+  },
+};
+
+
 maze.name = "Eller’s Algorithm";
 maze.link = "<a href='http://weblog.jamisbuck.org/2010/12/29/maze-generation-eller-s-algorithm'>explanation</a>";
+maze.handlesOwnEnd = true;
 
 maze.carve_passages_from = function(cx, cy, grid) {
-  // work, work, work
-  var directions = [N, S, E, W];
-  directions.sort(function() {return 0.5 - Math.random()});
-  for (var i in directions) {
-    var direction = directions[i];
-    var nx = cx + DX[direction];
-    var ny = cy + DY[direction];
-    if (0 <= ny && ny <= grid.length-1 &&
-        0 <= nx && nx <= grid[ny].length-1 &&
-        grid[ny][nx] == 0) {
-      grid[cy][cx] |= direction
-      grid[ny][nx] |= OPPOSITE[direction]
-      maze.carve_passages_from(nx, ny, grid)
+  sets.current = 1;
+  var size = grid.length;
+
+  // Start with the first row.
+  for (var y = 0; y < size; y++) {
+
+    // Assign each remaining cell to its own set.
+    for (var x = 0; x < size; x++) {
+      var set = sets.setForCell(x);
+      if (set == 0)
+        set = sets.next();
+      sets.addToSet(x, set);
     }
+
+    // Randomly merge adjacent sets.
+    var temp = [];
+    for (var x = 0; x < size-1; x++) {
+      temp.push(sets.setForCell(x));
+      temp.push("|");
+      if (((Math.random() > 0.5) ||
+           (y == size - 1)) &&
+         (sets.setForCell(x) != sets.setForCell(x+1))) {
+        sets.merge(x, function(i) {
+          grid[y][i] |= E;
+          temp.pop();
+          temp.push(" ");
+        });
+      }
+    }
+    temp.push(sets.setForCell(size-1));
+    console.log(temp.join(""));
+
+    var prevSets = sets.allSets;
+    sets.clear();
+
+    if (y == size - 1)
+      break;
+
+    // Randomly determine the vertical connections, at least one per set.
+    for (var i in prevSets) {
+      var set = Object.keys(prevSets[i]);
+      var verticals = Math.floor(Math.random() * set.length) + 1;
+      set.sort(function() {return 0.5 - Math.random()});
+      for (var j = 0; j < verticals; j++) {
+        sets.addToSet(set[j], i);
+        grid[y][set[j]] |= S;
+      }
+    }
+    var temp = [];
+    for (var x = 0; x < size; x++) {
+      temp.push(sets.setForCell(x) == 0 ? "-" : " ");
+    }
+    console.log(temp.join("+"));
   }
 };
 
 maze.asciify_grid = function(grid) {
   var size = grid.length;
-  var rv = "<pre>\n " + new Array(size * 2).join("_") + "\n";
+  var rv = "<pre>\n";
   for (var y = 0; y < size; y++) {
-    rv += "|";
     for (var x = 0; x < size; x++) {
-      var temp = ((grid[y][x] & S) != 0) ? " " : "_";
-      if ((grid[y][x] & E) != 0) {
-        temp += (((grid[y][x] | grid[y][x+1]) & S) != 0) ? " " : "_";
-      }
-      else {
-        temp += "|";
-      }
-      rv += temp;
+      rv += ("0" + grid[y][x]).substr(-2);
+      rv += (grid[y][x] == grid[y][x+1]) ? " " : "|";
     }
     rv += "\n";
   }
   rv += "</pre>";
   return rv;
+};
+
+maze.draw_grid = function(grid, res) {
+  const size = 25;
+  var context = {
+    "name": maze.name,
+    "length": grid.length,
+    "width": (grid.length + 1) * size,
+    "height": (grid.length + 1) * size,
+    "size": size,
+    "offset": size / 2,
+    "grid": grid,
+    "S": S,
+    "E": E,
+    "ascii": maze.asciify_grid(grid),
+  };
+  mu.render("nsew.html", context, {}, function (err, output) {
+    if (err) {
+      throw err;
+    }
+    output.addListener("data", function(c) { res.write(c); })
+          .addListener("end", function() { res.end(); });
+  });
 };
 
 maze.process = function(req, res) {
@@ -70,7 +167,6 @@ maze.process = function(req, res) {
   for (var i = 0; i < size; i++) {
     grid.push(newArray(size, 0));
   }
-  res.write(grid.length + "<br>");
   maze.carve_passages_from(0, 0, grid);
-  res.write(maze.asciify_grid(grid));
+  maze.draw_grid(grid, res);
 }
