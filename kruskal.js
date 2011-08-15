@@ -8,10 +8,7 @@ const S = 2;
 const E = 4;
 const DX = {2: 0, 4: 1}
 const DY = {2: 1, 4: 0}
-const NAMES = [" X  ", " N  ", " S  ", " NS ", " E  ", " NE ", " SE ", "NSE ",
-               " W  ", " NW ", " SW ", "NSW ", " EW ", "NEW ", "SEW ", "NSEW"];
 
-var sys = require("sys");
 var mu = require("./lib/mu");
 mu.templateRoot = "./templates";
 
