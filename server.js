@@ -2,8 +2,8 @@
 
 var express = require("express");
 var http = require("http");
-var sys = require("sys");
 var url = require("url");
+var util = require("util");
 
 // Mazes.
 var recdesc = require("./recdesc");
