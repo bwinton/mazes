@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// recursive division algorithm functions.
+// Recursive Division algorithm functions.
 
 const S = 2;
 const E = 4;
