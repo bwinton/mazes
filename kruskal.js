@@ -1,22 +1,16 @@
 #!/usr/bin/env node
 
+var util = require("./mazeutils");
+
 // Kruskal’s algorithm functions.
 
 var maze = exports;
-
-const S = 2;
-const E = 4;
-const DX = {2: 0, 4: 1}
-const DY = {2: 1, 4: 0}
-
-var mu = require("./lib/mu");
-mu.templateRoot = "./templates";
 
 function shuffle(array) {
   var top = array.length;
 
   if(top) while(--top) {
-    var current = Math.floor(Math.random() * (top + 1));
+    var current = util.randint(1, top);
     var tmp = array[current];
     array[current] = array[top];
     array[top] = tmp;
@@ -48,8 +42,8 @@ maze.carve_passages = function(edges, sets, grid) {
     var x = edge[0];
     var y = edge[1];
     var dir = edge[2];
-    var nx = x + DX[dir];
-    var ny = y + DY[dir];
+    var nx = x + util.DX[dir];
+    var ny = y + util.DY[dir];
 
     var set1 = sets[x][y]
     var set2 = sets[nx][ny]
@@ -59,50 +53,6 @@ maze.carve_passages = function(edges, sets, grid) {
     }
   }
 }
-
-maze.asciify_grid = function(grid) {
-  var size = grid.length;
-  var rv = "<pre>\n " + new Array(size * 2).join("_") + "\n";
-  for (var y = 0; y < size; y++) {
-    rv += "|";
-    for (var x = 0; x < size; x++) {
-      var temp = ((grid[y][x] & S) != 0) ? " " : "_";
-      if (grid[y][x] & E) {
-        temp += (((grid[y][x] | grid[y][x+1]) & S) != 0) ? " " : "_";
-      }
-      else {
-        temp += "|";
-      }
-      rv += temp;
-    }
-    rv += "\n";
-  }
-  rv += "</pre>";
-  return rv;
-};
-
-maze.draw_grid = function(grid, res) {
-  const size = 25;
-  var context = {
-    "name": maze.name,
-    "length": grid.length,
-    "width": (grid.length + 1) * size,
-    "height": (grid.length + 1) * size,
-    "size": size,
-    "offset": size / 2,
-    "grid": grid,
-    "S": S,
-    "E": E,
-    "ascii": maze.asciify_grid(grid),
-  };
-  mu.render("nsew.html", context, {}, function (err, output) {
-    if (err) {
-      throw err;
-    }
-    output.addListener("data", function(c) { res.write(c); })
-          .addListener("end", function() { res.end(); });
-  });
-};
 
 maze.process = function(req, res) {
   var size = parseInt(req.params[0]);
@@ -116,12 +66,12 @@ maze.process = function(req, res) {
       grid[y][x] = 0;
       sets[y][x] = [null, (y+","+x)];
       if (y < size-1)
-        edges.push([x, y, S]);
+        edges.push([x, y, util.S]);
       if (x < size-1)
-        edges.push([x, y, E]);
+        edges.push([x, y, util.E]);
     }
   }
   edges = shuffle(edges);
   maze.carve_passages(edges, sets, grid);
-  maze.draw_grid(grid, res);
+  util.draw_grid(grid, maze.name, res);
 }
