@@ -23,7 +23,7 @@ var sidewinder = require("./sidewinder");
 function timedResponse(module, handlesOwnEnd) {
   function g(req, res) {
     var startTime = Date.now();
-    // res.writeHead(200, {"Content-Type": "text/html"});
+    res.writeHead(200, {"Content-Type": "text/html"});
     module.process(req, res);
     if (!module.handlesOwnEnd)
       res.end();
