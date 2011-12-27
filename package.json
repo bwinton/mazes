@@ -1,0 +1,8 @@
+{
+    "name": "maze",
+    "description": "A set of Maze-generating algorithms.",
+    "version": "0.1.0",
+    "author": "Blake Winton",
+    "dependencies": {},
+    "devDependencies": {}
+}
