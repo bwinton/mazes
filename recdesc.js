@@ -21,9 +21,9 @@ maze.carve_passages_from = function(cx, cy, grid) {
     if (0 <= ny && ny <= grid.length-1 &&
         0 <= nx && nx <= grid[ny].length-1 &&
         grid[ny][nx] == 0) {
-      grid[cy][cx] |= direction
-      grid[ny][nx] |= util.OPPOSITE[direction]
-      maze.carve_passages_from(nx, ny, grid)
+      grid[cy][cx] |= direction;
+      grid[ny][nx] |= util.OPPOSITE[direction];
+      maze.carve_passages_from(nx, ny, grid);
     }
   }
 };

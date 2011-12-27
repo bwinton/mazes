@@ -26,41 +26,41 @@ function divide(l, grid, x, y, width, height, orientation) {
   var horizontal = (orientation == util.HORIZONTAL);
 
   // where will the wall be drawn from?
-  var wx = x + (horizontal ? 0 : util.randint(width-2))
-  var wy = y + (horizontal ? util.randint(height-2) : 0)
+  var wx = x + (horizontal ? 0 : util.randint(width-2));
+  var wy = y + (horizontal ? util.randint(height-2) : 0);
 
   // where will the passage through the wall exist?
-  var px = wx + (horizontal ? util.randint(width) : 0)
-  var py = wy + (horizontal ? 0 : util.randint(height))
+  var px = wx + (horizontal ? util.randint(width) : 0);
+  var py = wy + (horizontal ? 0 : util.randint(height));
 
   // what direction will the wall be drawn?
-  var dx = horizontal ? 1 : 0
-  var dy = horizontal ? 0 : 1
+  var dx = horizontal ? 1 : 0;
+  var dy = horizontal ? 0 : 1;
 
   // how long will the wall be?
-  var length = horizontal ? width : height
+  var length = horizontal ? width : height;
 
   // what direction is perpendicular to the wall?
-  var dir = horizontal ? util.S : util.E
+  var dir = horizontal ? util.S : util.E;
 
   for (var i = 0; i < length; i++) {
     if ((wx != px) || (wy != py))
       grid[wy][wx] &= ~dir;
-    wx += dx
-    wy += dy
+    wx += dx;
+    wy += dy;
   }
 
   var nx = x;
   var ny = y;
   var w = horizontal ? width : wx-x+1;
   var h = horizontal ? wy-y+1 : height;
-  divide(l+1, grid, nx, ny, w, h, chooseOrientation(w, h))
+  divide(l+1, grid, nx, ny, w, h, chooseOrientation(w, h));
 
   nx = horizontal ? x : wx+1;
   ny = horizontal ? wy+1 : y;
   w = horizontal ? width : x+width-wx-1;
   h = horizontal ? y+height-wy-1 : height;
-  divide(l+1, grid, nx, ny, w, h, chooseOrientation(w, h))
+  divide(l+1, grid, nx, ny, w, h, chooseOrientation(w, h));
 }
 
 maze.process = function(req, res) {
@@ -73,6 +73,6 @@ maze.process = function(req, res) {
     grid[size-1][x] &= ~util.S;
   }
 
-  divide(1, grid, 0, 0, size, size, chooseOrientation(size, size))
+  divide(1, grid, 0, 0, size, size, chooseOrientation(size, size));
   util.draw_grid(grid, maze.name, res);
 }

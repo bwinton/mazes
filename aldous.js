@@ -26,7 +26,7 @@ maze.process = function(req, res) {
 
   var y = util.randint(grid.length);
   var x = util.randint(grid[y].length);
-  var remaining = size * size - 1
+  var remaining = size * size - 1;
   var directions = [util.N, util.S, util.E, util.W];
 
   while (remaining > 0) {

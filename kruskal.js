@@ -45,8 +45,8 @@ maze.carve_passages = function(edges, sets, grid) {
     var nx = x + util.DX[dir];
     var ny = y + util.DY[dir];
 
-    var set1 = sets[x][y]
-    var set2 = sets[nx][ny]
+    var set1 = sets[x][y];
+    var set2 = sets[nx][ny];
 
     if (connect(set1, set2)) {
       grid[y][x] |= dir;

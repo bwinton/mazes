@@ -21,12 +21,12 @@ function walk(grid) {
     visits[[x,y]] = 0;
 
     // where the random walk started
-    var start_x = x
-    var start_y = y
-    walking = true
+    var start_x = x;
+    var start_y = y;
+    walking = true;
 
     while (walking) {
-      walking = false
+      walking = false;
 
       var directions = [util.N, util.S, util.E, util.W];
       util.shuffle(directions);
@@ -69,7 +69,7 @@ maze.process = function(req, res) {
   var grid = util.newGrid(size, 0);
 
   grid[util.randint(size)][util.randint(size)] = IN;
-  var remaining = size * size - 1
+  var remaining = size * size - 1;
 
   while (remaining > 0) {
     path = walk(grid);
