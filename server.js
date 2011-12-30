@@ -60,6 +60,7 @@ app.get("/recdiv/*", timedResponse(recdiv));
 app.get("/aldous/*", timedResponse(aldous));
 app.get("/wilson/*", timedResponse(wilson));
 app.get("/huntandkill/*", timedResponse(huntandkill));
+app.get("/growingtree/*/*", timedResponse(growingtree));
 app.get("/growingtree/*", timedResponse(growingtree));
 app.get("/binarytree/*", timedResponse(binarytree));
 app.get("/sidewinder/*", timedResponse(sidewinder));
