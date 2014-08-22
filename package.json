@@ -1,8 +1,11 @@
 {
-    "name": "maze",
-    "description": "A set of Maze-generating algorithms.",
-    "version": "0.1.0",
-    "author": "Blake Winton",
-    "dependencies": {},
-    "devDependencies": {}
+  "name": "maze",
+  "description": "A set of Maze-generating algorithms.",
+  "version": "0.1.0",
+  "author": "Blake Winton",
+  "dependencies": {
+    "express": "^3.8.4",
+    "mu": "^0.5.2"
+  },
+  "devDependencies": {}
 }

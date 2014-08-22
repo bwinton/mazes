@@ -36,7 +36,9 @@ function timedResponse(module, handlesOwnEnd) {
 var app = express.createServer();
 
 app.get("/", timedResponse({"process": function(req, res) {
-  res.write("<html><head><title>Mazes</title></head><body>\n");
+  res.write("<!DOCTYPE html>\n");
+  res.write("<html><head><meta charset='utf-8'>");
+  res.write("<title>Mazes</title></head><body>\n");
   res.write("<ul>\n");
   res.write("<li><a href='recdesc/10'>"+recdesc.name+"</a>: "+recdesc.link+"</li>\n");
   res.write("<li><a href='eller/10'>"+eller.name+"</a>: "+eller.link+"</li>\n");
@@ -66,6 +68,6 @@ app.get("/binarytree/*/*", timedResponse(binarytree));
 app.get("/binarytree/*", timedResponse(binarytree));
 app.get("/sidewinder/*", timedResponse(sidewinder));
 
-app.listen(8123);
+app.listen(8123, null);
 
 console.log("Server running at http://127.0.0.1:8123/");
