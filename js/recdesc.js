@@ -11,20 +11,31 @@ globalstrict:true, nomen:false, newcap:false */
   }
   var util = exports.mazeutils;
 
+  // Metadata
   var maze = {};
 
   maze.name = 'Recursive Descent';
   maze.link = 'http://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking';
 
+
+  // Algorithm
   var done = false;
   var grid = null;
   var work = [];
 
+  var add_work = function (x, y) {
+    var newc = {
+      x: x,
+      y: y,
+      directions: [util.N, util.S, util.E, util.W]
+    }
+    util.shuffle(newc.directions);
+    work.push(newc);
+  }
+
   var carve_passage_from = function (c) {
-    var directions = [util.N, util.S, util.E, util.W];
-    util.shuffle(directions);
-    for (var i in directions) {
-      var direction = directions[i];
+    if (c.directions.length) {
+      var direction = c.directions.pop();
       var nx = c.x + util.DX[direction];
       var ny = c.y + util.DY[direction];
       if (0 <= ny && ny <= grid.length-1 &&
@@ -32,7 +43,7 @@ globalstrict:true, nomen:false, newcap:false */
           grid[ny][nx] == 0) {
         grid[c.y][c.x] |= direction;
         grid[ny][nx] |= util.OPPOSITE[direction];
-        work.push({x: nx, y: ny, seen: false});
+        add_work(nx, ny);
       }
     }
     c.seen = true;
@@ -45,7 +56,7 @@ globalstrict:true, nomen:false, newcap:false */
       done = true;
       return;
     }
-    if (current.seen) {
+    if (current.directions.length === 0) {
       work.pop();
     } else {
       carve_passage_from(current);
@@ -54,23 +65,56 @@ globalstrict:true, nomen:false, newcap:false */
   }
 
 
+  // Drawing
+  var draw_current = function (mazeElem) {
+    mazeElem.selectAll('rect.current').remove();
+
+    var x = mazeutils.x;
+    var y = mazeutils.y;
+
+    mazeElem.selectAll('rect.current').data(work)
+      .enter().append('rect').classed('current', true)
+      .attr('x', 0).attr('y', 0)
+      .attr('width', x(2) - x(1)).attr('height', y(2) - y(1))
+      .attr('stroke', 'rgba(0,0,0,0)')
+      .attr('fill', (d, i) => i == work.length ? 'rgba(136,255,170,0.3)' : 'rgba(136,170,255,0.3)')
+      .attr('transform', d => 'translate(' + x(d.x) + ',' + y(d.y) + ')')
+  }
+
+  var update_current = function (mazeElem) {
+    var x = mazeutils.x;
+    var y = mazeutils.y;
+
+    var rects = mazeElem.selectAll('rect.current').data(work)
+
+    rects.enter().append('rect').classed('current', true)
+      .attr('x', 0).attr('y', 0)
+      .attr('width', x(2) - x(1)).attr('height', y(2) - y(1))
+      .attr('stroke', 'rgba(0,0,0,0)');
+
+    rects.attr('fill', (d, i) => (i === work.length - 1) ? 'rgba(136,170,255,0.3)' : 'rgba(136,255,170,0.3)')
+      .attr('transform', d => 'translate(' + x(d.x) + ',' + y(d.y) + ')')
+
+    rects.exit().remove();
+  }
+
+  // Scaffolding.
   maze.init = function (size, mazeElem) {
     grid = util.newGrid(size, 0);
-    // console.log(util.asciify_grid(grid));
     util.draw_grid(grid, mazeElem);
+    draw_current(mazeElem);
     done = false;
-    work.push({x: 0, y: 0, seen: false});
+    add_work(0, 0);
   }
 
   maze.step = function (time, mazeElem) {
     var current = carve_next_passage();
-    // console.log(util.asciify_grid(grid, current));
-    util.update_grid(grid, current, mazeElem);
+    util.update_grid(grid, mazeElem);
+    update_current(mazeElem);
     if (done) {
       console.log(grid);
     }
     return done;
-    // return true;
   };
 
   maze.stop = function () {

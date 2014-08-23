@@ -47,7 +47,7 @@
     return Math.floor(Math.random() * end) + start;
   }
 
-  mazeutils.asciify_grid = function(grid, current) {
+  mazeutils.asciify_grid = function(grid) {
     if (grid === null) {
       return "null";
     }
@@ -58,9 +58,6 @@
       rv += "|";
       for (var x = 0; x < size; x++) {
         var temp = ((grid[y][x] & mazeutils.S) != 0) ? " " : "_";
-        if (current && x === current.x && y === current.y) {
-          temp = 'X';
-        }
         if (grid[y][x] & mazeutils.E) {
           temp += (((grid[y][x] | grid[y][x+1]) & mazeutils.S) != 0) ? " " : "_";
         }
@@ -84,21 +81,14 @@
   var y = d3.scale.linear()
     .range([margin.top, height - margin.top - margin.bottom]);
 
+  mazeutils.x = x;
+  mazeutils.y = y;
+
   mazeutils.draw_grid = function(grid, mazeElem) {
     x.domain([0, grid.length]);
     y.domain([0, grid[0].length]);
 
-    mazeElem.selectAll('rect.current').remove();
     mazeElem.selectAll('g.row').remove();
-
-    mazeElem.selectAll('rect.current').data([{x: 0, y:0, seen: false}])
-      .enter().append('rect').classed('current', true)
-      .attr('x', 0).attr('y', 0)
-      .attr('width', x(2) - x(1)).attr('height', y(2) - y(1))
-      .attr('stroke', 'rgba(0,0,0,0)')
-      .attr('fill', d => d.seen ? '#88FFAA' : '#88AAFF')
-      .attr('transform', d => 'translate(' + x(d.x) + ',' + y(d.y) + ')')
-
 
     var cells = mazeElem.selectAll('g.row').data(grid)
       .enter().append('g').classed('row', true)
@@ -118,23 +108,14 @@
     cells.append('line').classed('right', true)
       .attr('x1', x(2) - x(1)).attr('y1', 0)
       .attr('x2', x(2) - x(1)).attr('y2', y(2) - y(1));
-    // cells.append('text')
-    //   .attr('text-anchor', 'middle')
-    //   .attr('x', (x(2) - x(1)) / 2).attr('y', (y(2) - y(1)) / 2)
-    //   .text(0);
   };
 
-  mazeutils.update_grid = function(grid, current, mazeElem) {
+  mazeutils.update_grid = function(grid, mazeElem) {
     var cells = mazeElem.selectAll('g.cell').data(d3.merge(grid));
-    // cells.select('text').text(d => d);
     cells.select('line.top').classed('hidden', d => d & mazeutils.N);
     cells.select('line.left').classed('hidden', d => d & mazeutils.W);
     cells.select('line.bottom').classed('hidden', d => d & mazeutils.S);
     cells.select('line.right').classed('hidden', d => d & mazeutils.E);
-    mazeElem.select('rect.current').data([current || {x: 0, y:0, seen: true}])
-      // .transition().duration(50)
-      .attr('fill', d => d.seen ? '#88FFAA' : '#88AAFF')
-      .attr('transform', d => 'translate(' + x(d.x) + ',' + y(d.y) + ')')
   };
 
   exports.mazeutils = mazeutils;
