@@ -22,13 +22,11 @@ globalstrict:true, nomen:false, newcap:false */
   var currentMaze;
   var setMaze = function (maze) {
     if (currentMaze) {
-      currentMaze.stop();
+      currentMaze.stop(mazeElem);
     }
-    // console.log('BW1 - Setting current maze to ' + maze.name);
     currentMaze = maze;
     currentMaze.init(30, mazeElem);
     d3.timer(function (time) {
-      // console.log("BW1 Stepping:", time);
       return currentMaze.step(time, mazeElem);
     }, 1000);
   }

@@ -71,7 +71,7 @@
     return rv;
   };
 
-  var margin = {top: 20, right: 20, bottom: 20, left: 20};
+  var margin = {top: 20, right: 25, bottom: 25, left: 20};
   var width = 800;
   var height = 800;
 
@@ -85,8 +85,8 @@
   mazeutils.y = y;
 
   mazeutils.draw_grid = function(grid, mazeElem) {
-    x.domain([0, grid.length]);
-    y.domain([0, grid[0].length]);
+    x.domain([0, grid.length - 1]);
+    y.domain([0, grid[0].length - 1]);
 
     mazeElem.selectAll('g.row').remove();
 

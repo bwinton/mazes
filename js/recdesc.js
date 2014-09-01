@@ -13,7 +13,6 @@ globalstrict:true, nomen:false, newcap:false */
 
   // Metadata
   var maze = {};
-
   maze.name = 'Recursive Descent';
   maze.link = 'http://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking';
 
@@ -104,6 +103,7 @@ globalstrict:true, nomen:false, newcap:false */
     util.draw_grid(grid, mazeElem);
     draw_current(mazeElem);
     done = false;
+    var work = [];
     add_work(0, 0);
   }
 
@@ -117,8 +117,9 @@ globalstrict:true, nomen:false, newcap:false */
     return done;
   };
 
-  maze.stop = function () {
+  maze.stop = function (mazeElem) {
     done = true;
+    mazeElem.selectAll('rect.current').remove();
   };
 
   exports.mazes.push(maze);
