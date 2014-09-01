@@ -10,7 +10,6 @@ globalstrict:true, nomen:false, newcap:false */
     exports.mazes = [];
   }
   var util = exports.mazeutils;
-  console.log(exports.mazes);
 
   // Metadata
   var maze = {};
@@ -22,6 +21,7 @@ globalstrict:true, nomen:false, newcap:false */
   var done = false;
   var grid = null;
   var work = [];
+  var setScale = d3.scale.category20();
 
   var sets = {
     current: 1,
@@ -171,48 +171,44 @@ globalstrict:true, nomen:false, newcap:false */
         grid[y + 1][set[j]] |= util.N;
       }
     }
+    return current;
   }
 
   // Drawing
-  var draw_current = function (mazeElem) {
+  var draw_current = function (mazeElem, size) {
     mazeElem.selectAll('rect.current').remove();
 
     var x = mazeutils.x;
     var y = mazeutils.y;
 
-    mazeElem.selectAll('rect.current').data(sets.allSets)
-      // .enter().append('rect').classed('current', true)
-      // .attr('x', 0).attr('y', 0)
-      // .attr('width', x(2) - x(1)).attr('height', y(2) - y(1))
-      // .attr('stroke', 'rgba(0,0,0,0)')
-      // .attr('fill', (d, i) => i == work.length ? 'rgba(136,255,170,0.3)' : 'rgba(136,170,255,0.3)')
-      // .attr('transform', d => 'translate(' + x(d.x) + ',' + y(d.y) + ')')
+    mazeElem.selectAll('rect.current').data(d3.range(0, size))
+      .enter().append('rect').classed('current', true)
+      .attr('x', 0).attr('y', 0)
+      .attr('width', x(2) - x(1)).attr('height', y(2) - y(1))
+      .attr('stroke', 'rgba(0,0,0,0)')
+      .attr('fill', (d, i) => 'rgba(136,170,255,0.3)')
+      .attr('transform', d => 'translate(' + x(d) + ',' + y(0) + ')')
   };
 
-  var update_current = function (mazeElem) {
+  var update_current = function (mazeElem, current) {
     var x = mazeutils.x;
     var y = mazeutils.y;
 
-    var rects = mazeElem.selectAll('rect.current').data(sets.allSets)
+    var rects = mazeElem.selectAll('rect.current')
 
-    console.log(sets.setForCell(10));
-
-    // rects.enter().append('rect').classed('current', true)
-    //   .attr('x', 0).attr('y', 0)
-    //   .attr('width', x(2) - x(1)).attr('height', y(2) - y(1))
-    //   .attr('stroke', 'rgba(0,0,0,0)');
-
-    // rects.attr('fill', (d, i) => (i === work.length - 1) ? 'rgba(136,170,255,0.3)' : 'rgba(136,255,170,0.3)')
-    //   .attr('transform', d => 'translate(' + x(d.x) + ',' + y(d.y) + ')')
-
-    // rects.exit().remove();
+    if (current) {
+      rects.attr('fill', (d, i) => setScale(sets.setForCell(d)))
+        .attr('transform', d => 'translate(' + x(d) + ',' + y(current.row) + ')')
+    } else {
+      rects.remove();
+    }
   };
 
   // Scaffolding.
   maze.init = function (size, mazeElem) {
     grid = util.newGrid(size, 0);
     util.draw_grid(grid, mazeElem);
-    draw_current(mazeElem);
+    draw_current(mazeElem, size);
     done = false;
     // Add some work for each row.
     var work = [];
@@ -224,7 +220,7 @@ globalstrict:true, nomen:false, newcap:false */
   maze.step = function (time, mazeElem) {
     var current = carve_next_passage();
     util.update_grid(grid, mazeElem);
-    update_current(mazeElem);
+    update_current(mazeElem, current);
     if (done) {
       console.log(grid);
     }
@@ -233,10 +229,9 @@ globalstrict:true, nomen:false, newcap:false */
 
   maze.stop = function (mazeElem) {
     done = true;
+    mazeElem.selectAll('rect.current').remove();
   };
 
 
   exports.mazes.push(maze);
-
-  console.log(exports.mazes);
 })(window);
