@@ -84,6 +84,8 @@
   mazeutils.x = x;
   mazeutils.y = y;
 
+  var _cells;
+
   mazeutils.draw_grid = function(grid, mazeElem) {
     x.domain([0, grid.length - 1]);
     y.domain([0, grid[0].length - 1]);
@@ -108,14 +110,16 @@
     cells.append('line').classed('right', true)
       .attr('x1', x(2) - x(1)).attr('y1', 0)
       .attr('x2', x(2) - x(1)).attr('y2', y(2) - y(1));
+
+    _cells = mazeElem.selectAll('g.cell');
   };
 
   mazeutils.update_grid = function(grid, mazeElem) {
-    var cells = mazeElem.selectAll('g.cell').data(d3.merge(grid));
-    cells.select('line.top').classed('hidden', d => d & mazeutils.N);
-    cells.select('line.left').classed('hidden', d => d & mazeutils.W);
-    cells.select('line.bottom').classed('hidden', d => d & mazeutils.S);
-    cells.select('line.right').classed('hidden', d => d & mazeutils.E);
+    _cells.data(d3.merge(grid));
+    _cells.select('line.top').classed('hidden', d => d & mazeutils.N);
+    _cells.select('line.left').classed('hidden', d => d & mazeutils.W);
+    _cells.select('line.bottom').classed('hidden', d => d & mazeutils.S);
+    _cells.select('line.right').classed('hidden', d => d & mazeutils.E);
   };
 
   exports.mazeutils = mazeutils;

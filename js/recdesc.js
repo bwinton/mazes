@@ -21,6 +21,8 @@ globalstrict:true, nomen:false, newcap:false */
   var done = false;
   var grid = null;
   var work = [];
+  var lastUpdate = 0;
+  const MS_PER_STEP = 200;
 
   var add_work = function (x, y) {
     var newc = {
@@ -50,15 +52,18 @@ globalstrict:true, nomen:false, newcap:false */
   }
 
   var carve_next_passage = function () {
-    var current = work[work.length - 1];
-    if (!current) {
-      done = true;
-      return;
-    }
-    if (current.directions.length === 0) {
-      work.pop();
-    } else {
-      carve_passage_from(current);
+    var startLength = work.length;
+    while (work.length == startLength) {
+      var current = work[work.length - 1];
+        if (!current) {
+          done = true;
+          return;
+        }
+        if (current.directions.length === 0) {
+          work.pop();
+        } else {
+          carve_passage_from(current);
+        }
     }
     return current;
   }
@@ -108,11 +113,17 @@ globalstrict:true, nomen:false, newcap:false */
   }
 
   maze.step = function (time, mazeElem) {
-    var current = carve_next_passage();
-    util.update_grid(grid, mazeElem);
-    update_current(mazeElem);
-    if (done) {
-      console.log(grid);
+    if (lastUpdate >= time) {
+      return done;
+    }
+    while (lastUpdate < time) {
+      lastUpdate += MS_PER_STEP;
+      var current = carve_next_passage();
+      util.update_grid(grid, mazeElem);
+      update_current(mazeElem);
+      if (done) {
+        console.log(grid);
+      }
     }
     return done;
   };
