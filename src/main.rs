@@ -1,49 +1,47 @@
+mod backtrack;
+mod parallel;
+
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate enumset;
 
 use clap::Arg;
 
+use ggez::timer::check_update_time;
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event::{self, quit, EventHandler};
-use ggez::graphics::{Color, DrawMode, DrawParam, LineCap, MeshBuilder, StrokeOptions};
 use ggez::input::keyboard::{KeyCode, KeyMods};
 use ggez::{graphics, Context, ContextBuilder, GameResult};
 
-const LINE_WIDTH: f32 = 4.0;
-const CELL_WIDTH: f32 = 20.0;
-const COLUMNS: f32 = 40.0;
-const ROWS: f32 = 30.0;
+pub const LINE_WIDTH: f32 = 4.0;
+pub const CELL_WIDTH: f32 = 20.0;
+pub const COLUMNS: f32 = 40.0;
+pub const ROWS: f32 = 30.0;
+
+pub trait Algorithm {
+    fn name(&self) -> String;
+    fn update(&mut self);
+    fn draw(&self, ctx: &mut Context) -> GameResult<()>;
+}
 
 struct MyGame {
     // Your state here...
-    lines: Vec<[[f32; 2]; 2]>,
+    algorithm: Box<dyn Algorithm>,
 }
 
 impl MyGame {
-    pub fn new(_ctx: &mut Context) -> MyGame {
+    pub fn new(_ctx: &mut Context, algorithm: Box<dyn Algorithm>) -> MyGame {
         // Load/create resources such as images here.
-        let mut lines = vec![];
-        for i in 0..=(COLUMNS as i32) {
-            for j in 0..=(ROWS as i32) {
-                let x = i as f32;
-                let y = j as f32;
-                lines.push([
-                    [(x - 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                    [x * CELL_WIDTH, y * CELL_WIDTH],
-                ]);
-                lines.push([
-                    [x * CELL_WIDTH, (y - 1.0) * CELL_WIDTH],
-                    [x * CELL_WIDTH, y * CELL_WIDTH],
-                ]);
-            }
-        }
-        MyGame { lines }
+        MyGame { algorithm }
     }
 }
 
 impl EventHandler for MyGame {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        // Update code here...
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        while check_update_time(ctx, 6) {
+            self.algorithm.update();
+        }
         Ok(())
     }
 
@@ -61,19 +59,7 @@ impl EventHandler for MyGame {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::WHITE);
-        // Draw code here...
-        let mut builder = MeshBuilder::new();
-        let options = StrokeOptions::default()
-            .with_line_width(LINE_WIDTH)
-            .with_line_cap(LineCap::Round);
-        let color = Color::from_rgba_u32(0x88_00_44_FF);
-        for line in &self.lines {
-            builder.polyline(DrawMode::Stroke(options), line, color)?;
-        }
-        let mesh = builder.build(ctx)?;
-        let dest = DrawParam::default().dest([LINE_WIDTH / 2.0, LINE_WIDTH / 2.0]);
-
-        graphics::draw(ctx, &mesh, dest)?;
+        self.algorithm.draw(ctx)?;
         graphics::present(ctx)
     }
 }
@@ -93,12 +79,12 @@ fn main() {
                     "kruskal",
                     "prim",
                     "recdiv",
-                    "blobby",
+                    // "blobby",
                     "aldousbroder",
                     "wilson",
-                    "houston",
+                    // "houston",
                     "huntandkill",
-                    "tree",
+                    // "tree",
                     "growingbintree",
                     "bintree",
                     "sidewinder",
@@ -107,8 +93,12 @@ fn main() {
         )
         .get_matches();
 
-    let algorithm = matches.value_of("algorithm").unwrap();
-    println!("Algorithm: {:?}", algorithm);
+    let algorithm: Box<dyn Algorithm> = match matches.value_of("algorithm").unwrap() {
+        "backtrack" => Box::new(backtrack::Exports::new()),
+        "parallel" => Box::new(parallel::Exports::new()),
+        _ => panic!("Unimplemented algorithm."),
+    };
+    println!("Algorithm: {:?}", algorithm.name());
 
     // Make a Context.
     let (mut ctx, mut event_loop) = ContextBuilder::new("mazes", "Blake Winton")
@@ -123,7 +113,7 @@ fn main() {
     // Create an instance of your event handler.
     // Usually, you should provide it with the Context object to
     // use when setting your game up.
-    let mut my_game = MyGame::new(&mut ctx);
+    let mut my_game = MyGame::new(&mut ctx, algorithm);
 
     // Run!
     match event::run(&mut ctx, &mut event_loop, &mut my_game) {
