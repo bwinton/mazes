@@ -8,10 +8,10 @@ extern crate enumset;
 
 use clap::Arg;
 
-use ggez::timer::check_update_time;
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event::{self, quit, EventHandler};
 use ggez::input::keyboard::{KeyCode, KeyMods};
+use ggez::timer::check_update_time;
 use ggez::{graphics, Context, ContextBuilder, GameResult};
 
 pub const LINE_WIDTH: f32 = 4.0;

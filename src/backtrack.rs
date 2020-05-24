@@ -1,14 +1,15 @@
 use crate::{Algorithm, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
 
-use std::collections::VecDeque;
 use enumset::EnumSet;
-use ggez::graphics::{Color, DrawMode, Rect, DrawParam, LineCap, MeshBuilder, StrokeOptions, FillOptions};
+use ggez::graphics::{
+    Color, DrawMode, DrawParam, FillOptions, LineCap, MeshBuilder, Rect, StrokeOptions,
+};
 use ggez::{graphics, Context, GameResult};
+use std::collections::VecDeque;
 
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
-
 
 #[derive(EnumSetType, Debug)]
 pub enum Direction {
@@ -19,7 +20,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    fn opposite(&self) -> Self {
+    fn opposite(self) -> Self {
         match self {
             Direction::North => Direction::South,
             Direction::East => Direction::West,
@@ -33,7 +34,7 @@ impl Direction {
 enum State {
     Setup,
     Running,
-    Done
+    Done,
 }
 
 pub struct Exports {
@@ -44,14 +45,14 @@ pub struct Exports {
 }
 
 impl Exports {
-    pub fn new() -> impl Algorithm {
+    pub fn new() -> Self {
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let mut rng = thread_rng();
         let mut stack = VecDeque::new();
         stack.push_front((
             rng.gen_range(0, COLUMNS as usize),
             rng.gen_range(0, ROWS as usize),
-            EnumSet::all()
+            EnumSet::all(),
         ));
         let state = State::Setup;
         Self {
@@ -86,7 +87,7 @@ impl Algorithm for Exports {
                 return;
             }
 
-            let (x,y, directions) = self.stack.pop_front().unwrap();
+            let (x, y, directions) = self.stack.pop_front().unwrap();
             let mut potentials: Vec<Direction> = directions.iter().collect();
             if potentials.is_empty() {
                 return;
@@ -95,20 +96,21 @@ impl Algorithm for Exports {
             let direction = potentials.pop().unwrap();
             // println!("({},{}) -> {:?}", x, y, direction);
             self.stack.push_front((x, y, directions ^ direction));
-    
+
             let (new_x, new_y) = match direction {
                 Direction::North => (x as i32, y as i32 - 1),
-                Direction::East => (x as i32+ 1, y as i32),
+                Direction::East => (x as i32 + 1, y as i32),
                 Direction::South => (x as i32, y as i32 + 1),
-                Direction::West => (x as i32 - 1, y as i32)
+                Direction::West => (x as i32 - 1, y as i32),
             };
             // println!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
-            if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32{
+            if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                 let (new_x, new_y) = (new_x as usize, new_y as usize);
                 if self.grid[new_y][new_x] == EnumSet::new() {
                     self.grid[y][x] |= direction;
                     self.grid[new_y][new_x] |= direction.opposite();
-                    self.stack.push_front((new_x, new_y, EnumSet::all() ^ direction.opposite()));
+                    self.stack
+                        .push_front((new_x, new_y, EnumSet::all() ^ direction.opposite()));
                     found = true;
                 }
                 // Otherwise, loop again and see what we can get.
@@ -116,7 +118,6 @@ impl Algorithm for Exports {
             // if potentials.is_empty() {
             //     return;
             // }
-
         }
     }
 
@@ -178,9 +179,13 @@ impl Algorithm for Exports {
         if let Some((x, y, _)) = self.stack.front() {
             builder.rectangle(
                 DrawMode::Fill(FillOptions::default()),
-                Rect::new(*x as f32 * CELL_WIDTH + LINE_WIDTH, *y as f32 * CELL_WIDTH + LINE_WIDTH,
-                    CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
-                color_2
+                Rect::new(
+                    *x as f32 * CELL_WIDTH + LINE_WIDTH,
+                    *y as f32 * CELL_WIDTH + LINE_WIDTH,
+                    CELL_WIDTH - LINE_WIDTH * 2.0,
+                    CELL_WIDTH - LINE_WIDTH * 2.0,
+                ),
+                color_2,
             );
         }
         let mesh = builder.build(ctx)?;
