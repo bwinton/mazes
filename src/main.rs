@@ -1,10 +1,15 @@
+mod util;
+
 mod backtrack;
 mod parallel;
+mod eller;
 
 #[macro_use]
 extern crate clap;
 #[macro_use]
 extern crate enumset;
+
+use crate::util::{Algorithm, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
 
 use clap::Arg;
 
@@ -13,17 +18,6 @@ use ggez::event::{self, quit, EventHandler};
 use ggez::input::keyboard::{KeyCode, KeyMods};
 use ggez::timer::check_update_time;
 use ggez::{graphics, Context, ContextBuilder, GameResult};
-
-pub const LINE_WIDTH: f32 = 4.0;
-pub const CELL_WIDTH: f32 = 20.0;
-pub const COLUMNS: f32 = 40.0;
-pub const ROWS: f32 = 30.0;
-
-pub trait Algorithm {
-    fn name(&self) -> String;
-    fn update(&mut self);
-    fn draw(&self, ctx: &mut Context) -> GameResult<()>;
-}
 
 struct MyGame {
     // Your state here...
@@ -96,6 +90,7 @@ fn main() {
     let algorithm: Box<dyn Algorithm> = match matches.value_of("algorithm").unwrap() {
         "backtrack" => Box::new(backtrack::Exports::new()),
         "parallel" => Box::new(parallel::Exports::new()),
+        "eller" => Box::new(eller::Exports::new()),
         _ => panic!("Unimplemented algorithm."),
     };
     println!("Algorithm: {:?}", algorithm.name());

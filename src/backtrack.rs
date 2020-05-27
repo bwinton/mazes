@@ -1,4 +1,4 @@
-use crate::{Algorithm, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
+use crate::util::{Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
 
 use enumset::EnumSet;
 use ggez::graphics::{
@@ -10,25 +10,6 @@ use std::collections::VecDeque;
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
-
-#[derive(EnumSetType, Debug)]
-pub enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
-
-impl Direction {
-    fn opposite(self) -> Self {
-        match self {
-            Direction::North => Direction::South,
-            Direction::East => Direction::West,
-            Direction::South => Direction::North,
-            Direction::West => Direction::East,
-        }
-    }
-}
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -127,8 +108,7 @@ impl Algorithm for Exports {
         let options = StrokeOptions::default()
             .with_line_width(LINE_WIDTH)
             .with_line_cap(LineCap::Round);
-        let color = Color::from_rgba_u32(0x88_00_88_FF);
-        let color_2 = Color::from_rgba_u32(0x00_00_00_88);
+        let line_color = Color::from_rgba_u32(COLORS[0]);
         for (j, row) in self.grid.iter().enumerate() {
             for (i, cell) in row.iter().enumerate() {
                 let x = i as f32;
@@ -141,7 +121,7 @@ impl Algorithm for Exports {
                             [x * CELL_WIDTH, y * CELL_WIDTH],
                             [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
                         ],
-                        color,
+                        line_color,
                     )?;
                 }
                 if !cell.contains(Direction::East) {
@@ -151,7 +131,7 @@ impl Algorithm for Exports {
                             [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
                             [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
                         ],
-                        color,
+                        line_color,
                     )?;
                 }
                 if !cell.contains(Direction::South) {
@@ -161,7 +141,7 @@ impl Algorithm for Exports {
                             [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
                             [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
                         ],
-                        color,
+                        line_color,
                     )?;
                 }
                 if !cell.contains(Direction::West) {
@@ -171,22 +151,38 @@ impl Algorithm for Exports {
                             [x * CELL_WIDTH, y * CELL_WIDTH],
                             [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
                         ],
-                        color,
+                        line_color,
                     )?;
                 }
             }
         }
-        if let Some((x, y, _)) = self.stack.front() {
-            builder.rectangle(
-                DrawMode::Fill(FillOptions::default()),
-                Rect::new(
-                    *x as f32 * CELL_WIDTH + LINE_WIDTH,
-                    *y as f32 * CELL_WIDTH + LINE_WIDTH,
-                    CELL_WIDTH - LINE_WIDTH * 2.0,
-                    CELL_WIDTH - LINE_WIDTH * 2.0,
-                ),
-                color_2,
-            );
+        let curr_color = Color::from_rgba_u32(COLORS[1]);
+        let mut cell_color = Color::from_rgba_u32(COLORS[1]);
+        cell_color.a = 0.5;
+        for (i, (x, y, _)) in self.stack.iter().enumerate() {
+            if i == 0 {
+                builder.rectangle(
+                    DrawMode::Fill(FillOptions::default()),
+                    Rect::new(
+                        *x as f32 * CELL_WIDTH + LINE_WIDTH,
+                        *y as f32 * CELL_WIDTH + LINE_WIDTH,
+                        CELL_WIDTH - LINE_WIDTH * 2.0,
+                        CELL_WIDTH - LINE_WIDTH * 2.0,
+                    ),
+                    curr_color,
+                );
+            } else {
+                builder.rectangle(
+                    DrawMode::Fill(FillOptions::default()),
+                    Rect::new(
+                        *x as f32 * CELL_WIDTH,
+                        *y as f32 * CELL_WIDTH,
+                        CELL_WIDTH,
+                        CELL_WIDTH,
+                    ),
+                    cell_color,
+                );
+            }
         }
         let mesh = builder.build(ctx)?;
         let dest = DrawParam::default().dest([LINE_WIDTH / 2.0, LINE_WIDTH / 2.0]);
