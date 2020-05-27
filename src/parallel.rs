@@ -50,11 +50,7 @@ impl Exports {
         for (i, stack) in stack.iter_mut().enumerate() {
             let x = rng.gen_range(0, COLUMNS as usize);
             let y = rng.gen_range(0, ROWS as usize);
-            stack.push_front((
-                x,
-                y,
-                EnumSet::all(),
-            ));
+            stack.push_front((x, y, EnumSet::all()));
             sets[i].insert(i);
         }
         let state = State::Setup;
@@ -121,7 +117,8 @@ impl Algorithm for Exports {
                         found = true;
                     } else if let (Some(set), _) = self.grid[new_y][new_x] {
                         if !self.sets[i].contains(&set) {
-                            let both_sets: HashSet<usize> = self.sets[i].union(&self.sets[set]).cloned().collect();
+                            let both_sets: HashSet<usize> =
+                                self.sets[i].union(&self.sets[set]).cloned().collect();
                             for i in &both_sets {
                                 self.sets[*i] = both_sets.clone();
                             }
@@ -146,7 +143,7 @@ impl Algorithm for Exports {
             .with_line_width(LINE_WIDTH)
             .with_line_cap(LineCap::Round);
         let line_color = Color::from_rgba_u32(COLORS[0]);
-            for (j, row) in self.grid.iter().enumerate() {
+        for (j, row) in self.grid.iter().enumerate() {
             for (i, (_, cell)) in row.iter().enumerate() {
                 let x = i as f32;
                 let y = j as f32;
@@ -220,7 +217,7 @@ impl Algorithm for Exports {
                         ),
                         cell_color,
                     );
-                    }
+                }
             }
         }
         let mesh = builder.build(ctx)?;

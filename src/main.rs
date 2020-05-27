@@ -1,8 +1,8 @@
 mod util;
 
 mod backtrack;
-mod parallel;
 mod eller;
+mod parallel;
 
 #[macro_use]
 extern crate clap;
