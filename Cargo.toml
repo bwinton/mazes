@@ -5,6 +5,7 @@ authors = ["Blake Winton <bwinton@latte.ca>"]
 edition = "2018"
 
 [dependencies]
+array-init = "0.1.1"
 clap = "3.0.0-beta.1"
 enumset = "1.0.0"
 ggez = "0.5.1"

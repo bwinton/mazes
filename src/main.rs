@@ -22,19 +22,26 @@ use ggez::{graphics, Context, ContextBuilder, GameResult};
 struct MyGame {
     // Your state here...
     algorithm: Box<dyn Algorithm>,
+    drawn: bool,
 }
 
 impl MyGame {
     pub fn new(_ctx: &mut Context, algorithm: Box<dyn Algorithm>) -> MyGame {
         // Load/create resources such as images here.
-        MyGame { algorithm }
+        MyGame {
+            algorithm,
+            drawn: false,
+        }
     }
 }
 
 impl EventHandler for MyGame {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         while check_update_time(ctx, 6) {
-            self.algorithm.update();
+            if self.drawn {
+                self.algorithm.update();
+                self.drawn = false;
+            }
         }
         Ok(())
     }
@@ -54,6 +61,7 @@ impl EventHandler for MyGame {
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::WHITE);
         self.algorithm.draw(ctx)?;
+        self.drawn = true;
         graphics::present(ctx)
     }
 }
@@ -97,7 +105,7 @@ fn main() {
 
     // Make a Context.
     let (mut ctx, mut event_loop) = ContextBuilder::new("mazes", "Blake Winton")
-        .window_setup(WindowSetup::default().title("Some mazes…"))
+        .window_setup(WindowSetup::default().title(&format!("Some {} mazes…", algorithm.name())))
         .window_mode(WindowMode::default().dimensions(
             COLUMNS * CELL_WIDTH + LINE_WIDTH,
             ROWS * CELL_WIDTH + LINE_WIDTH,

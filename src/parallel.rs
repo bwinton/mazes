@@ -2,6 +2,7 @@ use crate::util::{Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH,
 
 use std::collections::{HashSet, VecDeque};
 
+use array_init::array_init;
 use enumset::EnumSet;
 use ggez::graphics::{
     Color, DrawMode, DrawParam, FillOptions, LineCap, MeshBuilder, Rect, StrokeOptions,
@@ -32,27 +33,9 @@ pub struct Exports {
 impl Exports {
     pub fn new() -> Self {
         let grid = [[(None, EnumSet::new()); COLUMNS as usize]; ROWS as usize];
-        let mut rng = thread_rng();
-        let mut stack = [
-            VecDeque::new(),
-            VecDeque::new(),
-            VecDeque::new(),
-            VecDeque::new(),
-            VecDeque::new(),
-        ];
-        let mut sets = [
-            HashSet::new(),
-            HashSet::new(),
-            HashSet::new(),
-            HashSet::new(),
-            HashSet::new(),
-        ];
-        for (i, stack) in stack.iter_mut().enumerate() {
-            let x = rng.gen_range(0, COLUMNS as usize);
-            let y = rng.gen_range(0, ROWS as usize);
-            stack.push_front((x, y, EnumSet::all()));
-            sets[i].insert(i);
-        }
+        let rng = thread_rng();
+        let stack = array_init(|_| VecDeque::new());
+        let sets = array_init(|_| HashSet::new());
         let state = State::Setup;
         Self {
             grid,
@@ -70,11 +53,22 @@ impl Algorithm for Exports {
     }
     fn update(&mut self) {
         // println!("Updating {}", self.name());
-        if self.state != State::Running {
-            if self.state == State::Setup {
+        match self.state {
+            State::Setup => {
+                for (i, stack) in self.stack.iter_mut().enumerate() {
+                    let x = self.rng.gen_range(0, COLUMNS as usize);
+                    let y = self.rng.gen_range(0, ROWS as usize);
+                    stack.push_front((x, y, EnumSet::all()));
+                    self.sets[i].insert(i);
+                }
+
                 self.state = State::Running;
+                return;
             }
-            return;
+            State::Done => {
+                return;
+            }
+            _ => {}
         }
 
         let mut done = true;

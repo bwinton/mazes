@@ -28,13 +28,8 @@ pub struct Exports {
 impl Exports {
     pub fn new() -> Self {
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
-        let mut rng = thread_rng();
-        let mut stack = VecDeque::new();
-        stack.push_front((
-            rng.gen_range(0, COLUMNS as usize),
-            rng.gen_range(0, ROWS as usize),
-            EnumSet::all(),
-        ));
+        let rng = thread_rng();
+        let stack = VecDeque::new();
         let state = State::Setup;
         Self {
             grid,
@@ -51,11 +46,20 @@ impl Algorithm for Exports {
     }
     fn update(&mut self) {
         // println!("Updating {}", self.name());
-        if self.state != State::Running {
-            if self.state == State::Setup {
+        match self.state {
+            State::Setup => {
+                self.stack.push_front((
+                    self.rng.gen_range(0, COLUMNS as usize),
+                    self.rng.gen_range(0, ROWS as usize),
+                    EnumSet::all(),
+                ));
                 self.state = State::Running;
+                return;
             }
-            return;
+            State::Done => {
+                return;
+            }
+            _ => {}
         }
 
         let mut found = false;
