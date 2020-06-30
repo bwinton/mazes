@@ -1,8 +1,8 @@
-use crate::util::{Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
+use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
 
 use enumset::EnumSet;
 use ggez::graphics::{
-    Color, DrawMode, DrawParam, FillOptions, LineCap, MeshBuilder, Rect, StrokeOptions,
+    Color, DrawMode, DrawParam, FillOptions, Rect,
 };
 use ggez::{graphics, Context, GameResult};
 use std::collections::VecDeque;
@@ -108,58 +108,8 @@ impl Algorithm for Exports {
 
     fn draw(&self, ctx: &mut Context) -> GameResult<()> {
         // Draw code here...
-        let mut builder = MeshBuilder::new();
-        let options = StrokeOptions::default()
-            .with_line_width(LINE_WIDTH)
-            .with_line_cap(LineCap::Round);
-        let line_color = Color::from_rgba_u32(COLORS[0]);
-        for (j, row) in self.grid.iter().enumerate() {
-            for (i, cell) in row.iter().enumerate() {
-                let x = i as f32;
-                let y = j as f32;
-                //Figure out which lines to draw.
-                if !cell.contains(Direction::North) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, y * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::East) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::South) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::West) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, y * CELL_WIDTH],
-                            [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-            }
-        }
+        let mut builder = draw_board(self.grid)?;
+
         let curr_color = Color::from_rgba_u32(COLORS[1]);
         let mut cell_color = Color::from_rgba_u32(COLORS[1]);
         cell_color.a = 0.5;

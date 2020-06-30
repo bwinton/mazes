@@ -1,8 +1,8 @@
-use crate::util::{Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
+use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
 use array_init::array_init;
 use enumset::EnumSet;
 use ggez::graphics::{
-    Color, DrawMode, DrawParam, FillOptions, LineCap, MeshBuilder, Rect, StrokeOptions,
+    Color, DrawMode, DrawParam, FillOptions, Rect,
 };
 use ggez::{graphics, Context, GameResult};
 use rand::rngs::ThreadRng;
@@ -22,7 +22,8 @@ pub struct Exports {
     current_row: usize,
     current_column: usize,
     empty_sets: Vec<usize>,
-    grid: [[(Option<usize>, EnumSet<Direction>); COLUMNS as usize]; ROWS as usize],
+    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid_sets: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     rng: ThreadRng,
     sets: Vec<(Vec<usize>, usize)>,
     state: State,
@@ -34,7 +35,8 @@ impl Exports {
         let current_column = 0;
         let empty_sets = vec![];
         let rng = thread_rng();
-        let grid = [[(None, EnumSet::new()); COLUMNS as usize]; ROWS as usize];
+        let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
+        let grid_sets = [[None; COLUMNS as usize]; ROWS as usize];
         let sets = vec![];
         let state = State::Setup;
         Self {
@@ -42,6 +44,7 @@ impl Exports {
             current_column,
             empty_sets,
             grid,
+            grid_sets,
             rng,
             sets,
             state,
@@ -58,34 +61,34 @@ impl Algorithm for Exports {
         match self.state {
             State::Setup => {
                 for x in 0..COLUMNS as usize {
-                    self.grid[self.current_row][x].0 = Some(x);
+                    self.grid_sets[self.current_row][x] = Some(x);
                 }
                 self.state = State::Merging;
             }
             State::Done => {}
             State::Merging => {
-                if self.grid[self.current_row][self.current_column].0 == None {
-                    self.grid[self.current_row][self.current_column].0 = self.empty_sets.pop();
+                if self.grid_sets[self.current_row][self.current_column] == None {
+                    self.grid_sets[self.current_row][self.current_column] = self.empty_sets.pop();
                 }
-                if self.grid[self.current_row][self.current_column + 1].0 == None {
-                    self.grid[self.current_row][self.current_column + 1].0 = self.empty_sets.pop();
+                if self.grid_sets[self.current_row][self.current_column + 1] == None {
+                    self.grid_sets[self.current_row][self.current_column + 1] = self.empty_sets.pop();
                 }
                 if self.rng.gen() || self.current_row == (ROWS - 1.0) as usize {
                     // Merge the cells, if they're in different sets.
-                    let old_set = self.grid[self.current_row][self.current_column + 1].0;
-                    let new_set = self.grid[self.current_row][self.current_column].0;
+                    let old_set = self.grid_sets[self.current_row][self.current_column + 1];
+                    let new_set = self.grid_sets[self.current_row][self.current_column];
                     if new_set != old_set {
                         // println!(
                         //     "Merging {}: {:?} and {:?}…",
                         //     x, self.grid[self.current_row][x], self.grid[self.current_row][x]
                         // );
 
-                        self.grid[self.current_row][self.current_column].1 |= Direction::East;
-                        self.grid[self.current_row][self.current_column + 1].1 |= Direction::West;
+                        self.grid[self.current_row][self.current_column] |= Direction::East;
+                        self.grid[self.current_row][self.current_column + 1] |= Direction::West;
 
                         for i in 0..COLUMNS as usize {
-                            if self.grid[self.current_row][i].0 == old_set {
-                                self.grid[self.current_row][i].0 = new_set;
+                            if self.grid_sets[self.current_row][i] == old_set {
+                                self.grid_sets[self.current_row][i] = new_set;
                             }
                         }
                     }
@@ -106,7 +109,7 @@ impl Algorithm for Exports {
                 self.empty_sets.clear();
                 let mut sets: [Vec<usize>; COLUMNS as usize] = array_init(|_| Vec::new());
                 for x in 0..COLUMNS as usize {
-                    let i = self.grid[self.current_row][x].0.unwrap();
+                    let i = self.grid_sets[self.current_row][x].unwrap();
                     sets[i].push(x);
                 }
                 for (i, set) in sets.iter().enumerate() {
@@ -130,9 +133,9 @@ impl Algorithm for Exports {
                     let count = self.rng.gen_range(1, set.len() + 1);
                     for &cell in set.choose_multiple(&mut self.rng, count) {
                         // print!("{}, ", cell);
-                        self.grid[self.current_row][cell].1 |= Direction::South;
-                        self.grid[self.current_row + 1][cell].1 |= Direction::North;
-                        self.grid[self.current_row + 1][cell].0 = Some(i);
+                        self.grid[self.current_row][cell] |= Direction::South;
+                        self.grid[self.current_row + 1][cell] |= Direction::North;
+                        self.grid_sets[self.current_row + 1][cell] = Some(i);
                     }
                     // println!();
                 }
@@ -148,64 +151,13 @@ impl Algorithm for Exports {
 
     fn draw(&self, ctx: &mut Context) -> GameResult<()> {
         // Draw code here...
+        let mut builder = draw_board(self.grid)?;
 
-        let mut builder = MeshBuilder::new();
-        let options = StrokeOptions::default()
-            .with_line_width(LINE_WIDTH)
-            .with_line_cap(LineCap::Round);
-        let line_color = Color::from_rgba_u32(COLORS[0]);
-        for (j, row) in self.grid.iter().enumerate() {
-            for (i, (_, cell)) in row.iter().enumerate() {
-                let x = i as f32;
-                let y = j as f32;
-                //Figure out which lines to draw.
-                if !cell.contains(Direction::North) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, y * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::East) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::South) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::West) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, y * CELL_WIDTH],
-                            [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-            }
-        }
         for row in self.current_row..self.current_row + 2 {
             if row < ROWS as usize {
                 for x in 0..COLUMNS as usize {
                     // println!("{:?}.", self.grid[self.current_row][x]);
-                    if let Some(i) = self.grid[row][x].0 {
+                    if let Some(i) = self.grid_sets[row][x] {
                         let mut cell_color = Color::from_rgba_u32(COLORS[i + 1]);
                         cell_color.a = 0.5;
                         builder.rectangle(

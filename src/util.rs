@@ -1,4 +1,8 @@
+use enumset::EnumSet;
 use ggez::{Context, GameResult};
+use ggez::graphics::{
+    Color, DrawMode, LineCap, MeshBuilder, StrokeOptions,
+};
 
 pub const LINE_WIDTH: f32 = 4.0;
 pub const CELL_WIDTH: f32 = 20.0;
@@ -92,4 +96,60 @@ impl Direction {
             Direction::West => Direction::East,
         }
     }
+}
+
+pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]) -> GameResult<MeshBuilder> {
+    let mut builder = MeshBuilder::new();
+    let options = StrokeOptions::default()
+        .with_line_width(LINE_WIDTH)
+        .with_line_cap(LineCap::Round);
+    let line_color = Color::from_rgba_u32(COLORS[0]);
+    for (j, row) in grid.iter().enumerate() {
+        for (i, cell) in row.iter().enumerate() {
+            let x = i as f32;
+            let y = j as f32;
+            //Figure out which lines to draw.
+            if !cell.contains(Direction::North) {
+                builder.polyline(
+                    DrawMode::Stroke(options),
+                    &[
+                        [x * CELL_WIDTH, y * CELL_WIDTH],
+                        [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
+                    ],
+                    line_color,
+                )?;
+            }
+            if !cell.contains(Direction::East) {
+                builder.polyline(
+                    DrawMode::Stroke(options),
+                    &[
+                        [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
+                        [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
+                    ],
+                    line_color,
+                )?;
+            }
+            if !cell.contains(Direction::South) {
+                builder.polyline(
+                    DrawMode::Stroke(options),
+                    &[
+                        [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
+                        [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
+                    ],
+                    line_color,
+                )?;
+            }
+            if !cell.contains(Direction::West) {
+                builder.polyline(
+                    DrawMode::Stroke(options),
+                    &[
+                        [x * CELL_WIDTH, y * CELL_WIDTH],
+                        [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
+                    ],
+                    line_color,
+                )?;
+            }
+        }
+    }
+    Ok(builder)
 }

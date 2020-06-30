@@ -1,11 +1,11 @@
-use crate::util::{Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
+use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
 
 use std::collections::{HashSet, VecDeque};
 
 use array_init::array_init;
 use enumset::EnumSet;
 use ggez::graphics::{
-    Color, DrawMode, DrawParam, FillOptions, LineCap, MeshBuilder, Rect, StrokeOptions,
+    Color, DrawMode, DrawParam, FillOptions, Rect,
 };
 use ggez::{graphics, Context, GameResult};
 
@@ -23,7 +23,8 @@ enum State {
 }
 
 pub struct Exports {
-    grid: [[(Option<usize>, EnumSet<Direction>); COLUMNS as usize]; ROWS as usize],
+    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     rng: ThreadRng,
     stack: [VecDeque<(usize, usize, EnumSet<Direction>)>; SEEDS],
     sets: [HashSet<usize>; SEEDS],
@@ -32,13 +33,15 @@ pub struct Exports {
 
 impl Exports {
     pub fn new() -> Self {
-        let grid = [[(None, EnumSet::new()); COLUMNS as usize]; ROWS as usize];
+        let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
+        let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
         let rng = thread_rng();
         let stack = array_init(|_| VecDeque::new());
         let sets = array_init(|_| HashSet::new());
         let state = State::Setup;
         Self {
             grid,
+            grid_seeds,
             rng,
             stack,
             sets,
@@ -102,22 +105,22 @@ impl Algorithm for Exports {
                 // println!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
                 if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                     let (new_x, new_y) = (new_x as usize, new_y as usize);
-                    if self.grid[new_y][new_x] == (None, EnumSet::new()) {
-                        self.grid[y][x].0 = Some(i);
-                        self.grid[y][x].1 |= direction;
-                        self.grid[new_y][new_x].0 = Some(i);
-                        self.grid[new_y][new_x].1 |= direction.opposite();
+                    if self.grid[new_y][new_x] == EnumSet::new() && self.grid_seeds[new_y][new_x] == None {
+                        self.grid_seeds[y][x] = Some(i);
+                        self.grid[y][x] |= direction;
+                        self.grid_seeds[new_y][new_x] = Some(i);
+                        self.grid[new_y][new_x] |= direction.opposite();
                         stack.push_front((new_x, new_y, EnumSet::all() ^ direction.opposite()));
                         found = true;
-                    } else if let (Some(set), _) = self.grid[new_y][new_x] {
+                    } else if let Some(set) = self.grid_seeds[new_y][new_x] {
                         if !self.sets[i].contains(&set) {
                             let both_sets: HashSet<usize> =
                                 self.sets[i].union(&self.sets[set]).cloned().collect();
                             for i in &both_sets {
                                 self.sets[*i] = both_sets.clone();
                             }
-                            self.grid[y][x].1 |= direction;
-                            self.grid[new_y][new_x].1 |= direction.opposite();
+                            self.grid[y][x] |= direction;
+                            self.grid[new_y][new_x] |= direction.opposite();
                         }
                     }
                     // Otherwise, loop again and see what we can get.
@@ -132,58 +135,8 @@ impl Algorithm for Exports {
 
     fn draw(&self, ctx: &mut Context) -> GameResult<()> {
         // Draw code here...
-        let mut builder = MeshBuilder::new();
-        let options = StrokeOptions::default()
-            .with_line_width(LINE_WIDTH)
-            .with_line_cap(LineCap::Round);
-        let line_color = Color::from_rgba_u32(COLORS[0]);
-        for (j, row) in self.grid.iter().enumerate() {
-            for (i, (_, cell)) in row.iter().enumerate() {
-                let x = i as f32;
-                let y = j as f32;
-                //Figure out which lines to draw.
-                if !cell.contains(Direction::North) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, y * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::East) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::South) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                            [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-                if !cell.contains(Direction::West) {
-                    builder.polyline(
-                        DrawMode::Stroke(options),
-                        &[
-                            [x * CELL_WIDTH, y * CELL_WIDTH],
-                            [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        ],
-                        line_color,
-                    )?;
-                }
-            }
-        }
+        let mut builder = draw_board(self.grid)?;
+
         for i in 0..SEEDS {
             let curr_color = Color::from_rgba_u32(COLORS[i + 1]);
             let mut cell_color = Color::from_rgba_u32(COLORS[i + 1]);
