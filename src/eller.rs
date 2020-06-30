@@ -15,7 +15,6 @@ enum State {
     Merging,
     NextLine,
     Dropping,
-    Filling,
     Done,
 }
 
@@ -25,7 +24,7 @@ pub struct Exports {
     empty_sets: Vec<usize>,
     grid: [[(Option<usize>, EnumSet<Direction>); COLUMNS as usize]; ROWS as usize],
     rng: ThreadRng,
-    sets: Vec<(usize, Vec<usize>)>,
+    sets: Vec<(Vec<usize>, usize)>,
     state: State,
 }
 
@@ -65,6 +64,12 @@ impl Algorithm for Exports {
             }
             State::Done => {}
             State::Merging => {
+                if self.grid[self.current_row][self.current_column].0 == None {
+                    self.grid[self.current_row][self.current_column].0 = self.empty_sets.pop();
+                }
+                if self.grid[self.current_row][self.current_column + 1].0 == None {
+                    self.grid[self.current_row][self.current_column + 1].0 = self.empty_sets.pop();
+                }
                 if self.rng.gen() || self.current_row == (ROWS - 1.0) as usize {
                     // Merge the cells, if they're in different sets.
                     let old_set = self.grid[self.current_row][self.current_column + 1].0;
@@ -105,14 +110,14 @@ impl Algorithm for Exports {
                     sets[i].push(x);
                 }
                 for (i, set) in sets.iter().enumerate() {
-                    if !set.is_empty() {
-                        self.sets.push((i, set.clone()));
-                    } else {
+                    if set.is_empty() {
                         self.empty_sets.push(i);
+                    } else {
+                        self.sets.push((set.clone(), i));
                     }
                 }
                 self.sets.sort();
-                self.sets.reverse();
+                self.empty_sets.sort();
                 self.empty_sets.reverse();
                 self.current_column = 0;
 
@@ -120,7 +125,7 @@ impl Algorithm for Exports {
             }
             State::Dropping => {
                 // Pick 1..n of each set and drop it.
-                if let Some((i, set)) = self.sets.pop() {
+                if let Some((set, i)) = self.sets.pop() {
                     // print!("{}: {:?}, Dropping: ", i, set);
                     let count = self.rng.gen_range(1, set.len() + 1);
                     for &cell in set.choose_multiple(&mut self.rng, count) {
@@ -135,18 +140,8 @@ impl Algorithm for Exports {
 
                 if self.sets.is_empty() {
                     self.current_row += 1;
-                    self.state = State::Filling
+                    self.state = State::Merging;
                 }
-            }
-            State::Filling => {
-                // println!("Empty: {:?}\n", empty_sets);
-                // Fill out the rest with the empty sets.
-                for i in 0..COLUMNS as usize {
-                    if self.grid[self.current_row][i].0 == None {
-                        self.grid[self.current_row][i].0 = self.empty_sets.pop();
-                    }
-                }
-                self.state = State::Merging;
             }
         }
     }
@@ -223,7 +218,7 @@ impl Algorithm for Exports {
                             ),
                             cell_color,
                         );
-                        if row == self.current_row && x == self.current_column {
+                        if row == self.current_row && x == self.current_column && self.state == State::Merging {
                             cell_color.a = 1.0;
                             builder.rectangle(
                                 DrawMode::Fill(FillOptions::default()),

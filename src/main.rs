@@ -1,8 +1,9 @@
 mod util;
 
 mod backtrack;
-mod eller;
 mod parallel;
+mod eller;
+mod kruskal;
 
 #[macro_use]
 extern crate clap;
@@ -99,6 +100,7 @@ fn main() {
         "backtrack" => Box::new(backtrack::Exports::new()),
         "parallel" => Box::new(parallel::Exports::new()),
         "eller" => Box::new(eller::Exports::new()),
+        "kruskal" => Box::new(kruskal::Exports::new()),
         _ => panic!("Unimplemented algorithm."),
     };
     println!("Algorithm: {:?}", algorithm.name());
