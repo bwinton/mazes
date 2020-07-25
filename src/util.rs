@@ -86,6 +86,7 @@ lazy_static! {
 
 pub trait Algorithm {
     fn name(&self) -> String;
+    fn re_init(&mut self);
     fn update(&mut self);
     fn draw(&self, gfx: &mut Graphics) -> Result<()>;
 }

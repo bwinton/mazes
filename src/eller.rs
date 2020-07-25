@@ -52,11 +52,24 @@ impl Exports {
             state,
         }
     }
+    fn from(&mut self, other: Self) {
+        self.current_row = other.current_row;
+        self.current_column = other.current_column;
+        self.empty_sets = other.empty_sets;
+        self.grid = other.grid;
+        self.grid_sets = other.grid_sets;
+        self.rng = other.rng;
+        self.sets = other.sets;
+        self.state = other.state;
+    }
 }
 
 impl Algorithm for Exports {
     fn name(&self) -> String {
         String::from("Eller")
+    }
+    fn re_init(&mut self) {
+        self.from(Exports::new());
     }
     fn update(&mut self) {
         // println!("{}, {:?}", self.current_row, self.state);

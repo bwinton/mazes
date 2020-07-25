@@ -39,11 +39,20 @@ impl Exports {
             state,
         }
     }
+    fn from(&mut self, other: Self) {
+        self.grid = other.grid;
+        self.rng = other.rng;
+        self.stack = other.stack;
+        self.state = other.state;
+    }
 }
 
 impl Algorithm for Exports {
     fn name(&self) -> String {
         String::from("Backtrack")
+    }
+    fn re_init(&mut self) {
+        self.from(Exports::new());
     }
     fn update(&mut self) {
         // println!("Updating {}", self.name());

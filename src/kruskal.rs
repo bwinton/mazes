@@ -34,11 +34,20 @@ impl<'a> Exports<'a> {
             state,
         }
     }
+    fn from(&mut self, other: Self) {
+        self.sets = other.sets;
+        self.grid = other.grid;
+        self.grid_sets = other.grid_sets;
+        self.state = other.state;
+    }
 }
 
 impl<'a> Algorithm for Exports<'a> {
     fn name(&self) -> String {
         String::from("Kruskal")
+    }
+    fn re_init(&mut self) {
+        self.from(Exports::new());
     }
     fn update(&mut self) {
         match self.state {

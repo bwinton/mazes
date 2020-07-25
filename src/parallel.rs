@@ -21,7 +21,6 @@ enum State {
     Running,
     Done,
 }
-
 pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
@@ -48,11 +47,22 @@ impl Exports {
             state,
         }
     }
+    fn from(&mut self, other: Self) {
+        self.grid = other.grid;
+        self.grid_seeds = other.grid_seeds;
+        self.rng = other.rng;
+        self.stack = other.stack;
+        self.sets = other.sets;
+        self.state = other.state;
+    }
 }
 
 impl Algorithm for Exports {
     fn name(&self) -> String {
         String::from("Parallel Backtrack")
+    }
+    fn re_init(&mut self) {
+        self.from(Exports::new());
     }
     fn update(&mut self) {
         // println!("Updating {}", self.name());

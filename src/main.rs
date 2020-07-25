@@ -36,7 +36,7 @@ use crate::util::{Algorithm, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
 use quicksilver::{
     geom::Vector,
     graphics::{Color, Graphics},
-    input::Key,
+    input::{Event, Key, MouseButton},
     log, run, Input, Result, Settings, Timer, Window,
 };
 
@@ -45,6 +45,7 @@ struct MyGame {
     algorithm: Box<dyn Algorithm>,
     update_timer: Timer,
     draw_timer: Timer,
+    paused: bool,
 }
 
 impl MyGame {
@@ -54,16 +55,41 @@ impl MyGame {
             algorithm,
             update_timer: Timer::time_per_second(20.0),
             draw_timer: Timer::time_per_second(60.0),
+            paused: false,
         }
     }
 
-    fn update(&mut self, input: &Input, window: &Window, gfx: &mut Graphics) -> bool {
+    fn handle_event(&mut self, input: &Input, event: Event) -> bool {
         if input.key_down(Key::Q) && (input.key_down(Key::LWin) || input.key_down(Key::RWin)) {
             return true;
         }
-
+        match event {
+            Event::KeyboardInput(key_event) => {
+                // R was pressed, so restart.
+                if key_event.key() == Key::R && key_event.is_down() {
+                    self.paused = false;
+                    self.algorithm.re_init();
+                }
+                // Space was pressed, so pause.
+                if key_event.key() == Key::Space && key_event.is_down() {
+                    self.paused = !self.paused;
+                }
+            }
+            Event::PointerInput(pointer_event) => {
+                // Left button was pressed, so pause.
+                if pointer_event.button() == MouseButton::Left && pointer_event.is_down() {
+                    self.paused = !self.paused;
+                }
+            }
+            _ => {}
+        }
+        false
+    }
+    fn update(&mut self, window: &Window, gfx: &mut Graphics) -> bool {
         while self.update_timer.tick() {
-            self.algorithm.update();
+            if !self.paused {
+                self.algorithm.update();
+            }
         }
 
         if self.draw_timer.exhaust().is_some() && self.draw(window, gfx).is_err() {
@@ -119,8 +145,12 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     game.draw(&window, &mut gfx)?;
 
     'outer: loop {
-        while input.next_event().await.is_some() {}
-        if game.update(&input, &window, &mut gfx) {
+        while let Some(e) = input.next_event().await {
+            if game.handle_event(&input, e) {
+                break 'outer;
+            }
+        }
+        if game.update(&window, &mut gfx) {
             break 'outer;
         }
     }
