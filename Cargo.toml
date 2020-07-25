@@ -6,7 +6,21 @@ edition = "2018"
 
 [dependencies]
 array-init = "0.1.1"
-clap = "3.0.0-beta.1"
 enumset = "1.0.0"
-ggez = "0.5.1"
-rand = "0.7.3"
+# ggez = "0.5.1"
+thiserror = "1.0.20"
+lazy_static = "1.4.0"
+
+[target.'cfg(not(cargo_web))'.dependencies]
+clap = "3.0.0-beta.1"
+
+[target.'cfg(cargo_web)'.dependencies]
+stdweb = "0.4.20"
+
+[dependencies.rand]
+version = "0.7.3"
+features = ["stdweb"]
+
+[dependencies.quicksilver]
+version = "0.4.0-alpha0.5"
+features = ["stdweb"]

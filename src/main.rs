@@ -1,128 +1,130 @@
-mod util;
-
 mod backtrack;
+mod util;
 mod parallel;
-mod eller;
-mod kruskal;
+// mod eller;
+// mod kruskal;
 
-#[macro_use]
-extern crate clap;
 #[macro_use]
 extern crate enumset;
+#[macro_use]
+extern crate lazy_static;
+
+#[cfg(cargo_web)]
+mod web_util;
+
+#[cfg(not(cargo_web))]
+mod desktop_util;
+
+#[cfg(not(cargo_web))]
+#[macro_use]
+extern crate clap;
+
+#[cfg(cargo_web)]
+extern crate stdweb;
+
+#[cfg(not(cargo_web))]
+use desktop_util::get_args;
+
+#[cfg(cargo_web)]
+use web_util::get_args;
 
 use crate::util::{Algorithm, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
 
-use clap::Arg;
+// use std::thread::sleep;
+// use std::time::Duration;
 
-use ggez::conf::{WindowMode, WindowSetup};
-use ggez::event::{self, quit, EventHandler};
-use ggez::input::keyboard::{KeyCode, KeyMods};
-use ggez::timer::check_update_time;
-use ggez::{graphics, Context, ContextBuilder, GameResult};
+use quicksilver::{
+    geom::Vector,
+    graphics::{Color, Graphics},
+    input::Key,
+    log, run, Input, Result, Timer, Settings, Window,
+};
 
 struct MyGame {
     // Your state here...
     algorithm: Box<dyn Algorithm>,
-    drawn: bool,
+    update_timer: Timer,
+    draw_timer: Timer,
 }
 
 impl MyGame {
-    pub fn new(_ctx: &mut Context, algorithm: Box<dyn Algorithm>) -> MyGame {
+    pub fn new(algorithm: Box<dyn Algorithm>) -> MyGame {
         // Load/create resources such as images here.
         MyGame {
             algorithm,
-            drawn: false,
+            update_timer: Timer::time_per_second(20.0),
+            draw_timer: Timer::time_per_second(60.0),
         }
     }
-}
 
-impl EventHandler for MyGame {
-    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        while check_update_time(ctx, 6) {
-            if self.drawn {
-                self.algorithm.update();
-                self.drawn = false;
-            }
+    fn update(&mut self, input: &Input, window: &Window, gfx: &mut Graphics) -> bool {
+        if input.key_down(Key::Q) && (input.key_down(Key::LWin) || input.key_down(Key::RWin)) {
+            return true;
         }
+
+        while self.update_timer.tick() {
+            self.algorithm.update();
+        }
+
+        if self.draw_timer.exhaust().is_some() {
+            if self.draw(window, gfx).is_err() {
+                // Got an error, let's quit the app, and hope they logged.
+                return true;
+            };
+        }
+        false
+    }
+
+    fn draw(&mut self, window: &Window, gfx: &mut Graphics) -> Result<()> {
+        // Clear the screen to a blank, white color
+        gfx.clear(Color::WHITE);
+
+        self.algorithm.draw(gfx)?;
+
+        // Send the data to be drawn
+        gfx.present(&window)?;
         Ok(())
-    }
-
-    fn key_down_event(
-        &mut self,
-        ctx: &mut Context,
-        keycode: KeyCode,
-        keymods: KeyMods,
-        _repeat: bool,
-    ) {
-        if keycode == KeyCode::Q && keymods.contains(KeyMods::LOGO) {
-            quit(ctx);
-        }
-    }
-
-    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        graphics::clear(ctx, graphics::WHITE);
-        self.algorithm.draw(ctx)?;
-        self.drawn = true;
-        graphics::present(ctx)
     }
 }
 
 fn main() {
-    let matches = app_from_crate!("\n")
-        .arg(
-            Arg::with_name("algorithm")
-                .short('a')
-                .about("Which algorithm to run")
-                .long_about("Specify an algorithm to run.")
-                .takes_value(true)
-                .possible_values(&[
-                    "backtrack",
-                    "parallel",
-                    "eller",
-                    "kruskal",
-                    "prim",
-                    "recdiv",
-                    // "blobby",
-                    "aldousbroder",
-                    "wilson",
-                    // "houston",
-                    "huntandkill",
-                    // "tree",
-                    "growingbintree",
-                    "bintree",
-                    "sidewinder",
-                ])
-                .default_value("backtrack"),
-        )
-        .get_matches();
+    run(
+        Settings {
+            size: Vector::new(
+                COLUMNS * CELL_WIDTH + LINE_WIDTH,
+                ROWS * CELL_WIDTH + LINE_WIDTH,
+            ),
+            log_level: log::Level::Info,
+            // icon_path: Some("static/maze.png"),
+            ..Settings::default()
+        },
+        app,
+    );
+}
 
-    let algorithm: Box<dyn Algorithm> = match matches.value_of("algorithm").unwrap() {
+async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
+    let arg = get_args()?;
+    let algorithm: Box<dyn Algorithm> = match arg.as_str() {
         "backtrack" => Box::new(backtrack::Exports::new()),
         "parallel" => Box::new(parallel::Exports::new()),
-        "eller" => Box::new(eller::Exports::new()),
-        "kruskal" => Box::new(kruskal::Exports::new()),
-        _ => panic!("Unimplemented algorithm."),
+        // "eller" => Box::new(eller::Exports::new()),
+        // "kruskal" => Box::new(kruskal::Exports::new()),
+        _ => {
+            log::error!("Unimplemented algorithm: {:?}!", arg);
+            panic!("Unimplemented algorithm.")
+        },
     };
-    println!("Algorithm: {:?}", algorithm.name());
+    log::info!("Algorithm: {:?}", algorithm.name());
+    window.set_title(&format!("Some {} mazes…", algorithm.name()));
 
-    // Make a Context.
-    let (mut ctx, mut event_loop) = ContextBuilder::new("mazes", "Blake Winton")
-        .window_setup(WindowSetup::default().title(&format!("Some {} mazes…", algorithm.name())))
-        .window_mode(WindowMode::default().dimensions(
-            COLUMNS * CELL_WIDTH + LINE_WIDTH,
-            ROWS * CELL_WIDTH + LINE_WIDTH,
-        ))
-        .build()
-        .expect("aieee, could not create ggez context!");
+    let mut game = MyGame::new(algorithm);
+    game.draw(&window, &mut gfx)?;
 
-    // Create an instance of your event handler.
-    // Usually, you should provide it with the Context object to
-    // use when setting your game up.
-    let mut my_game = MyGame::new(&mut ctx, algorithm);
-
-    // Run!
-    match event::run(&mut ctx, &mut event_loop, &mut my_game) {
-        Ok(_) => println!("Exited cleanly."),
-        Err(e) => println!("Error occured: {}", e),
+    'outer: loop {
+        while let Some(_) = input.next_event().await {}
+        if game.update(&input, &window, &mut gfx) {
+            break 'outer;
+        }
     }
+    Ok(())
 }

@@ -1,7 +1,16 @@
 use enumset::EnumSet;
-use ggez::{Context, GameResult};
-use ggez::graphics::{
-    Color, DrawMode, LineCap, MeshBuilder, StrokeOptions,
+
+// use ggez::{Context, GameResult};
+// use ggez::graphics::{
+//     Color, DrawMode, LineCap, MeshBuilder, StrokeOptions,
+// };
+
+use quicksilver::{
+    geom::{Vector},
+    graphics::{Color, Element, Mesh, Graphics, Vertex},
+    // Input, Window,
+    Result,
+    // Settings, run,
 };
 
 pub const LINE_WIDTH: f32 = 4.0;
@@ -9,74 +18,76 @@ pub const CELL_WIDTH: f32 = 20.0;
 pub const COLUMNS: f32 = 40.0;
 pub const ROWS: f32 = 30.0;
 
-pub const COLORS: [u32; 61] = [
-    0xB2_18_2B_FF,
-    0x37_7E_B8_FF,
-    0x4D_AF_4A_FF,
-    0x98_4E_A3_FF,
-    0xFF_7F_00_FF,
-    0xA6_56_28_FF,
-    0xF7_81_BF_FF,
-    0x99_33_00_FF,
-    0x33_33_00_FF,
-    0x00_33_00_FF,
-    0x00_33_66_FF,
-    0x00_00_80_FF,
-    0x33_33_99_FF,
-    0x33_33_33_FF,
-    0x80_00_00_FF,
-    0xFF_66_00_FF,
-    0x80_80_00_FF,
-    0x00_80_00_FF,
-    0x00_80_80_FF,
-    0x00_00_FF_FF,
-    0x66_66_99_FF,
-    0x80_80_80_FF,
-    0xFF_00_00_FF,
-    0xFF_99_00_FF,
-    0x99_CC_00_FF,
-    0x33_99_66_FF,
-    0x33_CC_CC_FF,
-    0x33_66_FF_FF,
-    0x80_00_80_FF,
-    0x96_96_96_FF,
-    0xFF_00_FF_FF,
-    0xFF_CC_00_FF,
-    0xFF_FF_00_FF,
-    0x00_FF_00_FF,
-    0x00_FF_FF_FF,
-    0x00_CC_FF_FF,
-    0x99_33_66_FF,
-    0xC0_C0_C0_FF,
-    0xFF_99_CC_FF,
-    0xFF_CC_99_FF,
-    0xFF_FF_99_FF,
-    0xCC_FF_CC_FF,
-    0xCC_FF_FF_FF,
-    0x99_CC_FF_FF,
-    0xCC_99_FF_FF,
-    0x99_99_FF_FF,
-    0x99_33_66_FF,
-    0xFF_FF_CC_FF,
-    0xCC_FF_FF_FF,
-    0x66_00_66_FF,
-    0xFF_80_80_FF,
-    0x00_66_CC_FF,
-    0xCC_CC_FF_FF,
-    0x00_00_80_FF,
-    0xFF_00_FF_FF,
-    0xFF_FF_00_FF,
-    0x00_FF_FF_FF,
-    0x80_00_80_FF,
-    0x80_00_00_FF,
-    0x00_80_80_FF,
-    0x00_00_FF_FF,
-];
+lazy_static! {
+    pub static ref COLORS: [Color; 61] = [
+        Color::from_rgba(0xB2, 0x18, 0x2B, 1.0),
+        Color::from_rgba(0x37, 0x7E, 0xB8, 1.0),
+        Color::from_rgba(0x4D, 0xAF, 0x4A, 1.0),
+        Color::from_rgba(0x98, 0x4E, 0xA3, 1.0),
+        Color::from_rgba(0xFF, 0x7F, 0x00, 1.0),
+        Color::from_rgba(0xA6, 0x56, 0x28, 1.0),
+        Color::from_rgba(0xF7, 0x81, 0xBF, 1.0),
+        Color::from_rgba(0x99, 0x33, 0x00, 1.0),
+        Color::from_rgba(0x33, 0x33, 0x00, 1.0),
+        Color::from_rgba(0x00, 0x33, 0x00, 1.0),
+        Color::from_rgba(0x00, 0x33, 0x66, 1.0),
+        Color::from_rgba(0x00, 0x00, 0x80, 1.0),
+        Color::from_rgba(0x33, 0x33, 0x99, 1.0),
+        Color::from_rgba(0x33, 0x33, 0x33, 1.0),
+        Color::from_rgba(0x80, 0x00, 0x00, 1.0),
+        Color::from_rgba(0xFF, 0x66, 0x00, 1.0),
+        Color::from_rgba(0x80, 0x80, 0x00, 1.0),
+        Color::from_rgba(0x00, 0x80, 0x00, 1.0),
+        Color::from_rgba(0x00, 0x80, 0x80, 1.0),
+        Color::from_rgba(0x00, 0x00, 0xFF, 1.0),
+        Color::from_rgba(0x66, 0x66, 0x99, 1.0),
+        Color::from_rgba(0x80, 0x80, 0x80, 1.0),
+        Color::from_rgba(0xFF, 0x00, 0x00, 1.0),
+        Color::from_rgba(0xFF, 0x99, 0x00, 1.0),
+        Color::from_rgba(0x99, 0xCC, 0x00, 1.0),
+        Color::from_rgba(0x33, 0x99, 0x66, 1.0),
+        Color::from_rgba(0x33, 0xCC, 0xCC, 1.0),
+        Color::from_rgba(0x33, 0x66, 0xFF, 1.0),
+        Color::from_rgba(0x80, 0x00, 0x80, 1.0),
+        Color::from_rgba(0x96, 0x96, 0x96, 1.0),
+        Color::from_rgba(0xFF, 0x00, 0xFF, 1.0),
+        Color::from_rgba(0xFF, 0xCC, 0x00, 1.0),
+        Color::from_rgba(0xFF, 0xFF, 0x00, 1.0),
+        Color::from_rgba(0x00, 0xFF, 0x00, 1.0),
+        Color::from_rgba(0x00, 0xFF, 0xFF, 1.0),
+        Color::from_rgba(0x00, 0xCC, 0xFF, 1.0),
+        Color::from_rgba(0x99, 0x33, 0x66, 1.0),
+        Color::from_rgba(0xC0, 0xC0, 0xC0, 1.0),
+        Color::from_rgba(0xFF, 0x99, 0xCC, 1.0),
+        Color::from_rgba(0xFF, 0xCC, 0x99, 1.0),
+        Color::from_rgba(0xFF, 0xFF, 0x99, 1.0),
+        Color::from_rgba(0xCC, 0xFF, 0xCC, 1.0),
+        Color::from_rgba(0xCC, 0xFF, 0xFF, 1.0),
+        Color::from_rgba(0x99, 0xCC, 0xFF, 1.0),
+        Color::from_rgba(0xCC, 0x99, 0xFF, 1.0),
+        Color::from_rgba(0x99, 0x99, 0xFF, 1.0),
+        Color::from_rgba(0x99, 0x33, 0x66, 1.0),
+        Color::from_rgba(0xFF, 0xFF, 0xCC, 1.0),
+        Color::from_rgba(0xCC, 0xFF, 0xFF, 1.0),
+        Color::from_rgba(0x66, 0x00, 0x66, 1.0),
+        Color::from_rgba(0xFF, 0x80, 0x80, 1.0),
+        Color::from_rgba(0x00, 0x66, 0xCC, 1.0),
+        Color::from_rgba(0xCC, 0xCC, 0xFF, 1.0),
+        Color::from_rgba(0x00, 0x00, 0x80, 1.0),
+        Color::from_rgba(0xFF, 0x00, 0xFF, 1.0),
+        Color::from_rgba(0xFF, 0xFF, 0x00, 1.0),
+        Color::from_rgba(0x00, 0xFF, 0xFF, 1.0),
+        Color::from_rgba(0x80, 0x00, 0x80, 1.0),
+        Color::from_rgba(0x80, 0x00, 0x00, 1.0),
+        Color::from_rgba(0x00, 0x80, 0x80, 1.0),
+        Color::from_rgba(0x00, 0x00, 0xFF, 1.0),
+    ];
+}
 
 pub trait Algorithm {
     fn name(&self) -> String;
     fn update(&mut self);
-    fn draw(&self, ctx: &mut Context) -> GameResult<()>;
+    fn draw(&self, gfx: &mut Graphics) -> Result<()>;
 }
 
 #[derive(EnumSetType, Debug)]
@@ -98,58 +109,48 @@ impl Direction {
     }
 }
 
-pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]) -> GameResult<MeshBuilder> {
-    let mut builder = MeshBuilder::new();
-    let options = StrokeOptions::default()
-        .with_line_width(LINE_WIDTH)
-        .with_line_cap(LineCap::Round);
-    let line_color = Color::from_rgba_u32(COLORS[0]);
-    for (j, row) in grid.iter().enumerate() {
-        for (i, cell) in row.iter().enumerate() {
-            let x = i as f32;
-            let y = j as f32;
-            //Figure out which lines to draw.
-            if !cell.contains(Direction::North) {
-                builder.polyline(
-                    DrawMode::Stroke(options),
-                    &[
-                        [x * CELL_WIDTH, y * CELL_WIDTH],
-                        [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                    ],
-                    line_color,
-                )?;
-            }
-            if !cell.contains(Direction::East) {
-                builder.polyline(
-                    DrawMode::Stroke(options),
-                    &[
-                        [(x + 1.0) * CELL_WIDTH, y * CELL_WIDTH],
-                        [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                    ],
-                    line_color,
-                )?;
-            }
-            if !cell.contains(Direction::South) {
-                builder.polyline(
-                    DrawMode::Stroke(options),
-                    &[
-                        [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                        [(x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                    ],
-                    line_color,
-                )?;
-            }
-            if !cell.contains(Direction::West) {
-                builder.polyline(
-                    DrawMode::Stroke(options),
-                    &[
-                        [x * CELL_WIDTH, y * CELL_WIDTH],
-                        [x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH],
-                    ],
-                    line_color,
-                )?;
+pub fn draw_board(
+    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]
+) -> Result<Mesh> {
+    let mut vertices= vec![];
+    let mut elements = vec![];
+    //     let mut builder = MeshBuilder::new();
+    //     let options = StrokeOptions::default()
+    //         .with_line_width(LINE_WIDTH)
+    //         .with_line_cap(LineCap::Round);
+        let color = COLORS[0];
+        for (j, row) in grid.iter().enumerate() {
+            for (i, cell) in row.iter().enumerate() {
+                let x = i as f32;
+                let y = j as f32;
+                let ne = Vector::new((x + 1.0) * CELL_WIDTH, y * CELL_WIDTH);
+                let nw = Vector::new(x * CELL_WIDTH, y * CELL_WIDTH);
+                let se = Vector::new((x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH);
+                let sw = Vector::new(x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH);
+                vertices.push(Vertex{pos: ne, uv: None, color});
+                let ne: u32 = vertices.len() as u32 - 1;
+                vertices.push(Vertex{pos: nw, uv: None, color});
+                let nw: u32 = vertices.len() as u32 - 1;
+                vertices.push(Vertex{pos: se, uv: None, color});
+                let se: u32 = vertices.len() as u32 - 1;
+                vertices.push(Vertex{pos: sw, uv: None, color});
+                let sw: u32 = vertices.len() as u32 - 1;
+
+                //Figure out which lines to draw.
+                if !cell.contains(Direction::North) {
+                    elements.push(Element::Line([ne, nw]));
+                }
+                if !cell.contains(Direction::East) {
+                    elements.push(Element::Line([ne, se]));
+                }
+                if !cell.contains(Direction::South) {
+                    elements.push(Element::Line([se, sw]));
+                }
+                if !cell.contains(Direction::West) {
+                    elements.push(Element::Line([nw, sw]));
+                }
+
             }
         }
-    }
-    Ok(builder)
+    Ok(Mesh{vertices, elements, image: None})
 }

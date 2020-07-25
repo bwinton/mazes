@@ -1,15 +1,18 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
-
-use enumset::EnumSet;
-use ggez::graphics::{
-    Color, DrawMode, DrawParam, FillOptions, Rect,
+use crate::util::{
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS,
 };
-use ggez::{graphics, Context, GameResult};
+
 use std::collections::VecDeque;
 
-use rand::rngs::ThreadRng;
-use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng};
+use enumset::EnumSet;
+use quicksilver::{log, Result,
+    geom::{Rectangle, Vector},
+    graphics::Graphics,
+};
+use rand::{thread_rng, Rng,
+    rngs::ThreadRng,
+    seq::SliceRandom,
+};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -68,7 +71,7 @@ impl Algorithm for Exports {
         while !found {
             if self.stack.is_empty() {
                 self.state = State::Done;
-                println!("Done!");
+                log::info!("Done!");
                 return;
             }
 
@@ -106,42 +109,26 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, ctx: &mut Context) -> GameResult<()> {
+    fn draw(&self, gfx: &mut Graphics) -> Result<()> {
         // Draw code here...
-        let mut builder = draw_board(self.grid)?;
+        let elements = draw_board(self.grid)?;
+        gfx.draw_mesh(&elements);
 
-        let curr_color = Color::from_rgba_u32(COLORS[1]);
-        let mut cell_color = Color::from_rgba_u32(COLORS[1]);
+        let curr_color = COLORS[1];
+        let mut cell_color = COLORS[1];
         cell_color.a = 0.5;
         for (i, (x, y, _)) in self.stack.iter().enumerate() {
             if i == 0 {
-                builder.rectangle(
-                    DrawMode::Fill(FillOptions::default()),
-                    Rect::new(
-                        *x as f32 * CELL_WIDTH + LINE_WIDTH,
-                        *y as f32 * CELL_WIDTH + LINE_WIDTH,
-                        CELL_WIDTH - LINE_WIDTH * 2.0,
-                        CELL_WIDTH - LINE_WIDTH * 2.0,
-                    ),
-                    curr_color,
-                );
+                let rect = Rectangle::new(Vector::new(*x as f32 * CELL_WIDTH + LINE_WIDTH, *y as f32 * CELL_WIDTH + LINE_WIDTH),
+                Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0));
+
+                gfx.fill_rect(&rect, curr_color);
             } else {
-                builder.rectangle(
-                    DrawMode::Fill(FillOptions::default()),
-                    Rect::new(
-                        *x as f32 * CELL_WIDTH,
-                        *y as f32 * CELL_WIDTH,
-                        CELL_WIDTH,
-                        CELL_WIDTH,
-                    ),
-                    cell_color,
-                );
+                let rect = Rectangle::new(Vector::new(*x as f32 * CELL_WIDTH, *y as f32 * CELL_WIDTH),
+                 Vector::new(CELL_WIDTH, CELL_WIDTH));
+                gfx.fill_rect(&rect, cell_color);
             }
         }
-        let mesh = builder.build(ctx)?;
-        let dest = DrawParam::default().dest([LINE_WIDTH / 2.0, LINE_WIDTH / 2.0]);
-
-        graphics::draw(ctx, &mesh, dest)?;
 
         Ok(())
     }
