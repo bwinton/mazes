@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="shortcut icon" href="maze.ico" type="image/x-icon">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1" name="viewport" />
+    <script>
+        var Module = {};
+        var __cargo_web = {};
+        Object.defineProperty( Module, 'canvas', {
+            get: function() {
+                if( __cargo_web.canvas ) {
+                    return __cargo_web.canvas;
+                }
+
+                var canvas = document.createElement( 'canvas' );
+                document.querySelector( 'body' ).appendChild( canvas );
+                __cargo_web.canvas = canvas;
+
+                return canvas;
+            }
+        });
+    </script>
+    <style type="text/css">
+        body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body>
+    <p>Tap/Click/Space to pause/unpause. "r" to restart.</p>
+    <script src="mazes.js"></script>
+</body>
+</html>
