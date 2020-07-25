@@ -1,8 +1,8 @@
 mod backtrack;
-mod util;
+mod eller;
+mod kruskal;
 mod parallel;
-// mod eller;
-// mod kruskal;
+mod util;
 
 #[macro_use]
 extern crate enumset;
@@ -37,7 +37,7 @@ use quicksilver::{
     geom::Vector,
     graphics::{Color, Graphics},
     input::Key,
-    log, run, Input, Result, Timer, Settings, Window,
+    log, run, Input, Result, Settings, Timer, Window,
 };
 
 struct MyGame {
@@ -66,11 +66,9 @@ impl MyGame {
             self.algorithm.update();
         }
 
-        if self.draw_timer.exhaust().is_some() {
-            if self.draw(window, gfx).is_err() {
-                // Got an error, let's quit the app, and hope they logged.
-                return true;
-            };
+        if self.draw_timer.exhaust().is_some() && self.draw(window, gfx).is_err() {
+            // Got an error, let's quit the app, and hope they logged.
+            return true;
         }
         false
     }
@@ -107,12 +105,12 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     let algorithm: Box<dyn Algorithm> = match arg.as_str() {
         "backtrack" => Box::new(backtrack::Exports::new()),
         "parallel" => Box::new(parallel::Exports::new()),
-        // "eller" => Box::new(eller::Exports::new()),
-        // "kruskal" => Box::new(kruskal::Exports::new()),
+        "eller" => Box::new(eller::Exports::new()),
+        "kruskal" => Box::new(kruskal::Exports::new()),
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")
-        },
+        }
     };
     log::info!("Algorithm: {:?}", algorithm.name());
     window.set_title(&format!("Some {} mazes…", algorithm.name()));
@@ -121,7 +119,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     game.draw(&window, &mut gfx)?;
 
     'outer: loop {
-        while let Some(_) = input.next_event().await {}
+        while input.next_event().await.is_some() {}
         if game.update(&input, &window, &mut gfx) {
             break 'outer;
         }

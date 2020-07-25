@@ -5,14 +5,12 @@ use crate::util::{
 use std::collections::VecDeque;
 
 use enumset::EnumSet;
-use quicksilver::{log, Result,
+use quicksilver::{
     geom::{Rectangle, Vector},
     graphics::Graphics,
+    log, Result,
 };
-use rand::{thread_rng, Rng,
-    rngs::ThreadRng,
-    seq::SliceRandom,
-};
+use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -119,13 +117,20 @@ impl Algorithm for Exports {
         cell_color.a = 0.5;
         for (i, (x, y, _)) in self.stack.iter().enumerate() {
             if i == 0 {
-                let rect = Rectangle::new(Vector::new(*x as f32 * CELL_WIDTH + LINE_WIDTH, *y as f32 * CELL_WIDTH + LINE_WIDTH),
-                Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0));
+                let rect = Rectangle::new(
+                    Vector::new(
+                        *x as f32 * CELL_WIDTH + LINE_WIDTH,
+                        *y as f32 * CELL_WIDTH + LINE_WIDTH,
+                    ),
+                    Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
+                );
 
                 gfx.fill_rect(&rect, curr_color);
             } else {
-                let rect = Rectangle::new(Vector::new(*x as f32 * CELL_WIDTH, *y as f32 * CELL_WIDTH),
-                 Vector::new(CELL_WIDTH, CELL_WIDTH));
+                let rect = Rectangle::new(
+                    Vector::new(*x as f32 * CELL_WIDTH, *y as f32 * CELL_WIDTH),
+                    Vector::new(CELL_WIDTH, CELL_WIDTH),
+                );
                 gfx.fill_rect(&rect, cell_color);
             }
         }

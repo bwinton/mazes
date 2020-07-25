@@ -1,13 +1,15 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
+use crate::util::{
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS,
+};
+
 use array_init::array_init;
 use enumset::EnumSet;
-use ggez::graphics::{
-    Color, DrawMode, DrawParam, FillOptions, Rect,
+use quicksilver::{
+    geom::{Rectangle, Vector},
+    graphics::Graphics,
+    log, Result,
 };
-use ggez::{graphics, Context, GameResult};
-use rand::rngs::ThreadRng;
-use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -71,7 +73,8 @@ impl Algorithm for Exports {
                     self.grid_sets[self.current_row][self.current_column] = self.empty_sets.pop();
                 }
                 if self.grid_sets[self.current_row][self.current_column + 1] == None {
-                    self.grid_sets[self.current_row][self.current_column + 1] = self.empty_sets.pop();
+                    self.grid_sets[self.current_row][self.current_column + 1] =
+                        self.empty_sets.pop();
                 }
                 if self.rng.gen() || self.current_row == (ROWS - 1.0) as usize {
                     // Merge the cells, if they're in different sets.
@@ -100,6 +103,7 @@ impl Algorithm for Exports {
                     } else {
                         self.current_row += 1;
                         self.state = State::Done;
+                        log::info!("Done!");
                     }
                 }
             }
@@ -149,49 +153,46 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, ctx: &mut Context) -> GameResult<()> {
+    fn draw(&self, gfx: &mut Graphics) -> Result<()> {
         // Draw code here...
-        let mut builder = draw_board(self.grid)?;
+        let elements = draw_board(self.grid)?;
+        gfx.draw_mesh(&elements);
 
         for row in self.current_row..self.current_row + 2 {
             if row < ROWS as usize {
                 for x in 0..COLUMNS as usize {
                     // println!("{:?}.", self.grid[self.current_row][x]);
                     if let Some(i) = self.grid_sets[row][x] {
-                        let mut cell_color = Color::from_rgba_u32(COLORS[i + 1]);
+                        let curr_color = COLORS[i + 1];
+                        let mut cell_color = COLORS[i + 1];
                         cell_color.a = 0.5;
-                        builder.rectangle(
-                            DrawMode::Fill(FillOptions::default()),
-                            Rect::new(
-                                x as f32 * CELL_WIDTH,
-                                row as f32 * CELL_WIDTH,
-                                CELL_WIDTH,
-                                CELL_WIDTH,
-                            ),
-                            cell_color,
+                        let rect = Rectangle::new(
+                            Vector::new(x as f32 * CELL_WIDTH, row as f32 * CELL_WIDTH),
+                            Vector::new(CELL_WIDTH, CELL_WIDTH),
                         );
-                        if row == self.current_row && x == self.current_column && self.state == State::Merging {
-                            cell_color.a = 1.0;
-                            builder.rectangle(
-                                DrawMode::Fill(FillOptions::default()),
-                                Rect::new(
+                        gfx.fill_rect(&rect, cell_color);
+
+                        if row == self.current_row
+                            && x == self.current_column
+                            && self.state == State::Merging
+                        {
+                            let rect = Rectangle::new(
+                                Vector::new(
                                     x as f32 * CELL_WIDTH + LINE_WIDTH,
                                     row as f32 * CELL_WIDTH + LINE_WIDTH,
+                                ),
+                                Vector::new(
                                     CELL_WIDTH - LINE_WIDTH * 2.0,
                                     CELL_WIDTH - LINE_WIDTH * 2.0,
                                 ),
-                                cell_color,
                             );
+                            gfx.fill_rect(&rect, curr_color);
                         }
                     }
                 }
             }
         }
 
-        let mesh = builder.build(ctx)?;
-        let dest = DrawParam::default().dest([LINE_WIDTH / 2.0, LINE_WIDTH / 2.0]);
-
-        graphics::draw(ctx, &mesh, dest)?;
         Ok(())
     }
 }

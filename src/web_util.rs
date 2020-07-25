@@ -1,4 +1,4 @@
-use quicksilver::{Result};
+use quicksilver::Result;
 use stdweb::web::document;
 
 pub fn get_args() -> Result<String> {
@@ -8,7 +8,7 @@ pub fn get_args() -> Result<String> {
             Ok(hash) => {
                 if !hash.is_empty() {
                     rv = hash[1..].to_owned();
-                }        
+                }
             }
             Err(_) => {}
         };

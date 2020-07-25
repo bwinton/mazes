@@ -6,8 +6,8 @@ use enumset::EnumSet;
 // };
 
 use quicksilver::{
-    geom::{Vector},
-    graphics::{Color, Element, Mesh, Graphics, Vertex},
+    geom::Vector,
+    graphics::{Color, Element, Graphics, Mesh, Vertex},
     // Input, Window,
     Result,
     // Settings, run,
@@ -109,48 +109,65 @@ impl Direction {
     }
 }
 
-pub fn draw_board(
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]
-) -> Result<Mesh> {
-    let mut vertices= vec![];
+pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]) -> Result<Mesh> {
+    let mut vertices = vec![];
     let mut elements = vec![];
     //     let mut builder = MeshBuilder::new();
     //     let options = StrokeOptions::default()
     //         .with_line_width(LINE_WIDTH)
     //         .with_line_cap(LineCap::Round);
-        let color = COLORS[0];
-        for (j, row) in grid.iter().enumerate() {
-            for (i, cell) in row.iter().enumerate() {
-                let x = i as f32;
-                let y = j as f32;
-                let ne = Vector::new((x + 1.0) * CELL_WIDTH, y * CELL_WIDTH);
-                let nw = Vector::new(x * CELL_WIDTH, y * CELL_WIDTH);
-                let se = Vector::new((x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH);
-                let sw = Vector::new(x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH);
-                vertices.push(Vertex{pos: ne, uv: None, color});
-                let ne: u32 = vertices.len() as u32 - 1;
-                vertices.push(Vertex{pos: nw, uv: None, color});
-                let nw: u32 = vertices.len() as u32 - 1;
-                vertices.push(Vertex{pos: se, uv: None, color});
-                let se: u32 = vertices.len() as u32 - 1;
-                vertices.push(Vertex{pos: sw, uv: None, color});
-                let sw: u32 = vertices.len() as u32 - 1;
+    let color = COLORS[0];
+    for (j, row) in grid.iter().enumerate() {
+        for (i, cell) in row.iter().enumerate() {
+            let x = i as f32;
+            let y = j as f32;
+            let ne = Vector::new((x + 1.0) * CELL_WIDTH, y * CELL_WIDTH);
+            let nw = Vector::new(x * CELL_WIDTH, y * CELL_WIDTH);
+            let se = Vector::new((x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH);
+            let sw = Vector::new(x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH);
+            vertices.push(Vertex {
+                pos: ne,
+                uv: None,
+                color,
+            });
+            let ne: u32 = vertices.len() as u32 - 1;
+            vertices.push(Vertex {
+                pos: nw,
+                uv: None,
+                color,
+            });
+            let nw: u32 = vertices.len() as u32 - 1;
+            vertices.push(Vertex {
+                pos: se,
+                uv: None,
+                color,
+            });
+            let se: u32 = vertices.len() as u32 - 1;
+            vertices.push(Vertex {
+                pos: sw,
+                uv: None,
+                color,
+            });
+            let sw: u32 = vertices.len() as u32 - 1;
 
-                //Figure out which lines to draw.
-                if !cell.contains(Direction::North) {
-                    elements.push(Element::Line([ne, nw]));
-                }
-                if !cell.contains(Direction::East) {
-                    elements.push(Element::Line([ne, se]));
-                }
-                if !cell.contains(Direction::South) {
-                    elements.push(Element::Line([se, sw]));
-                }
-                if !cell.contains(Direction::West) {
-                    elements.push(Element::Line([nw, sw]));
-                }
-
+            //Figure out which lines to draw.
+            if !cell.contains(Direction::North) {
+                elements.push(Element::Line([ne, nw]));
+            }
+            if !cell.contains(Direction::East) {
+                elements.push(Element::Line([ne, se]));
+            }
+            if !cell.contains(Direction::South) {
+                elements.push(Element::Line([se, sw]));
+            }
+            if !cell.contains(Direction::West) {
+                elements.push(Element::Line([nw, sw]));
             }
         }
-    Ok(Mesh{vertices, elements, image: None})
+    }
+    Ok(Mesh {
+        vertices,
+        elements,
+        image: None,
+    })
 }

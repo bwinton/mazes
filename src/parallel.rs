@@ -1,17 +1,17 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS};
+use crate::util::{
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS,
+};
 
 use std::collections::{HashSet, VecDeque};
 
 use array_init::array_init;
 use enumset::EnumSet;
-use quicksilver::{log, Result,
+use quicksilver::{
     geom::{Rectangle, Vector},
     graphics::Graphics,
+    log, Result,
 };
-    use rand::{thread_rng, Rng,
-    rngs::ThreadRng,
-    seq::SliceRandom,
-};
+use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 const SEEDS: usize = 5;
 
@@ -105,7 +105,9 @@ impl Algorithm for Exports {
                 // println!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
                 if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                     let (new_x, new_y) = (new_x as usize, new_y as usize);
-                    if self.grid[new_y][new_x] == EnumSet::new() && self.grid_seeds[new_y][new_x] == None {
+                    if self.grid[new_y][new_x] == EnumSet::new()
+                        && self.grid_seeds[new_y][new_x] == None
+                    {
                         self.grid_seeds[y][x] = Some(i);
                         self.grid[y][x] |= direction;
                         self.grid_seeds[new_y][new_x] = Some(i);
@@ -143,12 +145,19 @@ impl Algorithm for Exports {
             cell_color.a = 0.5;
             for (i, (x, y, _)) in self.stack[i].iter().enumerate() {
                 if i == 0 {
-                    let rect = Rectangle::new(Vector::new(*x as f32 * CELL_WIDTH + LINE_WIDTH, *y as f32 * CELL_WIDTH + LINE_WIDTH),
-                    Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0));
+                    let rect = Rectangle::new(
+                        Vector::new(
+                            *x as f32 * CELL_WIDTH + LINE_WIDTH,
+                            *y as f32 * CELL_WIDTH + LINE_WIDTH,
+                        ),
+                        Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
+                    );
                     gfx.fill_rect(&rect, curr_color);
                 } else {
-                    let rect = Rectangle::new(Vector::new(*x as f32 * CELL_WIDTH, *y as f32 * CELL_WIDTH),
-                    Vector::new(CELL_WIDTH, CELL_WIDTH));
+                    let rect = Rectangle::new(
+                        Vector::new(*x as f32 * CELL_WIDTH, *y as f32 * CELL_WIDTH),
+                        Vector::new(CELL_WIDTH, CELL_WIDTH),
+                    );
                     gfx.fill_rect(&rect, cell_color);
                 }
             }

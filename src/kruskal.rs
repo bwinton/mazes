@@ -1,8 +1,11 @@
-use crate::util::{draw_board, Algorithm, Direction, COLUMNS, ROWS, LINE_WIDTH};
-use std::collections::HashSet;
+use crate::util::{draw_board, Algorithm, Direction, COLUMNS, LINE_WIDTH, ROWS};
 use enumset::EnumSet;
-use ggez::{graphics, Context, GameResult};
-use ggez::graphics::DrawParam;
+use quicksilver::{
+    geom::{Rectangle, Vector},
+    graphics::Graphics,
+    log, Result,
+};
+use std::collections::HashSet;
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -45,17 +48,14 @@ impl<'a> Algorithm for Exports<'a> {
             State::Done => {}
             State::Running => {
                 self.state = State::Done;
+                log::info!("Done!");
             }
         }
     }
 
-    fn draw(&self, ctx: &mut Context) -> GameResult<()> {
-        let mut builder = draw_board(self.grid)?;
-
-        let mesh = builder.build(ctx)?;
-        let dest = DrawParam::default().dest([LINE_WIDTH / 2.0, LINE_WIDTH / 2.0]);
-
-        graphics::draw(ctx, &mesh, dest)?;
+    fn draw(&self, gfx: &mut Graphics) -> Result<()> {
+        let elements = draw_board(self.grid)?;
+        gfx.draw_mesh(&elements);
 
         Ok(())
     }
