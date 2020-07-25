@@ -1,31 +1,30 @@
 <!doctype html>
 <html><head>
-  <meta charset="utf-8">
-  <title>The Demons of Cyclic Space.</title>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <link rel="shortcut icon" type="image/png" href="maze.png">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1" name="viewport" />
+  <title>Mazes!</title>
   <link type="text/css" rel="stylesheet" href="css/base.css">
+  <script>
+    var Module = {};
+    var __cargo_web = {};
+    Object.defineProperty( Module, 'canvas', {
+        get: function() {
+            if( __cargo_web.canvas ) {
+                return __cargo_web.canvas;
+            }
+
+            var canvas = document.createElement( 'canvas' );
+            document.querySelector( 'body' ).appendChild( canvas );
+            __cargo_web.canvas = canvas;
+
+            return canvas;
+        }
+    });
+  </script>
 </head>
 <body>
-  <canvas id="space" width="300" height="200"></canvas>
-
-  <ul id="mazeList"></ul>
-  <script type="application/javascript" src="js/d3.min.js"></script>
-  <!-- script type="application/javascript" src="js/cyclicDemons.js"></script -->
-  <script type="application/javascript" src="js/mazeutils.js"></script>
-  <script type="application/javascript" src="js/recdesc.js"></script>
-  <script type="application/javascript" src="js/eller.js"></script>
-  <!--
-    kruskal
-    prim
-    recdiv
-    aldous
-    wilson
-    huntandkill
-    growingtree
-    binarytree
-    sidewinder
-  -->
-  <svg id="maze" viewBox="0 0 800 800"></svg>
-
-  <script type="application/javascript" src="js/main.js"></script>
+  <script src="mazes.js"></script>
 </body>
 </html>
