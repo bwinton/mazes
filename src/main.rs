@@ -119,7 +119,7 @@ fn main() {
                 ROWS * CELL_WIDTH + LINE_WIDTH,
             ),
             log_level: log::Level::Info,
-            icon_path: Some("static/maze.png"),
+            // icon_path: Some("static/maze.png"),
             ..Settings::default()
         },
         app,
