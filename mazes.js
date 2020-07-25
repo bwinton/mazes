@@ -38,7 +38,6 @@ if( typeof Rust === "undefined" ) {
 
             return wasm_instance
                 .then( function( wasm_instance ) {
-                    console.log( "Started loading Rust wasm module 'mazes'" );
                     var exports = instance.initialize( wasm_instance );
                     console.log( "Finished loading Rust wasm module 'mazes'" );
                     return exports;
@@ -583,6 +582,12 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__cargo_web_snippet_0cc1118fde7fc91eee2f245758aa97fd63737e57": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).pointerId;})());
             },
+            "__cargo_web_snippet_0d39c013e2144171d64e2fac849140a7e54c939a": function($0, $1) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).location;})());
+            },
+            "__cargo_web_snippet_0d928c9deed59a3ed4f47e354865f7dc3b32ee9c": function($0, $1) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).error})());
+            },
             "__cargo_web_snippet_0dea113a333fb5e5b4a095e126af48297c78582c": function($0) {
                 Module.STDWEB_PRIVATE.from_js($0, (function(){return performance.now();})());
             },
@@ -600,6 +605,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             },
             "__cargo_web_snippet_0ff1ede2041e8f7cf873bf10620bac6eb8675e8e": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).keyCode;})());
+            },
+            "__cargo_web_snippet_10fb0150a5b019b90a877371779cdd0ec6f3ea33": function($0, $1, $2) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);Module.STDWEB_PRIVATE.from_js($0, (function(){try{let array=new Uint8Array(($1));self.crypto.getRandomValues(array);HEAPU8.set(array,($2));return{success:true};}catch(err){return{success:false,error:err};}})());
             },
             "__cargo_web_snippet_114b518968fda2247f8d0d6ad5a226d35aa55986": function($0) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);console.warn(($0));
@@ -624,6 +632,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             },
             "__cargo_web_snippet_2188750eeda3bc7312ed12e3b443a5e12f086cb0": function($0, $1) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);($0).bindVertexArray(($1));
+            },
+            "__cargo_web_snippet_22a7767e09f1cca8e9a9c425b93781008b1ecac3": function($0, $1) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){try{return{value:function(){return($1).hash;}(),success:true};}catch(error){return{error:error,success:false};}})());
             },
             "__cargo_web_snippet_23639371cb88eaf0e4e3ff14ba63d1e5b5cea0b2": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).key;})());
@@ -679,6 +690,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__cargo_web_snippet_36e906cb93b3cdc8fcb9850d6171323d702bb620": function($0, $1, $2, $3) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);$3 = Module.STDWEB_PRIVATE.to_js($3);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).getProgramParameter(($2),($3));})());
             },
+            "__cargo_web_snippet_3709cb4f35051d155438790e2442b511cbe1f8ef": function($0) {
+                var o = Module.STDWEB_PRIVATE.acquire_js_reference( $0 );return (o instanceof Error);
+            },
             "__cargo_web_snippet_37f123361e40b110cef478a4c4ab6d5b8c7e60cf": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).buffer;})());
             },
@@ -721,6 +735,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__cargo_web_snippet_522594a9ab8b9160e7c4bc14704529f31eacd977": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).getTime();})());
             },
+            "__cargo_web_snippet_565d7eb22cf4eeaca6c2215540351851e1420489": function($0, $1) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).success})());
+            },
             "__cargo_web_snippet_5b56fcf310d91b77b8bc26e68790a2a2fe40dbee": function($0, $1, $2, $3, $4) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);$3 = Module.STDWEB_PRIVATE.to_js($3);$4 = Module.STDWEB_PRIVATE.to_js($4);($0).uniform3f(($1),($2),($3),($4));
             },
@@ -753,6 +770,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             },
             "__cargo_web_snippet_6bcfdb0f4808b0b1e8b8b8d2facd39b73ac5018b": function($0) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);console.debug(($0));
+            },
+            "__cargo_web_snippet_6e1114fed8a9083841544437b12ccc90280f32cd": function($0, $1, $2) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);Module.STDWEB_PRIVATE.from_js($0, (function(){try{let bytes=require("crypto").randomBytes(($1));HEAPU8.set(new Uint8Array(bytes),($2));return{success:true};}catch(err){return{success:false,error:err};}})());
             },
             "__cargo_web_snippet_6f40eea589df25151032f882dd63be9d49c014a4": function($0, $1) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);($0).deleteBuffer(($1));
@@ -811,6 +831,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__cargo_web_snippet_8956c802ab8a6863a8347558d363df26d3d2b9ab": function($0, $1) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);($0).useProgram(($1));
             },
+            "__cargo_web_snippet_897ff2d0160606ea98961935acb125d1ddbf4688": function($0) {
+                var r = Module.STDWEB_PRIVATE.acquire_js_reference( $0 );return (r instanceof DOMException) && (r.name === "SecurityError");
+            },
             "__cargo_web_snippet_8ad5e488b61134cc6d61a42368f5146234bb0e68": function($0, $1, $2) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);($0).attachShader(($1),($2));
             },
@@ -868,6 +891,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             "__cargo_web_snippet_a412ded2b3170a87ab30052923fd00e6b95423b3": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).requestFullscreen();})());
             },
+            "__cargo_web_snippet_a43580d4464d7fa740f085251cce2bf50ef2e3db": function($0) {
+                Module.STDWEB_PRIVATE.from_js($0, (function(){try{if(typeof self==="object"&&typeof self.crypto==="object"&&typeof self.crypto.getRandomValues==="function"){return{success:true,ty:1};}if(typeof require("crypto").randomBytes==="function"){return{success:true,ty:2};}return{success:false,error:new Error("not supported")};}catch(err){return{success:false,error:err};}})());
+            },
             "__cargo_web_snippet_a62d434b4a4cbb7c530dbc00d5b6885d38f4d4e8": function($0, $1, $2, $3) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);$1 = Module.STDWEB_PRIVATE.to_js($1);$2 = Module.STDWEB_PRIVATE.to_js($2);$3 = Module.STDWEB_PRIVATE.to_js($3);($0).uniformMatrix2fv(($1),($2),($3));
             },
@@ -885,6 +911,9 @@ Module.STDWEB_PRIVATE.acquire_tmp = function( dummy ) {
             },
             "__cargo_web_snippet_aefaa9d37f5ee323edcd23f2b91f3aecdac17e52": function($0) {
                 $0 = Module.STDWEB_PRIVATE.to_js($0);($0).focus();
+            },
+            "__cargo_web_snippet_af48d409a7bc53bdf52746d5cd246d8e41014718": function($0, $1) {
+                $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).ty})());
             },
             "__cargo_web_snippet_b06dde4acf09433b5190a4b001259fe5d4abcbc2": function($0, $1) {
                 $1 = Module.STDWEB_PRIVATE.to_js($1);Module.STDWEB_PRIVATE.from_js($0, (function(){return($1).success;})());
