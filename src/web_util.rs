@@ -4,10 +4,10 @@ use stdweb::web::document;
 pub fn get_args() -> Result<String> {
     let mut rv = "backtrack".to_owned();
     if let Some(location) = document().location() {
-        match location.hash() {
-            Ok(hash) => {
-                if !hash.is_empty() {
-                    rv = hash[1..].to_owned();
+        match location.search() {
+            Ok(search) => {
+                if !search.is_empty() {
+                    rv = search[1..].to_owned();
                 }
             }
             Err(_) => {}
