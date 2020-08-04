@@ -17,6 +17,7 @@ pub const LINE_WIDTH: f32 = 4.0;
 pub const CELL_WIDTH: f32 = 20.0;
 pub const COLUMNS: f32 = 40.0;
 pub const ROWS: f32 = 30.0;
+pub const OFFSET: f32 = 2.0;
 
 lazy_static! {
     pub static ref COLORS: [Color; 61] = [
@@ -122,10 +123,13 @@ pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize])
         for (i, cell) in row.iter().enumerate() {
             let x = i as f32;
             let y = j as f32;
-            let ne = Vector::new((x + 1.0) * CELL_WIDTH, y * CELL_WIDTH);
-            let nw = Vector::new(x * CELL_WIDTH, y * CELL_WIDTH);
-            let se = Vector::new((x + 1.0) * CELL_WIDTH, (y + 1.0) * CELL_WIDTH);
-            let sw = Vector::new(x * CELL_WIDTH, (y + 1.0) * CELL_WIDTH);
+            let ne = Vector::new((x + 1.0) * CELL_WIDTH + OFFSET, y * CELL_WIDTH + OFFSET);
+            let nw = Vector::new(x * CELL_WIDTH + OFFSET, y * CELL_WIDTH + OFFSET);
+            let se = Vector::new(
+                (x + 1.0) * CELL_WIDTH + OFFSET,
+                (y + 1.0) * CELL_WIDTH + OFFSET,
+            );
+            let sw = Vector::new(x * CELL_WIDTH + OFFSET, (y + 1.0) * CELL_WIDTH + OFFSET);
             vertices.push(Vertex {
                 pos: ne,
                 uv: None,

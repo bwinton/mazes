@@ -1,5 +1,5 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS,
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 
 use std::collections::VecDeque;
@@ -128,8 +128,8 @@ impl Algorithm for Exports {
             if i == 0 {
                 let rect = Rectangle::new(
                     Vector::new(
-                        *x as f32 * CELL_WIDTH + LINE_WIDTH,
-                        *y as f32 * CELL_WIDTH + LINE_WIDTH,
+                        *x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                        *y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
                     ),
                     Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
                 );
@@ -137,7 +137,10 @@ impl Algorithm for Exports {
                 gfx.fill_rect(&rect, curr_color);
             } else {
                 let rect = Rectangle::new(
-                    Vector::new(*x as f32 * CELL_WIDTH, *y as f32 * CELL_WIDTH),
+                    Vector::new(
+                        *x as f32 * CELL_WIDTH + OFFSET,
+                        *y as f32 * CELL_WIDTH + OFFSET,
+                    ),
                     Vector::new(CELL_WIDTH, CELL_WIDTH),
                 );
                 gfx.fill_rect(&rect, cell_color);

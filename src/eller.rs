@@ -1,5 +1,5 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, ROWS,
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 
 use array_init::array_init;
@@ -180,7 +180,10 @@ impl Algorithm for Exports {
                         let mut cell_color = COLORS[i + 1];
                         cell_color.a = 0.5;
                         let rect = Rectangle::new(
-                            Vector::new(x as f32 * CELL_WIDTH, row as f32 * CELL_WIDTH),
+                            Vector::new(
+                                x as f32 * CELL_WIDTH + OFFSET,
+                                row as f32 * CELL_WIDTH + OFFSET,
+                            ),
                             Vector::new(CELL_WIDTH, CELL_WIDTH),
                         );
                         gfx.fill_rect(&rect, cell_color);
@@ -191,8 +194,8 @@ impl Algorithm for Exports {
                         {
                             let rect = Rectangle::new(
                                 Vector::new(
-                                    x as f32 * CELL_WIDTH + LINE_WIDTH,
-                                    row as f32 * CELL_WIDTH + LINE_WIDTH,
+                                    x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                                    row as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
                                 ),
                                 Vector::new(
                                     CELL_WIDTH - LINE_WIDTH * 2.0,

@@ -1,4 +1,4 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, ROWS};
+use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
@@ -176,7 +176,10 @@ impl Algorithm for Exports {
                         let mut color = COLORS[index % COLORS.len()];
                         color.a = 0.5;
                         let rect = Rectangle::new(
-                            Vector::new(x as f32 * CELL_WIDTH, y as f32 * CELL_WIDTH),
+                            Vector::new(
+                                x as f32 * CELL_WIDTH + OFFSET,
+                                y as f32 * CELL_WIDTH + OFFSET,
+                            ),
                             Vector::new(CELL_WIDTH, CELL_WIDTH),
                         );
                         gfx.fill_rect(&rect, color);
