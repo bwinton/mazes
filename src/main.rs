@@ -2,6 +2,7 @@ mod backtrack;
 mod eller;
 mod kruskal;
 mod parallel;
+mod prim;
 mod util;
 
 #[macro_use]
@@ -133,6 +134,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "parallel" => Box::new(parallel::Exports::new()),
         "eller" => Box::new(eller::Exports::new()),
         "kruskal" => Box::new(kruskal::Exports::new()),
+        "prim" => Box::new(prim::Exports::new()),
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")
