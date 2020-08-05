@@ -1,7 +1,7 @@
 use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
 use enumset::EnumSet;
 use quicksilver::{
-    // geom::{Rectangle, Vector},
+    geom::{Rectangle, Vector},
     graphics::Graphics,
     log, Result,
 };
@@ -34,9 +34,9 @@ impl Exports {
             grid[0][x].remove(Direction::North);
             grid[ROWS as usize - 1][x].remove(Direction::South);
         }
-        for y in 0..ROWS as usize {
-            grid[y][0].remove(Direction::West);
-            grid[y][COLUMNS as usize - 1].remove(Direction::East);
+        for row in grid.iter_mut() {
+            row[0].remove(Direction::West);
+            row[COLUMNS as usize - 1].remove(Direction::East);
         }
         let rng = thread_rng();
         let stack = vec![];
@@ -60,12 +60,10 @@ impl Exports {
             Orientation::HORIZONTAL
         } else if height < width {
             Orientation::VERTICAL
+        } else if self.rng.gen() {
+            Orientation::HORIZONTAL
         } else {
-            if self.rng.gen() {
-                Orientation::HORIZONTAL
-            } else {
-                Orientation::VERTICAL
-            }
+            Orientation::VERTICAL
         }
     }
 }
@@ -90,74 +88,84 @@ impl Algorithm for Exports {
             _ => {}
         }
 
-        let mut found = false;
-
-        while !found {
-            if self.stack.is_empty() {
-                self.state = State::Done;
-                log::info!("Done!");
-                return;
-            }
-
-            let (x, y, width, height) = self.stack.pop().unwrap();
-            let orientation = self.choose_orientation(width, height);
-            log::info!("Cutting ({},{})x({},{}) in {:?}", x, y, width, height, orientation);
-
-            match orientation {
-                Orientation::HORIZONTAL => {
-                    // log::info!("GenRange 1 {}-{}", y, y + height);
-                    let wall_y = self.rng.gen_range(y, y + height - 1);
-                    // log::info!("GenRange 2 {}-{}", x, x + width);
-                    let passage_x = self.rng.gen_range(x, x + width);
-                    log::info!("  H-At ({},{})", wall_y, passage_x);
-                    for i in x..x+width {
-                        self.grid[wall_y][i].remove(Direction::South);
-                    }
-                    self.grid[wall_y][passage_x].insert(Direction::South);
-
-                    let new_height = wall_y - y + 1;
-                    if width >= 2 && new_height >= 2 {
-                        log::info!("  1 - Adding {},{}x{},{}", x, y, width, new_height);
-                        self.stack.push((x, y, width, new_height));
-                    }
-
-                    let new_height = height - new_height;
-                    if width >= 2 && new_height >= 2 {
-                        log::info!("  2 - Adding {},{}x{},{}", x, wall_y + 1, width, new_height);
-                        self.stack.push((x, wall_y + 1, width, new_height));
-                    }
-                }
-                Orientation::VERTICAL => {
-                    // log::info!("GenRange 3 {}-{}", x, x + width);
-                    let wall_x = self.rng.gen_range(x, x + width - 1);
-                    // log::info!("GenRange 4 {}-{}", y, y + height);
-                    let passage_y = self.rng.gen_range(y, y + height);
-                    log::info!("  V-At ({},{})", wall_x, passage_y);
-                    for j in y..y+height {
-                        self.grid[j][wall_x].remove(Direction::East);
-                    }
-                    self.grid[passage_y][wall_x].insert(Direction::East);
-
-                    let new_width  = wall_x - x + 1;
-                    if new_width >= 2 && height >= 2 {
-                        log::info!("  3 - Adding {},{}x{},{}", x, y, new_width, height);
-                        self.stack.push((x, y, new_width, height));
-                    }
-
-                    let new_width = width - new_width;
-                    if new_width >= 2 && height >= 2 {
-                        log::info!("  4 - Adding {},{}x{},{}", wall_x + 1, y, new_width, height);
-                        self.stack.push((wall_x + 1, y, new_width, height));
-                    }
-                },
-            }
-            found = true;
+        if self.stack.is_empty() {
+            self.state = State::Done;
+            log::info!("Done!");
+            return;
         }
+
+        let (x, y, width, height) = self.stack.pop().unwrap();
+        let orientation = self.choose_orientation(width, height);
+
+        match orientation {
+            Orientation::HORIZONTAL => {
+                // log::info!("GenRange 1 {}-{}", y, y + height);
+                let wall_y = self.rng.gen_range(y, y + height - 1);
+                // log::info!("GenRange 2 {}-{}", x, x + width);
+                let passage_x = self.rng.gen_range(x, x + width);
+                for i in x..x + width {
+                    self.grid[wall_y][i].remove(Direction::South);
+                }
+                self.grid[wall_y][passage_x].insert(Direction::South);
+
+                let new_height = wall_y - y + 1;
+                if width >= 2 && new_height >= 2 {
+                    self.stack.push((x, y, width, new_height));
+                }
+
+                let new_height = height - new_height;
+                if width >= 2 && new_height >= 2 {
+                    self.stack.push((x, wall_y + 1, width, new_height));
+                }
+            }
+            Orientation::VERTICAL => {
+                // log::info!("GenRange 3 {}-{}", x, x + width);
+                let wall_x = self.rng.gen_range(x, x + width - 1);
+                // log::info!("GenRange 4 {}-{}", y, y + height);
+                let passage_y = self.rng.gen_range(y, y + height);
+                for row in self.grid.iter_mut().skip(y).take(height) {
+                    row[wall_x].remove(Direction::East);
+                }
+                self.grid[passage_y][wall_x].insert(Direction::East);
+
+                let new_width = wall_x - x + 1;
+                if new_width >= 2 && height >= 2 {
+                    self.stack.push((x, y, new_width, height));
+                }
+
+                let new_width = width - new_width;
+                if new_width >= 2 && height >= 2 {
+                    self.stack.push((wall_x + 1, y, new_width, height));
+                }
+            }
+        }
+        self.stack.sort_by(|a, b| {
+            let a_size = a.2 * a.3;
+            let b_size = b.2 * b.3;
+            b_size.partial_cmp(&a_size).unwrap()
+        });
     }
 
     fn draw(&self, gfx: &mut Graphics) -> Result<()> {
         let elements = draw_board(self.grid)?;
         gfx.draw_mesh(&elements);
+
+        if self.state == State::Running {
+            for (i, (x, y, width, height)) in self.stack.iter().enumerate() {
+                let mut cell_color = COLORS[i];
+                if i != self.stack.len() - 1 {
+                    cell_color.a = 0.3;
+                }
+                let rect = Rectangle::new(
+                    Vector::new(
+                        *x as f32 * CELL_WIDTH + OFFSET,
+                        *y as f32 * CELL_WIDTH + OFFSET,
+                    ),
+                    Vector::new(*width as f32 * CELL_WIDTH, *height as f32 * CELL_WIDTH),
+                );
+                gfx.fill_rect(&rect, cell_color);
+            }
+        }
 
         Ok(())
     }
