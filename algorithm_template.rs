@@ -63,6 +63,7 @@ impl Algorithm for Exports {
             if true {
                 self.state = State::Done;
                 log::info!("Done!");
+                return;
             }
 
             found = true;
