@@ -1,3 +1,4 @@
+mod aldous_broder;
 mod backtrack;
 mod eller;
 mod kruskal;
@@ -137,6 +138,8 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "kruskal" => Box::new(kruskal::Exports::new()),
         "prim" => Box::new(prim::Exports::new()),
         "recdiv" => Box::new(recdiv::Exports::new()),
+        // Blobby?!?
+        "aldousbroder" => Box::new(aldous_broder::Exports::new()),
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")
