@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
 
+
         {
             "type": "lldb",
             "request": "launch",
@@ -20,7 +21,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-a", "recdiv"],
+            "args": ["-a", "blobby"],
             "cwd": "${workspaceFolder}"
         },
         {

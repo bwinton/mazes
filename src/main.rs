@@ -1,16 +1,20 @@
 mod aldous_broder;
 mod backtrack;
+mod blobby;
 mod eller;
 mod kruskal;
 mod parallel;
 mod prim;
 mod recdiv;
 mod util;
+mod wilson;
 
 #[macro_use]
 extern crate enumset;
 #[macro_use]
 extern crate lazy_static;
+
+extern crate itertools;
 
 #[cfg(cargo_web)]
 mod web_util;
@@ -138,8 +142,9 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "kruskal" => Box::new(kruskal::Exports::new()),
         "prim" => Box::new(prim::Exports::new()),
         "recdiv" => Box::new(recdiv::Exports::new()),
-        // Blobby?!?
+        "blobby" => Box::new(blobby::Exports::new()),
         "aldousbroder" => Box::new(aldous_broder::Exports::new()),
+        "wilson" => Box::new(wilson::Exports::new()),
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")

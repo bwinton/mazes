@@ -16,7 +16,7 @@ pub fn get_args() -> Result<String> {
                     "kruskal",
                     "prim",
                     "recdiv",
-                    // "blobby",
+                    "blobby",
                     "aldousbroder",
                     "wilson",
                     // "houston",
