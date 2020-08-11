@@ -18,6 +18,7 @@ pub fn get_args() -> Result<String> {
                     "recdiv",
                     "blobby",
                     "aldousbroder",
+                    "fastaldousbroder",
                     "wilson",
                     // "houston",
                     "huntandkill",

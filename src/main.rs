@@ -1,5 +1,4 @@
 mod aldous_broder;
-mod backtrack;
 mod blobby;
 mod eller;
 mod kruskal;
@@ -136,14 +135,15 @@ fn main() {
 async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
     let arg = get_args()?;
     let algorithm: Box<dyn Algorithm> = match arg.as_str() {
-        "backtrack" => Box::new(backtrack::Exports::new()),
-        "parallel" => Box::new(parallel::Exports::new()),
+        "backtrack" => Box::new(parallel::Exports::new(1)),
+        "parallel" => Box::new(parallel::Exports::new(6)),
         "eller" => Box::new(eller::Exports::new()),
         "kruskal" => Box::new(kruskal::Exports::new()),
         "prim" => Box::new(prim::Exports::new()),
         "recdiv" => Box::new(recdiv::Exports::new()),
         "blobby" => Box::new(blobby::Exports::new()),
-        "aldousbroder" => Box::new(aldous_broder::Exports::new()),
+        "aldousbroder" => Box::new(aldous_broder::Exports::new(false)),
+        "fastaldousbroder" => Box::new(aldous_broder::Exports::new(true)),
         "wilson" => Box::new(wilson::Exports::new()),
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);

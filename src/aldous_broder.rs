@@ -22,16 +22,18 @@ pub struct Exports {
     prev: (usize, usize),
     remaining: usize,
     rng: ThreadRng,
+    speedup: bool,
     state: State,
 }
 
 impl Exports {
-    pub fn new() -> Self {
+    pub fn new(variant: bool) -> Self {
         let curr = (0, 0);
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let prev = (0, 0);
         let remaining = 0;
         let rng = thread_rng();
+        let speedup = variant;
         let state = State::Setup;
         Self {
             curr,
@@ -39,6 +41,7 @@ impl Exports {
             prev,
             remaining,
             rng,
+            speedup,
             state,
         }
     }
@@ -48,16 +51,21 @@ impl Exports {
         self.prev = other.prev;
         self.remaining = other.remaining;
         self.rng = other.rng;
+        self.speedup = other.speedup;
         self.state = other.state;
     }
 }
 
 impl Algorithm for Exports {
     fn name(&self) -> String {
-        String::from("Aldous-Broder")
+        if self.speedup {
+            String::from("Faster Aldous-Broderish")
+        } else {
+            String::from("Aldous-Broder")
+        }
     }
     fn re_init(&mut self) {
-        self.from(Exports::new());
+        self.from(Exports::new(self.speedup));
     }
     fn update(&mut self) {
         match self.state {
@@ -96,12 +104,13 @@ impl Algorithm for Exports {
                     Direction::South => (x as i32, y as i32 + 1),
                     Direction::West => (x as i32 - 1, y as i32),
                 };
-                if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 &&
-                // This isn't officially part of Aldous-Broder, but preventing the random walk
-                // from going back and forth a bunch seems to speed up the run by about 3x
-                // (from 30 minutes to 10 minutes)…
-                (new_x as usize, new_y as usize) != self.prev
-                {
+                if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
+                    // This isn't officially part of Aldous-Broder, but preventing the random walk
+                    // from going back and forth a bunch seems to speed up the run by about 3x
+                    // (from 30 minutes to 10 minutes)…
+                    if self.speedup && (new_x as usize, new_y as usize) == self.prev {
+                        continue;
+                    }
                     let (new_x, new_y) = (new_x as usize, new_y as usize);
                     if self.grid[new_y][new_x] == EnumSet::new() {
                         self.grid[y][x] |= direction;

@@ -247,13 +247,13 @@ impl Algorithm for Exports {
                 self.grid[new_y][new_x].0.insert(direction.opposite());
 
                 // log::info!("Carving {:?} out of {:?}", (x,y,direction), walls);
-                if first_size <= 2 || second_size <= 2 {
+                if first_size <= 3 || second_size <= 3 {
                     // Set too-small blobs as finished.
                     for (y, row) in board.iter().enumerate() {
                         for (x, cell) in row.iter().enumerate() {
                             match cell {
-                                Blob::First if first_size <= 2 => self.grid[y][x].1 = true,
-                                Blob::Second if second_size <= 2 => self.grid[y][x].1 = true,
+                                Blob::First if first_size <= 3 => self.grid[y][x].1 = true,
+                                Blob::Second if second_size <= 3 => self.grid[y][x].1 = true,
                                 _ => {}
                             };
                         }
@@ -261,7 +261,7 @@ impl Algorithm for Exports {
                 }
 
                 // If either of the blobs are big enough, add them to the stack.
-                if first_size > 2 {
+                if first_size > 3 {
                     let mut new_board = board;
                     for (y, row) in board.iter().enumerate() {
                         for (x, cell) in row.iter().enumerate() {
@@ -273,7 +273,7 @@ impl Algorithm for Exports {
                     }
                     self.stack.push(new_board);
                 }
-                if second_size > 2 {
+                if second_size > 3 {
                     let mut new_board = board;
                     for (y, row) in board.iter().enumerate() {
                         for (x, cell) in row.iter().enumerate() {

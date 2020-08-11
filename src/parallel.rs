@@ -13,7 +13,7 @@ use quicksilver::{
 };
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
-const SEEDS: usize = 5;
+const MAX_SEEDS: usize = 6;
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -25,25 +25,30 @@ pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     rng: ThreadRng,
-    stack: [VecDeque<(usize, usize, EnumSet<Direction>)>; SEEDS],
-    sets: [HashSet<usize>; SEEDS],
+    seeds: usize,
+    sets: [HashSet<usize>; MAX_SEEDS],
+    stack: [VecDeque<(usize, usize, EnumSet<Direction>)>; MAX_SEEDS],
     state: State,
 }
 
 impl Exports {
-    pub fn new() -> Self {
+    pub fn new(seeds: usize) -> Self {
+        if seeds < 1 || seeds > MAX_SEEDS {
+            panic!("Seeds {} must be between {} and {}", seeds, 1, MAX_SEEDS);
+        }
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
         let rng = thread_rng();
-        let stack = array_init(|_| VecDeque::new());
         let sets = array_init(|_| HashSet::new());
+        let stack = array_init(|_| VecDeque::new());
         let state = State::Setup;
         Self {
             grid,
             grid_seeds,
             rng,
-            stack,
+            seeds,
             sets,
+            stack,
             state,
         }
     }
@@ -59,16 +64,20 @@ impl Exports {
 
 impl Algorithm for Exports {
     fn name(&self) -> String {
-        String::from("Parallel Backtrack")
+        if self.seeds == 1 {
+            String::from("Backtrack")
+        } else {
+            String::from("Parallel Backtrack")
+        }
     }
     fn re_init(&mut self) {
-        self.from(Exports::new());
+        self.from(Exports::new(self.seeds));
     }
     fn update(&mut self) {
         // println!("Updating {}", self.name());
         match self.state {
             State::Setup => {
-                for (i, stack) in self.stack.iter_mut().enumerate() {
+                for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
                     let x = self.rng.gen_range(0, COLUMNS as usize);
                     let y = self.rng.gen_range(0, ROWS as usize);
                     stack.push_front((x, y, EnumSet::all()));
@@ -86,7 +95,7 @@ impl Algorithm for Exports {
 
         let mut done = true;
 
-        'outer: for (i, stack) in self.stack.iter_mut().enumerate() {
+        'outer: for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
             let mut found = false;
             // let (first_x, first_y, _) = self.stack.front().unwrap().clone();
 
@@ -149,7 +158,7 @@ impl Algorithm for Exports {
         let elements = draw_board(self.grid)?;
         gfx.draw_mesh(&elements);
 
-        for i in 0..SEEDS {
+        for i in 0..self.seeds {
             let curr_color = COLORS[i + 1];
             let mut cell_color = COLORS[i + 1];
             cell_color.a = 0.5;
