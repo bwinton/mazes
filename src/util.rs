@@ -19,6 +19,13 @@ pub const COLUMNS: f32 = 40.0;
 pub const ROWS: f32 = 30.0;
 pub const OFFSET: f32 = 2.0;
 
+pub const EMPTY_COLOR: Color = Color {
+    r: 0.0,
+    g: 0.0,
+    b: 0.0,
+    a: 0.2,
+};
+
 lazy_static! {
     pub static ref COLORS: [Color; 61] = [
         Color::from_rgba(0xB2, 0x18, 0x2B, 1.0),
@@ -114,10 +121,6 @@ impl Direction {
 pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]) -> Result<Mesh> {
     let mut vertices = vec![];
     let mut elements = vec![];
-    //     let mut builder = MeshBuilder::new();
-    //     let options = StrokeOptions::default()
-    //         .with_line_width(LINE_WIDTH)
-    //         .with_line_cap(LineCap::Round);
     let color = COLORS[0];
     for (j, row) in grid.iter().enumerate() {
         for (i, cell) in row.iter().enumerate() {

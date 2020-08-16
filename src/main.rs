@@ -144,7 +144,8 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "blobby" => Box::new(blobby::Exports::new()),
         "aldousbroder" => Box::new(aldous_broder::Exports::new(false)),
         "fastaldousbroder" => Box::new(aldous_broder::Exports::new(true)),
-        "wilson" => Box::new(wilson::Exports::new()),
+        "wilson" => Box::new(wilson::Exports::new(false)),
+        "slowwilson" => Box::new(wilson::Exports::new(true)),
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")

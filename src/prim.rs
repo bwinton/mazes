@@ -1,10 +1,11 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, EMPTY_COLOR, LINE_WIDTH, OFFSET,
+    ROWS,
 };
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
-    graphics::{Color, Graphics},
+    graphics::Graphics,
     log, Result,
 };
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
@@ -131,7 +132,6 @@ impl Algorithm for Exports {
         gfx.draw_mesh(&elements);
 
         if self.state == State::Running {
-            let empty_color = Color::from_rgba(0x00, 0x00, 0x00, 0.2);
             let curr_color = COLORS[1];
             let mut cell_color = COLORS[1];
             cell_color.a = 0.5;
@@ -146,7 +146,7 @@ impl Algorithm for Exports {
                             ),
                             Vector::new(CELL_WIDTH, CELL_WIDTH),
                         );
-                        gfx.fill_rect(&rect, empty_color);
+                        gfx.fill_rect(&rect, EMPTY_COLOR);
                     };
                 }
             }

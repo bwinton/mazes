@@ -1,8 +1,10 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
+use crate::util::{
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, EMPTY_COLOR, OFFSET, ROWS,
+};
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
-    graphics::{Color, Graphics},
+    graphics::Graphics,
     log, Result,
 };
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
@@ -32,7 +34,8 @@ pub enum Expanding {
 }
 
 pub struct Exports {
-    grid: [[(EnumSet<Direction>, bool); COLUMNS as usize]; ROWS as usize],
+    finished: [[bool; COLUMNS as usize]; ROWS as usize],
+    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     rng: ThreadRng,
     stack: Vec<[[Blob; COLUMNS as usize]; ROWS as usize]>,
     state: State,
@@ -40,19 +43,22 @@ pub struct Exports {
 
 impl Exports {
     pub fn new() -> Self {
-        let mut grid = [[(EnumSet::all(), false); COLUMNS as usize]; ROWS as usize];
+        let mut grid = [[EnumSet::all(); COLUMNS as usize]; ROWS as usize];
         for x in 0..COLUMNS as usize {
-            grid[0][x].0.remove(Direction::North);
-            grid[ROWS as usize - 1][x].0.remove(Direction::South);
+            grid[0][x].remove(Direction::North);
+            grid[ROWS as usize - 1][x].remove(Direction::South);
         }
         for row in grid.iter_mut() {
-            row[0].0.remove(Direction::West);
-            row[COLUMNS as usize - 1].0.remove(Direction::East);
+            row[0].remove(Direction::West);
+            row[COLUMNS as usize - 1].remove(Direction::East);
         }
+        let finished = [[false; COLUMNS as usize]; ROWS as usize];
+
         let rng = thread_rng();
         let stack = vec![];
         let state = State::Setup;
         Self {
+            finished,
             grid,
             rng,
             stack,
@@ -223,8 +229,8 @@ impl Algorithm for Exports {
                                     (Blob::First, Blob::Second) | (Blob::Second, Blob::First) => {
                                         // Draw a wall!
                                         walls.push((x, y, direction));
-                                        self.grid[y][x].0.remove(direction);
-                                        self.grid[new_y][new_x].0.remove(direction.opposite());
+                                        self.grid[y][x].remove(direction);
+                                        self.grid[new_y][new_x].remove(direction.opposite());
                                     }
                                     _ => {
                                         continue;
@@ -243,8 +249,8 @@ impl Algorithm for Exports {
                     Direction::South => (x, y + 1),
                     Direction::West => (x - 1, y),
                 };
-                self.grid[y][x].0.insert(direction);
-                self.grid[new_y][new_x].0.insert(direction.opposite());
+                self.grid[y][x].insert(direction);
+                self.grid[new_y][new_x].insert(direction.opposite());
 
                 // log::info!("Carving {:?} out of {:?}", (x,y,direction), walls);
                 if first_size <= 3 || second_size <= 3 {
@@ -252,8 +258,8 @@ impl Algorithm for Exports {
                     for (y, row) in board.iter().enumerate() {
                         for (x, cell) in row.iter().enumerate() {
                             match cell {
-                                Blob::First if first_size <= 3 => self.grid[y][x].1 = true,
-                                Blob::Second if second_size <= 3 => self.grid[y][x].1 = true,
+                                Blob::First if first_size <= 3 => self.finished[y][x] = true,
+                                Blob::Second if second_size <= 3 => self.finished[y][x] = true,
                                 _ => {}
                             };
                         }
@@ -287,7 +293,12 @@ impl Algorithm for Exports {
                 }
                 self.state = State::Choosing;
             }
-            _ => {}
+            _ => {
+                panic!(
+                    "Should be unable to hit state {:?} in this match!",
+                    self.state
+                );
+            }
         }
 
         self.stack.sort_by(|a, b| {
@@ -308,14 +319,7 @@ impl Algorithm for Exports {
     }
 
     fn draw(&self, gfx: &mut Graphics) -> Result<()> {
-        let mut grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize] =
-            [[EnumSet::all(); COLUMNS as usize]; ROWS as usize];
-        for (y, row) in self.grid.iter().enumerate() {
-            for (x, cell) in row.iter().enumerate() {
-                grid[y][x] = cell.0;
-            }
-        }
-        let elements = draw_board(grid)?;
+        let elements = draw_board(self.grid)?;
         gfx.draw_mesh(&elements);
 
         // if self.state != State::Done {
@@ -325,12 +329,11 @@ impl Algorithm for Exports {
         first_color.a = 0.3;
         let mut second_color = COLORS[3];
         second_color.a = 0.3;
-        let outside_color = Color::from_rgba(0x00, 0x00, 0x00, 0.2);
 
         if let Some(board) = self.stack.last() {
             for (y, row) in board.iter().enumerate() {
                 for (x, cell) in row.iter().enumerate() {
-                    if !self.grid[y][x].1 {
+                    if !self.finished[y][x] {
                         let rect = Rectangle::new(
                             Vector::new(
                                 x as f32 * CELL_WIDTH + OFFSET,
@@ -342,7 +345,7 @@ impl Algorithm for Exports {
                             Blob::None => none_color,
                             Blob::First => first_color,
                             Blob::Second => second_color,
-                            Blob::Outside => outside_color,
+                            Blob::Outside => EMPTY_COLOR,
                         };
                         gfx.fill_rect(&rect, color);
                     }
