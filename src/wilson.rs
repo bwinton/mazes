@@ -249,7 +249,10 @@ impl Algorithm for Exports {
         let mut start_color = COLORS[1];
         start_color.a = 0.3;
         let arrow_color = COLORS[1];
-        let curr_color = COLORS[2];
+        let curr_color = COLORS[3];
+        let mut empty_color = COLORS[2];
+        empty_color.a = 0.3;
+
 
         if let Some((x, y)) = self.current {
             let rect = Rectangle::new(
@@ -275,18 +278,29 @@ impl Algorithm for Exports {
 
         for x in 0..COLUMNS as usize {
             for y in 0..ROWS as usize {
-                if self.processing[y][x] != Cell::In && Some((x, y)) != self.start {
-                    let rect = Rectangle::new(
-                        Vector::new(
-                            x as f32 * CELL_WIDTH + OFFSET,
-                            y as f32 * CELL_WIDTH + OFFSET,
-                        ),
-                        Vector::new(CELL_WIDTH, CELL_WIDTH),
-                    );
-                    gfx.fill_rect(&rect, EMPTY_COLOR);
-                };
-                if let Cell::Direction(direction) = self.processing[y][x] {
-                    self.draw_arrow(x as f32, y as f32, direction, arrow_color, gfx);
+                match self.processing[y][x] {
+                    Cell::Out => {
+                        let rect = Rectangle::new(
+                            Vector::new(
+                                x as f32 * CELL_WIDTH + OFFSET,
+                                y as f32 * CELL_WIDTH + OFFSET,
+                            ),
+                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        );
+                        gfx.fill_rect(&rect, empty_color);
+                    },
+                    Cell::Direction(direction) => {
+                        let rect = Rectangle::new(
+                            Vector::new(
+                                x as f32 * CELL_WIDTH + OFFSET,
+                                y as f32 * CELL_WIDTH + OFFSET,
+                            ),
+                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        );
+                        gfx.fill_rect(&rect, start_color);
+                        self.draw_arrow(x as f32, y as f32, direction, arrow_color, gfx);
+                    },
+                    _ => {},
                 }
             }
         }
