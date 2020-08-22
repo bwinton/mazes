@@ -2,6 +2,7 @@ mod aldous_broder;
 mod blobby;
 mod eller;
 mod houston;
+mod huntandkill;
 mod kruskal;
 mod parallel;
 mod prim;
@@ -148,6 +149,8 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "wilson" => Box::new(wilson::Exports::new(false)),
         "slowwilson" => Box::new(wilson::Exports::new(true)),
         "houston" => Box::new(houston::Exports::new()),
+        "huntandkill" => Box::new(huntandkill::Exports::new()),
+
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")

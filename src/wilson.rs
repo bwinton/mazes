@@ -1,5 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
+    ROWS,
 };
 use enumset::EnumSet;
 use quicksilver::{
@@ -71,9 +72,9 @@ impl Exports {
         self.state = State::Finding;
         self.remaining = (ROWS * COLUMNS) as usize;
         self.grid = incoming;
-        for x in 0..COLUMNS as usize {
-            for y in 0..ROWS as usize {
-                if incoming[y][x] == EnumSet::new() {
+        for (y, row) in incoming.iter().enumerate() {
+            for (x, &cell) in row.iter().enumerate() {
+                if cell == EnumSet::new() {
                     self.processing[y][x] = Cell::Out;
                 } else {
                     self.processing[y][x] = Cell::In;
@@ -270,8 +271,6 @@ impl Algorithm for Exports {
         start_color.a = 0.5;
         let arrow_color = COLORS[1];
         let curr_color = COLORS[1];
-        let mut empty_color = COLORS[2];
-        empty_color.a = 0.5;
 
         if let Some((x, y)) = self.current {
             let rect = Rectangle::new(
@@ -312,7 +311,7 @@ impl Algorithm for Exports {
                             ),
                             Vector::new(CELL_WIDTH, CELL_WIDTH),
                         );
-                        gfx.fill_rect(&rect, empty_color);
+                        gfx.fill_rect(&rect, FIELD_COLOR);
                     }
                     Cell::Direction(direction) => {
                         let rect = Rectangle::new(

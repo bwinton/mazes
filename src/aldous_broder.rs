@@ -1,5 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
+    ROWS,
 };
 use enumset::EnumSet;
 use quicksilver::{
@@ -138,8 +139,6 @@ impl Algorithm for Exports {
 
         if self.state == State::Running {
             let curr_color = COLORS[1];
-            let mut cell_color = COLORS[2];
-            cell_color.a = 0.5;
             for x in 0..COLUMNS as usize {
                 for y in 0..ROWS as usize {
                     if self.grid[y][x] == EnumSet::new() {
@@ -150,7 +149,7 @@ impl Algorithm for Exports {
                             ),
                             Vector::new(CELL_WIDTH, CELL_WIDTH),
                         );
-                        gfx.fill_rect(&rect, cell_color);
+                        gfx.fill_rect(&rect, FIELD_COLOR);
                     }
                 }
             }

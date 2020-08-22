@@ -26,6 +26,13 @@ pub const EMPTY_COLOR: Color = Color {
     a: 0.2,
 };
 
+pub const FIELD_COLOR: Color = Color {
+    r: 0x4D as f32 / 255.0,
+    g: 0xAF as f32 / 255.0,
+    b: 0x4A as f32 / 255.0,
+    a: 0.5,
+};
+
 lazy_static! {
     pub static ref COLORS: [Color; 61] = [
         Color::from_rgba(0xB2, 0x18, 0x2B, 1.0),
