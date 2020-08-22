@@ -1,5 +1,5 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, EMPTY_COLOR, LINE_WIDTH, OFFSET,
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET,
     ROWS,
 };
 use enumset::EnumSet;
