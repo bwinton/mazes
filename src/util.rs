@@ -162,13 +162,13 @@ pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize])
             if !cell.contains(Direction::North) {
                 elements.push(Element::Line([ne, nw]));
             }
-            if !cell.contains(Direction::East) && (x,y) != (COLUMNS - 1.0, ROWS - 1.0) {
+            if !cell.contains(Direction::East) && (x, y) != (COLUMNS - 1.0, ROWS - 1.0) {
                 elements.push(Element::Line([ne, se]));
             }
             if !cell.contains(Direction::South) {
                 elements.push(Element::Line([se, sw]));
             }
-            if !cell.contains(Direction::West) && (x,y) != (0.0,0.0) {
+            if !cell.contains(Direction::West) && (x, y) != (0.0, 0.0) {
                 elements.push(Element::Line([nw, sw]));
             }
         }

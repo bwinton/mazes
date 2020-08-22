@@ -45,6 +45,12 @@ impl Exports {
             state,
         }
     }
+    pub fn filled(&self) -> f32 {
+        1.0 - ((self.remaining as f32) / (COLUMNS * ROWS))
+    }
+    pub fn get_grid(&self) -> [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize] {
+        self.grid
+    }
     fn from(&mut self, other: Self) {
         self.curr = other.curr;
         self.grid = other.grid;

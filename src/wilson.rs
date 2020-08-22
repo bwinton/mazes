@@ -1,6 +1,5 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET,
-    ROWS,
+    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use quicksilver::{
@@ -60,6 +59,27 @@ impl Exports {
             slowdown,
             start,
             state,
+        }
+    }
+    pub fn is_done(&self) -> bool {
+        self.state == State::Done
+    }
+    pub fn init_from_grid(
+        &mut self,
+        incoming: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    ) {
+        self.state = State::Finding;
+        self.remaining = (ROWS * COLUMNS) as usize;
+        self.grid = incoming;
+        for x in 0..COLUMNS as usize {
+            for y in 0..ROWS as usize {
+                if incoming[y][x] == EnumSet::new() {
+                    self.processing[y][x] = Cell::Out;
+                } else {
+                    self.processing[y][x] = Cell::In;
+                    self.remaining -= 1;
+                }
+            }
         }
     }
     fn from(&mut self, other: Self) {
@@ -157,7 +177,7 @@ impl Algorithm for Exports {
                             }
                         }
                     }
-                    self.start = potentials.choose(&mut self.rng).map(|x| x.clone());
+                    self.start = potentials.choose(&mut self.rng).copied();
                     if self.start.is_none() {
                         panic!("Couldn't find a random element, but we think we need one!");
                     }
@@ -247,12 +267,11 @@ impl Algorithm for Exports {
         gfx.draw_mesh(&elements);
 
         let mut start_color = COLORS[1];
-        start_color.a = 0.3;
+        start_color.a = 0.5;
         let arrow_color = COLORS[1];
-        let curr_color = COLORS[3];
+        let curr_color = COLORS[1];
         let mut empty_color = COLORS[2];
-        empty_color.a = 0.3;
-
+        empty_color.a = 0.5;
 
         if let Some((x, y)) = self.current {
             let rect = Rectangle::new(
@@ -278,8 +297,14 @@ impl Algorithm for Exports {
 
         for x in 0..COLUMNS as usize {
             for y in 0..ROWS as usize {
+                if Some((x, y)) == self.current {
+                    continue;
+                }
                 match self.processing[y][x] {
                     Cell::Out => {
+                        if Some((x, y)) == self.start {
+                            continue;
+                        }
                         let rect = Rectangle::new(
                             Vector::new(
                                 x as f32 * CELL_WIDTH + OFFSET,
@@ -288,7 +313,7 @@ impl Algorithm for Exports {
                             Vector::new(CELL_WIDTH, CELL_WIDTH),
                         );
                         gfx.fill_rect(&rect, empty_color);
-                    },
+                    }
                     Cell::Direction(direction) => {
                         let rect = Rectangle::new(
                             Vector::new(
@@ -299,8 +324,8 @@ impl Algorithm for Exports {
                         );
                         gfx.fill_rect(&rect, start_color);
                         self.draw_arrow(x as f32, y as f32, direction, arrow_color, gfx);
-                    },
-                    _ => {},
+                    }
+                    _ => {}
                 }
             }
         }

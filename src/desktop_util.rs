@@ -21,7 +21,7 @@ pub fn get_args() -> Result<String> {
                     "fastaldousbroder",
                     "wilson",
                     "slowwilson",
-                    // "houston",
+                    "houston",
                     "huntandkill",
                     // "tree",
                     "growingbintree",
