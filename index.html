@@ -41,11 +41,17 @@
         <a href="?prim">Prim</a> /
         <a href="?recdiv">Recursive Division</a> /
         <a href="?blobby">Blobby Recursive Subdivision</a> /
-        <a href="?aldousbroder">Aldous-Broder</a> (<a href="?fastaldousbroder">faster tweak</a>) /
-        <a href="?wilson">Wilson</a> (<a href="?slowwilson">slower tweak</a>) /
+        <a href="?aldousbroder">Aldous-Broder</a> (<input type="checkbox" id="aldousbroder" checked><label for="aldousbroder">faster tweak</label>) /
+        <a href="?wilson">Wilson</a> (<input type="checkbox" id="wilson"><label for="wilson">slower tweak</label>) /
         <a href="?houston">Houston</a> /
-        <a href="?huntandkill">Hunt and Kill</a>
+        <a href="?huntandkill">Hunt and Kill</a><br>
+        <a href="?growingtree">Growing Tree</a>
+        <select id="growingtree">
+            <option value="newest">newest (Recursive Backtracker)</option>
+            <option value="middle" selected>middle</option>
+            <option value="oldest">oldest</option>
+            <option value="random">random (Prim's)</option>
+        </select>
     </p>
 </body>
-
 </html>
