@@ -1,19 +1,14 @@
 use quicksilver::Result;
+// use quicksilver::log;
 use crate::stdweb::unstable::TryInto;
 use crate::util::Args;
-use std::io::{Error, ErrorKind};
-use stdweb::web::{
-    document,
-    INonElementParentNode,
-    IParentNode,
-    html_element::OptionElement
-};
+use stdweb::web::{document, html_element::OptionElement, IParentNode};
 
 pub struct Web {}
 
 impl Web {
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 
@@ -33,7 +28,7 @@ impl Args for Web {
         Ok(algorithm)
     }
 
-    fn get_variant(&self) -> Result<String> {
+    fn get_variant(&self) -> String {
         let mut algorithm = "backtrack".to_owned();
         if let Some(location) = document().location() {
             match location.search() {
@@ -63,12 +58,15 @@ impl Args for Web {
                 }
             }
             "growingtree" => {
-                let element = document().query_selector("#growingtree :checked").unwrap().unwrap();
-                let element: OptionElement = element.try_into().map_err(|e| Error::new(ErrorKind::Interrupted, e))?;
+                let element = document()
+                    .query_selector("#growingtree :checked")
+                    .unwrap()
+                    .unwrap();
+                let element: OptionElement = element.try_into().unwrap();
                 element.value()
-            },
-            _ => {"unused".to_owned()}
+            }
+            _ => "unused".to_owned(),
         };
-        Ok(variant)
+        variant
     }
 }

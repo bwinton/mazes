@@ -101,7 +101,7 @@ lazy_static! {
 
 pub trait Args {
     fn get_args(&self) -> Result<String>;
-    fn get_variant(&self) -> Result<String>;
+    fn get_variant(&self) -> String;
 }
 
 pub trait Algorithm {
@@ -109,6 +109,7 @@ pub trait Algorithm {
     fn re_init(&mut self, variant: String);
     fn update(&mut self);
     fn draw(&self, gfx: &mut Graphics) -> Result<()>;
+    fn get_variant(&self) -> String;
 }
 
 #[derive(EnumSetType, Debug)]

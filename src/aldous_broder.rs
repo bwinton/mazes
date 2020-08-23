@@ -74,6 +74,13 @@ impl Algorithm for Exports {
     fn re_init(&mut self, variant: String) {
         self.from(Exports::new(variant == "fast"));
     }
+    fn get_variant(&self) -> String {
+        if self.speedup {
+            "fast".to_owned()
+        } else {
+            "slow".to_owned()
+        }
+    }
     fn update(&mut self) {
         match self.state {
             State::Setup => {

@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 array-init = "0.1.1"
-enumset = "1.0.0"
+enumset = "1.0.1"
 # ggez = "0.5.1"
 itertools = "0.9.0"
 thiserror = "1.0.20"

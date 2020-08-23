@@ -37,7 +37,7 @@ use desktop_util::Desktop as RealArgs;
 #[cfg(cargo_web)]
 use web_util::Web as RealArgs;
 
-use crate::util::{Args, Algorithm, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
+use crate::util::{Algorithm, Args, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
 
 use quicksilver::{
     geom::Vector,
@@ -74,15 +74,11 @@ impl MyGame {
         match event {
             Event::KeyboardInput(key_event) => {
                 // R was pressed, so restart.
+
                 if key_event.key() == Key::R && key_event.is_down() {
                     self.paused = false;
-                    if let Ok(variant) = self.args.get_variant() {
-                        log::info!("Refreshing with {}", variant);
-                        self.algorithm.re_init(variant);
-                    } else {
-                        log::info!("Failed to refresh!");
-                        false;
-                    }
+                    log::info!("Refreshing with {}", self.args.get_variant());
+                    self.algorithm.re_init(self.args.get_variant());
                 }
                 // Space was pressed, so pause.
                 if key_event.key() == Key::Space && key_event.is_down() {
@@ -143,18 +139,17 @@ fn main() {
 async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
     let args = RealArgs::new();
     let arg = args.get_args()?;
-    let variant = args.get_variant()?;
-    log::info!("input: {:?}", (&arg, &variant));
+    let variant = args.get_variant();
     let algorithm: Box<dyn Algorithm> = match arg.as_str() {
         "backtrack" => Box::new(parallel::Exports::new(1)),
-        "parallel" => Box::new(parallel::Exports::new(6)),
+        "parallel" => Box::new(parallel::Exports::new(variant.parse().unwrap())),
         "eller" => Box::new(eller::Exports::new()),
         "kruskal" => Box::new(kruskal::Exports::new()),
         "prim" => Box::new(prim::Exports::new()),
         "recdiv" => Box::new(recdiv::Exports::new()),
         "blobby" => Box::new(blobby::Exports::new()),
         "aldousbroder" => Box::new(aldous_broder::Exports::new(variant == "fast")),
-        "wilson" => Box::new(wilson::Exports::new(variant=="slow")),
+        "wilson" => Box::new(wilson::Exports::new(variant == "slow")),
         "houston" => Box::new(houston::Exports::new()),
         "huntandkill" => Box::new(huntandkill::Exports::new()),
         "growingtree" => Box::new(growingtree::Exports::new(variant)),
@@ -175,6 +170,12 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
             if game.handle_event(&input, e) {
                 break 'outer;
             }
+        }
+        let variant = game.args.get_variant();
+        if variant != game.algorithm.get_variant() {
+            log::info!("Refreshing with {}", game.args.get_variant());
+            game.algorithm.re_init(variant);
+            window.set_title(&format!("Some {} mazes…", game.algorithm.name()));
         }
         if game.update(&window, &mut gfx) {
             break 'outer;

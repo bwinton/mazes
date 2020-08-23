@@ -86,9 +86,11 @@ impl Exports {
     fn from(&mut self, other: Self) {
         self.current = other.current;
         self.grid = other.grid;
+        self.previous = other.previous;
         self.processing = other.processing;
         self.remaining = other.remaining;
         self.rng = other.rng;
+        self.slowdown = other.slowdown;
         self.start = other.start;
         self.state = other.state;
     }
@@ -139,7 +141,26 @@ impl Algorithm for Exports {
         }
     }
     fn re_init(&mut self, variant: String) {
+        log::info!(
+            "REiniting from {}/{} with {}",
+            self.slowdown,
+            self.get_variant(),
+            variant
+        );
         self.from(Exports::new(variant == "slow"));
+        log::info!("  to {}/{}", self.slowdown, self.get_variant());
+    }
+    fn get_variant(&self) -> String {
+        // log::info!("slow? {} => {}", self.slowdown, if self.slowdown {
+        //     "slow".to_owned()
+        // } else {
+        //     "fast".to_owned()
+        // });
+        if self.slowdown {
+            "slow".to_owned()
+        } else {
+            "fast".to_owned()
+        }
     }
     fn update(&mut self) {
         match self.state {

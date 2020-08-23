@@ -73,6 +73,9 @@ impl Algorithm for Exports {
     fn re_init(&mut self, variant: String) {
         self.from(Exports::new(variant.parse().unwrap()));
     }
+    fn get_variant(&self) -> String {
+        self.seeds.to_string()
+    }
     fn update(&mut self) {
         // println!("Updating {}", self.name());
         match self.state {

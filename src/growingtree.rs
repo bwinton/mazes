@@ -1,11 +1,7 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
+use crate::util::{draw_board, Algorithm, Direction, COLUMNS, ROWS};
 use enumset::EnumSet;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::Graphics,
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng};
+use quicksilver::{graphics::Graphics, log, Result};
+use rand::{rngs::ThreadRng, thread_rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -48,6 +44,9 @@ impl Algorithm for Exports {
     }
     fn re_init(&mut self, variant: String) {
         self.from(Exports::new(variant));
+    }
+    fn get_variant(&self) -> String {
+        self.variant.clone()
     }
     fn update(&mut self) {
         match self.state {
