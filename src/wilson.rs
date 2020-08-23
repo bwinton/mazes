@@ -138,8 +138,8 @@ impl Algorithm for Exports {
             String::from("Wilson")
         }
     }
-    fn re_init(&mut self) {
-        self.from(Exports::new(self.slowdown));
+    fn re_init(&mut self, variant: String) {
+        self.from(Exports::new(variant == "slow"));
     }
     fn update(&mut self) {
         match self.state {

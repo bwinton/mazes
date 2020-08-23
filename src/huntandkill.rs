@@ -58,7 +58,7 @@ impl Algorithm for Exports {
     fn name(&self) -> String {
         String::from("Hunt and Kill")
     }
-    fn re_init(&mut self) {
+    fn re_init(&mut self, _variant: String) {
         self.from(Exports::new());
     }
     fn update(&mut self) {

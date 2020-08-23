@@ -99,9 +99,14 @@ lazy_static! {
     ];
 }
 
+pub trait Args {
+    fn get_args(&self) -> Result<String>;
+    fn get_variant(&self) -> Result<String>;
+}
+
 pub trait Algorithm {
     fn name(&self) -> String;
-    fn re_init(&mut self);
+    fn re_init(&mut self, variant: String);
     fn update(&mut self);
     fn draw(&self, gfx: &mut Graphics) -> Result<()>;
 }

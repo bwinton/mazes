@@ -1,6 +1,7 @@
 mod aldous_broder;
 mod blobby;
 mod eller;
+mod growingtree;
 mod houston;
 mod huntandkill;
 mod kruskal;
@@ -31,15 +32,12 @@ extern crate clap;
 extern crate stdweb;
 
 #[cfg(not(cargo_web))]
-use desktop_util::get_args;
+use desktop_util::Desktop as RealArgs;
 
 #[cfg(cargo_web)]
-use web_util::get_args;
+use web_util::Web as RealArgs;
 
-use crate::util::{Algorithm, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
-
-// use std::thread::sleep;
-// use std::time::Duration;
+use crate::util::{Args, Algorithm, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
 
 use quicksilver::{
     geom::Vector,
@@ -51,16 +49,18 @@ use quicksilver::{
 struct MyGame {
     // Your state here...
     algorithm: Box<dyn Algorithm>,
+    args: RealArgs,
     update_timer: Timer,
     draw_timer: Timer,
     paused: bool,
 }
 
 impl MyGame {
-    pub fn new(algorithm: Box<dyn Algorithm>) -> MyGame {
+    pub fn new(algorithm: Box<dyn Algorithm>, args: RealArgs) -> MyGame {
         // Load/create resources such as images here.
         MyGame {
             algorithm,
+            args,
             update_timer: Timer::time_per_second(20.0),
             draw_timer: Timer::time_per_second(60.0),
             paused: false,
@@ -76,7 +76,13 @@ impl MyGame {
                 // R was pressed, so restart.
                 if key_event.key() == Key::R && key_event.is_down() {
                     self.paused = false;
-                    self.algorithm.re_init();
+                    if let Ok(variant) = self.args.get_variant() {
+                        log::info!("Refreshing with {}", variant);
+                        self.algorithm.re_init(variant);
+                    } else {
+                        log::info!("Failed to refresh!");
+                        false;
+                    }
                 }
                 // Space was pressed, so pause.
                 if key_event.key() == Key::Space && key_event.is_down() {
@@ -135,7 +141,10 @@ fn main() {
 }
 
 async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
-    let arg = get_args()?;
+    let args = RealArgs::new();
+    let arg = args.get_args()?;
+    let variant = args.get_variant()?;
+    log::info!("input: {:?}", (&arg, &variant));
     let algorithm: Box<dyn Algorithm> = match arg.as_str() {
         "backtrack" => Box::new(parallel::Exports::new(1)),
         "parallel" => Box::new(parallel::Exports::new(6)),
@@ -144,12 +153,11 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "prim" => Box::new(prim::Exports::new()),
         "recdiv" => Box::new(recdiv::Exports::new()),
         "blobby" => Box::new(blobby::Exports::new()),
-        "aldousbroder" => Box::new(aldous_broder::Exports::new(false)),
-        "fastaldousbroder" => Box::new(aldous_broder::Exports::new(true)),
-        "wilson" => Box::new(wilson::Exports::new(false)),
-        "slowwilson" => Box::new(wilson::Exports::new(true)),
+        "aldousbroder" => Box::new(aldous_broder::Exports::new(variant == "fast")),
+        "wilson" => Box::new(wilson::Exports::new(variant=="slow")),
         "houston" => Box::new(houston::Exports::new()),
         "huntandkill" => Box::new(huntandkill::Exports::new()),
+        "growingtree" => Box::new(growingtree::Exports::new(variant)),
 
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
@@ -159,7 +167,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     log::info!("Algorithm: {:?}", algorithm.name());
     window.set_title(&format!("Some {} mazes…", algorithm.name()));
 
-    let mut game = MyGame::new(algorithm);
+    let mut game = MyGame::new(algorithm, args);
     game.draw(&window, &mut gfx)?;
 
     'outer: loop {

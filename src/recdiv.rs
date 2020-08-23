@@ -72,7 +72,7 @@ impl Algorithm for Exports {
     fn name(&self) -> String {
         String::from("Recursive Division")
     }
-    fn re_init(&mut self) {
+    fn re_init(&mut self, _variant: String) {
         self.from(Exports::new());
     }
     fn update(&mut self) {

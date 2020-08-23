@@ -1,17 +1,74 @@
 use quicksilver::Result;
-use stdweb::web::document;
+use crate::stdweb::unstable::TryInto;
+use crate::util::Args;
+use std::io::{Error, ErrorKind};
+use stdweb::web::{
+    document,
+    INonElementParentNode,
+    IParentNode,
+    html_element::OptionElement
+};
 
-pub fn get_args() -> Result<String> {
-    let mut rv = "backtrack".to_owned();
-    if let Some(location) = document().location() {
-        match location.search() {
-            Ok(search) => {
-                if !search.is_empty() {
-                    rv = search[1..].to_owned();
+pub struct Web {}
+
+impl Web {
+    pub fn new() -> Self {
+        Self{}
+    }
+}
+
+impl Args for Web {
+    fn get_args(&self) -> Result<String> {
+        let mut algorithm = "backtrack".to_owned();
+        if let Some(location) = document().location() {
+            match location.search() {
+                Ok(search) => {
+                    if !search.is_empty() {
+                        algorithm = search[1..].to_owned();
+                    }
+                }
+                Err(_) => {}
+            };
+        };
+        Ok(algorithm)
+    }
+
+    fn get_variant(&self) -> Result<String> {
+        let mut algorithm = "backtrack".to_owned();
+        if let Some(location) = document().location() {
+            match location.search() {
+                Ok(search) => {
+                    if !search.is_empty() {
+                        algorithm = search[1..].to_owned();
+                    }
+                }
+                Err(_) => {}
+            };
+        };
+        let variant = match algorithm.as_str() {
+            "aldousbroder" => {
+                let element = document().query_selector("#aldousbroder:checked").unwrap();
+                if element.is_some() {
+                    "fast".to_owned()
+                } else {
+                    "slow".to_owned()
                 }
             }
-            Err(_) => {}
+            "wilson" => {
+                let element = document().query_selector("#wilson:checked").unwrap();
+                if element.is_some() {
+                    "slow".to_owned()
+                } else {
+                    "fast".to_owned()
+                }
+            }
+            "growingtree" => {
+                let element = document().query_selector("#growingtree :checked").unwrap().unwrap();
+                let element: OptionElement = element.try_into().map_err(|e| Error::new(ErrorKind::Interrupted, e))?;
+                element.value()
+            },
+            _ => {"unused".to_owned()}
         };
+        Ok(variant)
     }
-    Ok(rv)
 }

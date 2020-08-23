@@ -70,8 +70,8 @@ impl Algorithm for Exports {
             String::from("Parallel Backtrack")
         }
     }
-    fn re_init(&mut self) {
-        self.from(Exports::new(self.seeds));
+    fn re_init(&mut self, variant: String) {
+        self.from(Exports::new(variant.parse().unwrap()));
     }
     fn update(&mut self) {
         // println!("Updating {}", self.name());
