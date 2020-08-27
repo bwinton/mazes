@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Wilson",
+            "name": "Debug Growing Tree",
             "cargo": {
                 "args": [
                     "build",
@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-a", "wilson"],
+            "args": ["-a", "growingtree", "middle"],
             "cwd": "${workspaceFolder}"
         },
         {
