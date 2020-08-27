@@ -57,6 +57,7 @@ impl Exports {
         self.grid_seeds = other.grid_seeds;
         self.rng = other.rng;
         self.stack = other.stack;
+        self.seeds = other.seeds;
         self.sets = other.sets;
         self.state = other.state;
     }

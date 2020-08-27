@@ -14,7 +14,7 @@ impl Web {
 
 impl Args for Web {
     fn get_args(&self) -> Result<String> {
-        let mut algorithm = "backtrack".to_owned();
+        let mut algorithm = "parallel".to_owned();
         if let Some(location) = document().location() {
             match location.search() {
                 Ok(search) => {
@@ -29,7 +29,7 @@ impl Args for Web {
     }
 
     fn get_variant(&self) -> String {
-        let mut algorithm = "backtrack".to_owned();
+        let mut algorithm = "parallel".to_owned();
         if let Some(location) = document().location() {
             match location.search() {
                 Ok(search) => {
@@ -41,6 +41,14 @@ impl Args for Web {
             };
         };
         let variant = match algorithm.as_str() {
+            "parallel" => {
+                let element = document()
+                    .query_selector("#parallel :checked")
+                    .unwrap()
+                    .unwrap();
+                let element: OptionElement = element.try_into().unwrap();
+                element.value()
+            }
             "aldousbroder" => {
                 let element = document().query_selector("#aldousbroder:checked").unwrap();
                 if element.is_some() {

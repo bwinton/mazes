@@ -17,7 +17,6 @@ impl Desktop {
                     .long_about("Specify an algorithm to run.")
                     .takes_value(true)
                     .possible_values(&[
-                        "backtrack",
                         "parallel",
                         "eller",
                         "kruskal",
@@ -35,9 +34,10 @@ impl Desktop {
                         "bintree",
                         "sidewinder",
                     ])
-                    .default_value("backtrack"),
+                    .default_value("parallel"),
             )
             .arg(Arg::with_name("variant").default_value_ifs(&[
+                ("algorithm", Some("parallel"), "6"),
                 ("algorithm", Some("aldousbroder"), "slow"),
                 ("algorithm", Some("wilson"), "fast"),
                 ("algorithm", Some("growingtree"), "middle"),

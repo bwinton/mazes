@@ -140,9 +140,9 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     let args = RealArgs::new();
     let arg = args.get_args()?;
     let variant = args.get_variant();
+    let message = format!("Expected an integer number of seeds. Got {}!", variant);
     let algorithm: Box<dyn Algorithm> = match arg.as_str() {
-        "backtrack" => Box::new(parallel::Exports::new(1)),
-        "parallel" => Box::new(parallel::Exports::new(variant.parse().unwrap())),
+        "parallel" => Box::new(parallel::Exports::new(variant.parse().expect(&message))),
         "eller" => Box::new(eller::Exports::new()),
         "kruskal" => Box::new(kruskal::Exports::new()),
         "prim" => Box::new(prim::Exports::new()),
@@ -173,7 +173,11 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         }
         let variant = game.args.get_variant();
         if variant != game.algorithm.get_variant() {
-            log::info!("Refreshing with {}", game.args.get_variant());
+            log::info!(
+                "Refreshing {:?} with {:?}",
+                game.algorithm.get_variant(),
+                variant
+            );
             game.algorithm.re_init(variant);
             window.set_title(&format!("Some {} mazes…", game.algorithm.name()));
         }

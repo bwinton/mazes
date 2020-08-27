@@ -34,8 +34,14 @@
     <p>Tap/Click/Space to pause/unpause. "r" or reload the page to restart.</p>
     <script src="mazes.js"></script>
     <p>
-        <a href="?backtrack">Backtrack</a> /
-        <a href="?parallel">Parallel</a> /
+        <a href="?parallel">Parallel Backtrack</a> <select id="parallel">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6" selected>6</option>
+        </select> <label for="parallel">seeds</label> /
         <a href="?eller">Eller</a> /
         <a href="?kruskal">Kruskal</a> /
         <a href="?prim">Prim</a> /
