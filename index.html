@@ -52,12 +52,19 @@
         <a href="?houston">Houston</a> /
         <a href="?huntandkill">Hunt and Kill</a> /
         <a href="?growingtree">Growing Tree</a>
-        <select id="growingtree">
+        (<select id="growingtree">
             <option value="newest">newest (Recursive Backtracker)</option>
             <option value="middle" selected>middle</option>
             <option value="oldest">oldest</option>
             <option value="random">random (Prim's)</option>
-        </select>
+        </select>) /
+        <a href="?bintree">Binary Tree</a> (<input type="checkbox" id="bintree-random" checked><label for="bintree-random">random order</label>
+        bias: <select id="bintree-bias">
+            <option value="NorthEast" selected>North East</option>
+            <option value="SouthEast">South East</option>
+            <option value="SouthWest">South West</option>
+            <option value="NorthWest">North West</option>
+        </select>)
     </p>
 </body>
 </html>
