@@ -45,6 +45,9 @@ impl Algorithm for Exports {
     fn re_init(&mut self, _variant: String) {
         self.from(Exports::new());
     }
+    fn get_variant(&self) -> String {
+        "unused".to_owned()
+    }
     fn update(&mut self) {
         match self.state {
             State::Setup => {

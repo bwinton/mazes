@@ -73,6 +73,22 @@ impl Args for Web {
                 let element: OptionElement = element.try_into().unwrap();
                 element.value()
             }
+            "bintree" => {
+                let element = document()
+                    .query_selector("#bintree-random:checked")
+                    .unwrap();
+                let random = if element.is_some() {
+                    "random"
+                } else {
+                    "ordered"
+                };
+                let element = document()
+                    .query_selector("#bintree-bias :checked")
+                    .unwrap()
+                    .unwrap();
+                let element: OptionElement = element.try_into().unwrap();
+                format!("{}:{}", random, &element.value()).to_owned()
+            }
             _ => "unused".to_owned(),
         };
         variant

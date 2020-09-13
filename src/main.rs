@@ -1,4 +1,5 @@
 mod aldous_broder;
+mod binarytree;
 mod blobby;
 mod eller;
 mod growingtree;
@@ -16,6 +17,7 @@ extern crate enumset;
 #[macro_use]
 extern crate lazy_static;
 
+extern crate derive_more;
 extern crate itertools;
 
 #[cfg(cargo_web)]
@@ -153,13 +155,18 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "houston" => Box::new(houston::Exports::new()),
         "huntandkill" => Box::new(huntandkill::Exports::new()),
         "growingtree" => Box::new(growingtree::Exports::new(variant)),
+        "bintree" => Box::new(binarytree::Exports::new(variant)),
 
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")
         }
     };
-    log::info!("Algorithm: {:?}", algorithm.name());
+    log::info!(
+        "Algorithm: {:?}, {:?}",
+        algorithm.name(),
+        algorithm.get_variant()
+    );
     window.set_title(&format!("Some {} mazes…", algorithm.name()));
 
     let mut game = MyGame::new(algorithm, args);

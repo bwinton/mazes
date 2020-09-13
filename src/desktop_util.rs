@@ -41,12 +41,28 @@ impl Desktop {
                 ("algorithm", Some("aldousbroder"), "slow"),
                 ("algorithm", Some("wilson"), "fast"),
                 ("algorithm", Some("growingtree"), "middle"),
+                ("algorithm", Some("bintree"), "random:NorthWest"),
                 ("algorithm", None, "unused"),
             ]))
             .get_matches();
         log::info!("DT matches {:?}", matches);
         let args = matches.value_of("algorithm").unwrap().to_owned();
-        let variant = matches.value_of("variant").unwrap().to_owned();
+        let variant = match args.as_str() {
+            "bintree" => {
+                let mut args = matches.value_of("variant").unwrap().splitn(2, ':');
+                let random = args.next().unwrap_or("random");
+                let random = if random.is_empty() || random == "random" {
+                    "random"
+                } else {
+                    "ordered"
+                };
+                let bias = args.next().unwrap_or("NorthWest");
+                let bias = if bias.is_empty() { "NorthWest" } else { bias };
+
+                format!("{}:{}", random, bias).to_owned()
+            }
+            _ => matches.value_of("variant").unwrap().to_owned(),
+        };
         Self { args, variant }
     }
 }
