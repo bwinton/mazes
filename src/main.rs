@@ -157,7 +157,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "huntandkill" => Box::new(huntandkill::Exports::new()),
         "growingtree" => Box::new(growingtree::Exports::new(variant)),
         "bintree" => Box::new(binarytree::Exports::new(variant)),
-        "sidewinder" => Box::new(sidewinder::Exports::new()),
+        "sidewinder" => Box::new(sidewinder::Exports::new(variant == "hard")),
 
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);

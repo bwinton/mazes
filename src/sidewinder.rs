@@ -21,21 +21,25 @@ enum State {
 pub struct Exports {
     curr: (usize, usize),
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    harder: bool,
     rng: ThreadRng,
     run_start: usize,
     state: State,
 }
 
 impl Exports {
-    pub fn new() -> Self {
+    pub fn new(variant: bool) -> Self {
         let curr = (0, 0);
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
+        let harder = variant;
+
         let rng = thread_rng();
         let run_start = 0;
         let state = State::Setup;
         Self {
             curr,
             grid,
+            harder,
             rng,
             run_start,
             state,
@@ -45,6 +49,7 @@ impl Exports {
     fn from(&mut self, other: Self) {
         self.curr = other.curr;
         self.grid = other.grid;
+        self.harder = other.harder;
         self.rng = other.rng;
         self.run_start = other.run_start;
         self.state = other.state;
@@ -65,13 +70,21 @@ impl Exports {
 
 impl Algorithm for Exports {
     fn name(&self) -> String {
-        String::from("Sidewinder")
+        if self.harder {
+            String::from("Harder Sidewinder")
+        } else {
+            String::from("Sidewinder")
+        }
     }
-    fn re_init(&mut self, _variant: String) {
-        self.from(Exports::new());
+    fn re_init(&mut self, variant: String) {
+        self.from(Exports::new(variant == "hard"));
     }
     fn get_variant(&self) -> String {
-        "unused".to_owned()
+        if self.harder {
+            "hard".to_owned()
+        } else {
+            "easy".to_owned()
+        }
     }
     fn update(&mut self) {
         match self.state {
@@ -82,7 +95,14 @@ impl Algorithm for Exports {
             }
             State::Done => {}
             State::Running => {
-                if (self.rng.gen() || self.curr.1 == 0) && self.curr.0 < COLUMNS as usize - 1 {
+                let proportion = if self.harder {
+                    0.4 + (self.curr.0 as f64 / COLUMNS as f64) * 0.4
+                } else {
+                    0.5
+                };
+                if (self.rng.gen_bool(proportion) || self.curr.1 == 0)
+                    && self.curr.0 < COLUMNS as usize - 1
+                {
                     // Carve a path to the east…
                     self.carve(self.curr, Direction::East);
                     self.curr.0 += 1;

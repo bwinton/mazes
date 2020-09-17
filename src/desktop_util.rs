@@ -42,6 +42,7 @@ impl Desktop {
                 ("algorithm", Some("wilson"), "fast"),
                 ("algorithm", Some("growingtree"), "middle"),
                 ("algorithm", Some("bintree"), "random:NorthWest"),
+                ("algorithm", Some("sidewinder"), "hard"),
                 ("algorithm", None, "unused"),
             ]))
             .get_matches();

@@ -89,6 +89,15 @@ impl Args for Web {
                 let element: OptionElement = element.try_into().unwrap();
                 format!("{}:{}", random, &element.value()).to_owned()
             }
+            "sidewinder" => {
+                let element = document().query_selector("#sidewinder:checked").unwrap();
+                if element.is_some() {
+                    "hard".to_owned()
+                } else {
+                    "easy".to_owned()
+                }
+            }
+
             _ => "unused".to_owned(),
         };
         variant
