@@ -9,6 +9,7 @@ mod kruskal;
 mod parallel;
 mod prim;
 mod recdiv;
+mod sidewinder;
 mod util;
 mod wilson;
 
@@ -156,6 +157,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "huntandkill" => Box::new(huntandkill::Exports::new()),
         "growingtree" => Box::new(growingtree::Exports::new(variant)),
         "bintree" => Box::new(binarytree::Exports::new(variant)),
+        "sidewinder" => Box::new(sidewinder::Exports::new()),
 
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);

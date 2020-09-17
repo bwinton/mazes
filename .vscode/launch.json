@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Growing Tree",
+            "name": "Debug Sidewinder",
             "cargo": {
                 "args": [
                     "build",
@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-a", "growingtree", "middle"],
+            "args": ["-a", "sidewinder"],
             "cwd": "${workspaceFolder}"
         },
         {

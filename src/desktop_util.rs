@@ -59,7 +59,7 @@ impl Desktop {
                 let bias = args.next().unwrap_or("NorthWest");
                 let bias = if bias.is_empty() { "NorthWest" } else { bias };
 
-                format!("{}:{}", random, bias).to_owned()
+                format!("{}:{}", random, bias)
             }
             _ => matches.value_of("variant").unwrap().to_owned(),
         };

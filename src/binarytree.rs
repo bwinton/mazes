@@ -99,7 +99,7 @@ impl Algorithm for Exports {
     }
     fn get_variant(&self) -> String {
         let rv = if self.random { "random" } else { "ordered" };
-        format!("{}:{}", rv, self.bias).to_owned()
+        format!("{}:{}", rv, self.bias)
     }
     fn update(&mut self) {
         match self.state {
