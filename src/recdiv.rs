@@ -1,4 +1,5 @@
 use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
+use maze_utils::From;
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
@@ -20,6 +21,7 @@ enum Orientation {
     VERTICAL,
 }
 
+#[derive(From)]
 pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     rng: ThreadRng,
@@ -47,12 +49,6 @@ impl Exports {
             stack,
             state,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.grid = other.grid;
-        self.rng = other.rng;
-        self.stack = other.stack;
-        self.state = other.state;
     }
 
     fn choose_orientation(&mut self, width: usize, height: usize) -> Orientation {

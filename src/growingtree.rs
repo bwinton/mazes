@@ -2,7 +2,7 @@ use crate::util::{
     draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
     ROWS,
 };
-
+use maze_utils::From;
 use std::collections::VecDeque;
 
 use enumset::EnumSet;
@@ -28,6 +28,7 @@ enum Variant {
     Random,
 }
 
+#[derive(From)]
 pub struct Exports {
     curr: Option<(usize, usize)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
@@ -59,14 +60,6 @@ impl Exports {
             state,
             variant,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.curr = other.curr;
-        self.grid = other.grid;
-        self.rng = other.rng;
-        self.stack = other.stack;
-        self.state = other.state;
-        self.variant = other.variant;
     }
 }
 

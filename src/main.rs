@@ -13,6 +13,8 @@ mod sidewinder;
 mod util;
 mod wilson;
 
+extern crate maze_utils;
+
 #[macro_use]
 extern crate enumset;
 #[macro_use]

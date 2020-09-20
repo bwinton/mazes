@@ -1,6 +1,7 @@
 use crate::util::{
     draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, EMPTY_COLOR, OFFSET, ROWS,
 };
+use maze_utils::From;
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
@@ -33,6 +34,7 @@ pub enum Expanding {
     Both,
 }
 
+#[derive(From)]
 pub struct Exports {
     finished: [[bool; COLUMNS as usize]; ROWS as usize],
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
@@ -64,12 +66,6 @@ impl Exports {
             stack,
             state,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.grid = other.grid;
-        self.rng = other.rng;
-        self.stack = other.stack;
-        self.state = other.state;
     }
 
     fn choose_starts(

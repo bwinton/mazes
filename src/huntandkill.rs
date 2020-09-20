@@ -2,6 +2,7 @@ use crate::util::{
     draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
     ROWS,
 };
+use maze_utils::From;
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
@@ -18,6 +19,7 @@ enum State {
     Done,
 }
 
+#[derive(From)]
 pub struct Exports {
     curr: Option<(usize, usize)>,
     first_empty_line: usize,
@@ -43,14 +45,6 @@ impl Exports {
             scan_line,
             state,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.curr = other.curr;
-        self.first_empty_line = other.first_empty_line;
-        self.grid = other.grid;
-        self.rng = other.rng;
-        self.scan_line = other.scan_line;
-        self.state = other.state;
     }
 }
 

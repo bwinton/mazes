@@ -1,4 +1,5 @@
 use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
+use maze_utils::From;
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
@@ -14,6 +15,7 @@ enum State {
     Done,
 }
 
+#[derive(From)]
 pub struct Exports {
     edges: Vec<(usize, usize, Direction)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
@@ -39,14 +41,6 @@ impl Exports {
             roots,
             state,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.edges = other.edges;
-        self.grid = other.grid;
-        self.parents = other.parents;
-        self.rng = other.rng;
-        self.roots = other.roots;
-        self.state = other.state;
     }
 
     fn find_root(&self, x: usize, y: usize) -> (usize, usize) {

@@ -1,6 +1,7 @@
 use crate::util::{
     draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, OFFSET, ROWS,
 };
+use maze_utils::From;
 use derive_more::Display;
 use enumset::EnumSet;
 use itertools::Itertools;
@@ -26,6 +27,7 @@ enum Bias {
     NorthWest,
 }
 
+#[derive(From)]
 pub struct Exports {
     bias: Bias,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
@@ -68,14 +70,6 @@ impl Exports {
             rng,
             state,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.bias = other.bias;
-        self.grid = other.grid;
-        self.random = other.random;
-        self.remaining = other.remaining;
-        self.rng = other.rng;
-        self.state = other.state;
     }
     fn carve(&mut self, cell: (usize, usize), direction: Direction) {
         let (x, y) = cell;

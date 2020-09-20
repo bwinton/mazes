@@ -1,3 +1,4 @@
+use maze_utils::From;
 use crate::aldous_broder::Exports as aldous_broder;
 use crate::util::Algorithm;
 use crate::wilson::Exports as wilson;
@@ -11,6 +12,7 @@ enum State {
     Done,
 }
 
+#[derive(From)]
 pub struct Exports {
     aldous_broder: aldous_broder,
     state: State,
@@ -27,11 +29,6 @@ impl Exports {
             state,
             wilson,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.aldous_broder = other.aldous_broder;
-        self.state = other.state;
-        self.wilson = other.wilson;
     }
 }
 

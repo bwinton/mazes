@@ -2,6 +2,7 @@ use crate::util::{
     draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
     ROWS,
 };
+use maze_utils::From;
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
@@ -27,6 +28,7 @@ enum Cell {
     Out,
 }
 
+#[derive(From)]
 pub struct Exports {
     current: Option<(usize, usize)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
@@ -82,17 +84,6 @@ impl Exports {
                 }
             }
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.current = other.current;
-        self.grid = other.grid;
-        self.previous = other.previous;
-        self.processing = other.processing;
-        self.remaining = other.remaining;
-        self.rng = other.rng;
-        self.slowdown = other.slowdown;
-        self.start = other.start;
-        self.state = other.state;
     }
     fn draw_arrow(&self, x: f32, y: f32, direction: Direction, color: Color, gfx: &mut Graphics) {
         let x = x * CELL_WIDTH + OFFSET;
@@ -151,11 +142,6 @@ impl Algorithm for Exports {
         log::info!("  to {}/{}", self.slowdown, self.get_variant());
     }
     fn get_variant(&self) -> String {
-        // log::info!("slow? {} => {}", self.slowdown, if self.slowdown {
-        //     "slow".to_owned()
-        // } else {
-        //     "fast".to_owned()
-        // });
         if self.slowdown {
             "slow".to_owned()
         } else {

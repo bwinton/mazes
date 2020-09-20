@@ -1,7 +1,7 @@
 use crate::util::{
     draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
-
+use maze_utils::From;
 use array_init::array_init;
 use enumset::EnumSet;
 use quicksilver::{
@@ -20,6 +20,7 @@ enum State {
     Done,
 }
 
+#[derive(From)]
 pub struct Exports {
     current_row: usize,
     current_column: usize,
@@ -51,16 +52,6 @@ impl Exports {
             sets,
             state,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.current_row = other.current_row;
-        self.current_column = other.current_column;
-        self.empty_sets = other.empty_sets;
-        self.grid = other.grid;
-        self.grid_sets = other.grid_sets;
-        self.rng = other.rng;
-        self.sets = other.sets;
-        self.state = other.state;
     }
 }
 

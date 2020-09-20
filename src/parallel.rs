@@ -1,7 +1,7 @@
 use crate::util::{
     draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
-
+use maze_utils::From;
 use std::collections::{HashSet, VecDeque};
 
 use array_init::array_init;
@@ -21,6 +21,7 @@ enum State {
     Running,
     Done,
 }
+#[derive(From)]
 pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
@@ -51,15 +52,6 @@ impl Exports {
             stack,
             state,
         }
-    }
-    fn from(&mut self, other: Self) {
-        self.grid = other.grid;
-        self.grid_seeds = other.grid_seeds;
-        self.rng = other.rng;
-        self.stack = other.stack;
-        self.seeds = other.seeds;
-        self.sets = other.sets;
-        self.state = other.state;
     }
 }
 
