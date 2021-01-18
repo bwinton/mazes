@@ -7,10 +7,8 @@ use enumset::EnumSet;
 
 use quicksilver::{
     geom::Vector,
-    graphics::{Color, Element, Graphics, Mesh, Vertex},
-    // Input, Window,
+    graphics::{Color, Element, FontRenderer, Graphics, Mesh, Vertex},
     Result,
-    // Settings, run,
 };
 
 pub const LINE_WIDTH: f32 = 4.0;
@@ -108,7 +106,7 @@ pub trait Algorithm {
     fn name(&self) -> String;
     fn re_init(&mut self, variant: String);
     fn update(&mut self);
-    fn draw(&self, gfx: &mut Graphics) -> Result<()>;
+    fn draw(&self, gfx: &mut Graphics, font: &mut FontRenderer) -> Result<()>;
     fn get_variant(&self) -> String;
 }
 
@@ -131,10 +129,19 @@ impl Direction {
     }
 }
 
+pub fn push_vertex(pos: Vector, vertices: &mut Vec<Vertex>) -> u32 {
+    let rv = vertices.len() as u32;
+    vertices.push(Vertex {
+        pos,
+        uv: None,
+        color: COLORS[0],
+    });
+    rv
+}
+
 pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]) -> Result<Mesh> {
     let mut vertices = vec![];
     let mut elements = vec![];
-    let color = COLORS[0];
     for (j, row) in grid.iter().enumerate() {
         for (i, cell) in row.iter().enumerate() {
             let x = i as f32;
@@ -146,30 +153,11 @@ pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize])
                 (y + 1.0) * CELL_WIDTH + OFFSET,
             );
             let sw = Vector::new(x * CELL_WIDTH + OFFSET, (y + 1.0) * CELL_WIDTH + OFFSET);
-            vertices.push(Vertex {
-                pos: ne,
-                uv: None,
-                color,
-            });
-            let ne: u32 = vertices.len() as u32 - 1;
-            vertices.push(Vertex {
-                pos: nw,
-                uv: None,
-                color,
-            });
-            let nw: u32 = vertices.len() as u32 - 1;
-            vertices.push(Vertex {
-                pos: se,
-                uv: None,
-                color,
-            });
-            let se: u32 = vertices.len() as u32 - 1;
-            vertices.push(Vertex {
-                pos: sw,
-                uv: None,
-                color,
-            });
-            let sw: u32 = vertices.len() as u32 - 1;
+
+            let ne = push_vertex(ne, &mut vertices);
+            let nw = push_vertex(nw, &mut vertices);
+            let se = push_vertex(se, &mut vertices);
+            let sw = push_vertex(sw, &mut vertices);
 
             //Figure out which lines to draw.
             if !cell.contains(Direction::North) {

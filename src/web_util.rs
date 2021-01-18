@@ -97,6 +97,14 @@ impl Args for Web {
                     "easy".to_owned()
                 }
             }
+            "hexparallel" => {
+                let element = document()
+                    .query_selector("#hexparallel :checked")
+                    .unwrap()
+                    .unwrap();
+                let element: OptionElement = element.try_into().unwrap();
+                element.value()
+            }
 
             _ => "unused".to_owned(),
         };

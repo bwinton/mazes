@@ -1863,9 +1863,9 @@ dependencies = [
 
 [[package]]
 name = "quicksilver"
-version = "0.4.0-alpha0.7"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "062ee99ddc199dcd2da6ec5b406fba64e5c787cff920c2576c894f4571b2cbab"
+checksum = "21405380ee8ccb5f8805f50a6e244306c1574cae126e2831ecffc1df2003e5a4"
 dependencies = [
  "blinds",
  "bytemuck",

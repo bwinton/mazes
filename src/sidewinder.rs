@@ -2,11 +2,11 @@ use crate::util::{
     draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
     ROWS,
 };
-use maze_utils::From;
 use enumset::EnumSet;
+use maze_utils::From;
 use quicksilver::{
     geom::{Rectangle, Vector},
-    graphics::Graphics,
+    graphics::{FontRenderer, Graphics},
     log, Result,
 };
 use rand::{rngs::ThreadRng, thread_rng, Rng};
@@ -126,7 +126,7 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics) -> Result<()> {
+    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
         let elements = draw_board(self.grid)?;
         gfx.draw_mesh(&elements);
 

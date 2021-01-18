@@ -33,6 +33,7 @@ impl Desktop {
                         "growingbintree",
                         "bintree",
                         "sidewinder",
+                        "hexparallel",
                     ])
                     .default_value("parallel"),
             )
@@ -43,6 +44,7 @@ impl Desktop {
                 ("algorithm", Some("growingtree"), "middle"),
                 ("algorithm", Some("bintree"), "random:NorthWest"),
                 ("algorithm", Some("sidewinder"), "hard"),
+                ("algorithm", Some("hexparallel"), "3"),
                 ("algorithm", None, "unused"),
             ]))
             .get_matches();

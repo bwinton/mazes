@@ -3,6 +3,8 @@ mod binarytree;
 mod blobby;
 mod eller;
 mod growingtree;
+mod hex_parallel;
+mod hex_util;
 mod houston;
 mod huntandkill;
 mod kruskal;
@@ -44,9 +46,11 @@ use web_util::Web as RealArgs;
 
 use crate::util::{Algorithm, Args, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
 
+use std::fs;
+
 use quicksilver::{
     geom::Vector,
-    graphics::{Color, Graphics},
+    graphics::{Color, FontRenderer, Graphics, VectorFont},
     input::{Event, Key, MouseButton},
     log, run, Input, Result, Settings, Timer, Window,
 };
@@ -55,17 +59,22 @@ struct MyGame {
     // Your state here...
     algorithm: Box<dyn Algorithm>,
     args: RealArgs,
+    font: FontRenderer,
     update_timer: Timer,
     draw_timer: Timer,
     paused: bool,
 }
 
 impl MyGame {
-    pub fn new(algorithm: Box<dyn Algorithm>, args: RealArgs) -> MyGame {
+    pub fn new(algorithm: Box<dyn Algorithm>, args: RealArgs, gfx: &Graphics) -> MyGame {
         // Load/create resources such as images here.
+        let data = fs::read("/Users/bwinton/Library/Fonts/InputMono-Thin.ttf").unwrap();
+        let font = VectorFont::from_bytes(data).to_renderer(gfx, 12.0).unwrap();
+
         MyGame {
             algorithm,
             args,
+            font,
             update_timer: Timer::time_per_second(20.0),
             draw_timer: Timer::time_per_second(60.0),
             paused: false,
@@ -118,7 +127,7 @@ impl MyGame {
         // Clear the screen to a blank, white color
         gfx.clear(Color::WHITE);
 
-        self.algorithm.draw(gfx)?;
+        self.algorithm.draw(gfx, &mut self.font)?;
 
         // Send the data to be drawn
         gfx.present(&window)?;
@@ -160,6 +169,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "growingtree" => Box::new(growingtree::Exports::new(variant)),
         "bintree" => Box::new(binarytree::Exports::new(variant)),
         "sidewinder" => Box::new(sidewinder::Exports::new(variant == "hard")),
+        "hexparallel" => Box::new(hex_parallel::Exports::new(variant.parse().expect(&message))),
 
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
@@ -173,7 +183,7 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
     );
     window.set_title(&format!("Some {} mazes…", algorithm.name()));
 
-    let mut game = MyGame::new(algorithm, args);
+    let mut game = MyGame::new(algorithm, args, &gfx);
     game.draw(&window, &mut gfx)?;
 
     'outer: loop {

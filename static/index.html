@@ -16,7 +16,7 @@
                 }
 
                 var canvas = document.createElement('canvas');
-                // document.querySelector('body').appendChild(canvas);
+                document.querySelector('body').appendChild(canvas);
                 __cargo_web.canvas = canvas;
 
                 return canvas;
@@ -65,7 +65,15 @@
             <option value="SouthWest">South West</option>
             <option value="NorthWest">North West</option>
         </select>) /
-        <a href="?sidewinder">Sidewinder</a> (<input type="checkbox" id="sidewinder" checked><label for="sidewinder">harder tweak</label>)
+        <a href="?sidewinder">Sidewinder</a> (<input type="checkbox" id="sidewinder" checked><label for="sidewinder">harder tweak</label>) /
+        <a href="?hexparallel">Parallel Hex Backtrack</a> <select id="hexparallel">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6" selected>6</option>
+        </select> <label for="hexparallel">seeds</label> /
     </p>
 </body>
 </html>

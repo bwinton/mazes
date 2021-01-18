@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Data};
+use syn::{parse_macro_input, Data, DeriveInput};
 
 #[proc_macro_derive(From)]
 pub fn derive(input: TokenStream) -> TokenStream {
@@ -14,7 +14,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
     if let Data::Struct(data) = input.data {
         for field in data.fields {
             let ident = field.ident;
-            fields.push(quote!{self.#ident = other.#ident;});
+            fields.push(quote! {self.#ident = other.#ident;});
         }
     }
     // Build the output, possibly using quasi-quotation

@@ -8,7 +8,7 @@ use std::collections::VecDeque;
 use enumset::EnumSet;
 use quicksilver::{
     geom::{Rectangle, Vector},
-    graphics::Graphics,
+    graphics::{FontRenderer, Graphics},
     log, Result,
 };
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
@@ -156,7 +156,7 @@ impl Algorithm for Exports {
         self.curr = Some((new_x, new_y));
     }
 
-    fn draw(&self, gfx: &mut Graphics) -> Result<()> {
+    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
         // Draw code here...
         let elements = draw_board(self.grid)?;
         gfx.draw_mesh(&elements);

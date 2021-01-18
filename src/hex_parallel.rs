@@ -1,13 +1,16 @@
-use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
+use crate::util::{Algorithm, COLORS};
+use crate::{
+    hex_util::{draw_board, draw_cell, Direction, COLUMNS, ROWS},
+    util::LINE_WIDTH,
 };
+
 use maze_utils::From;
 use std::collections::{HashSet, VecDeque};
 
 use array_init::array_init;
+
 use enumset::EnumSet;
 use quicksilver::{
-    geom::{Rectangle, Vector},
     graphics::{FontRenderer, Graphics},
     log, Result,
 };
@@ -21,9 +24,10 @@ enum State {
     Running,
     Done,
 }
+
 #[derive(From)]
 pub struct Exports {
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     rng: ThreadRng,
     seeds: usize,
@@ -37,7 +41,16 @@ impl Exports {
         if !(1..=MAX_SEEDS).contains(&seeds) {
             panic!("Seeds {} must be between {} and {}", seeds, 1, MAX_SEEDS);
         }
-        let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
+        let mut grid = [[Some(EnumSet::new()); COLUMNS as usize]; ROWS as usize];
+        for (j, row) in grid.iter_mut().enumerate() {
+            for (i, cell) in row.iter_mut().enumerate() {
+                let x = i as f32;
+                let y = j as f32;
+                if (x < (ROWS - 1.0 - y) / 2.0) || (x > COLUMNS - (ROWS + y) / 2.0) {
+                    *cell = None;
+                }
+            }
+        }
         let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
         let rng = thread_rng();
         let sets = array_init(|_| HashSet::new());
@@ -58,9 +71,9 @@ impl Exports {
 impl Algorithm for Exports {
     fn name(&self) -> String {
         if self.seeds == 1 {
-            String::from("Backtrack")
+            String::from("Hex Backtrack")
         } else {
-            String::from("Parallel Backtrack")
+            String::from("Parallel Hex Backtrack")
         }
     }
     fn re_init(&mut self, variant: String) {
@@ -74,9 +87,16 @@ impl Algorithm for Exports {
         match self.state {
             State::Setup => {
                 for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
-                    let x = self.rng.gen_range(0, COLUMNS as usize);
-                    let y = self.rng.gen_range(0, ROWS as usize);
-                    stack.push_front((x, y, EnumSet::all()));
+                    let mut pushed = false;
+                    while !pushed {
+                        let x = self.rng.gen_range(0, COLUMNS as usize);
+                        let y = self.rng.gen_range(0, ROWS as usize);
+                        if self.grid[y][x].is_none() {
+                            continue;
+                        }
+                        stack.push_front((x, y, EnumSet::all()));
+                        pushed = true;
+                    }
                     self.sets[i].insert(i);
                 }
 
@@ -93,7 +113,6 @@ impl Algorithm for Exports {
 
         'outer: for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
             let mut found = false;
-            // let (first_x, first_y, _) = self.stack.front().unwrap().clone();
 
             while !found {
                 if stack.is_empty() {
@@ -108,25 +127,28 @@ impl Algorithm for Exports {
                 }
                 potentials.shuffle(&mut self.rng);
                 let direction = potentials.pop().unwrap();
-                // println!("({},{}) -> {:?}", x, y, direction);
+                // println!("{}: ({},{}) -> {:?}", i, x, y, direction);
                 stack.push_front((x, y, directions ^ direction));
 
                 let (new_x, new_y) = match direction {
-                    Direction::North => (x as i32, y as i32 - 1),
+                    Direction::NorthEast => (x as i32 + 1, y as i32 - 1),
+                    Direction::NorthWest => (x as i32, y as i32 - 1),
                     Direction::East => (x as i32 + 1, y as i32),
-                    Direction::South => (x as i32, y as i32 + 1),
                     Direction::West => (x as i32 - 1, y as i32),
+                    Direction::SouthEast => (x as i32, y as i32 + 1),
+                    Direction::SouthWest => (x as i32 - 1, y as i32 + 1),
                 };
-                // println!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
+                // println!("{}: ({},{}) / {:?} -> {:?}", i, x,y, direction, (new_x, new_y));
                 if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                     let (new_x, new_y) = (new_x as usize, new_y as usize);
-                    if self.grid[new_y][new_x] == EnumSet::new()
+                    if self.grid[new_y][new_x] == Some(EnumSet::new())
                         && self.grid_seeds[new_y][new_x] == None
                     {
                         self.grid_seeds[y][x] = Some(i);
-                        self.grid[y][x] |= direction;
+                        self.grid[y][x] = self.grid[y][x].map(|cell| cell | direction);
                         self.grid_seeds[new_y][new_x] = Some(i);
-                        self.grid[new_y][new_x] |= direction.opposite();
+                        self.grid[new_y][new_x] =
+                            self.grid[new_y][new_x].map(|cell| cell | direction.opposite());
                         stack.push_front((new_x, new_y, EnumSet::all() ^ direction.opposite()));
                         found = true;
                     } else if let Some(set) = self.grid_seeds[new_y][new_x] {
@@ -136,13 +158,15 @@ impl Algorithm for Exports {
                             for i in &both_sets {
                                 self.sets[*i] = both_sets.clone();
                             }
-                            self.grid[y][x] |= direction;
-                            self.grid[new_y][new_x] |= direction.opposite();
+                            self.grid[y][x] = self.grid[y][x].map(|cell| cell | direction);
+                            self.grid[new_y][new_x] =
+                                self.grid[new_y][new_x].map(|cell| cell | direction.opposite());
                         }
                     }
                     // Otherwise, loop again and see what we can get.
                 }
             }
+            // done = true;
         }
         if done {
             self.state = State::Done;
@@ -160,26 +184,26 @@ impl Algorithm for Exports {
             cell_color.a = 0.5;
             for (i, (x, y, _)) in self.stack[i].iter().enumerate() {
                 if i == 0 {
-                    let rect = Rectangle::new(
-                        Vector::new(
-                            *x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                            *y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                        ),
-                        Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
-                    );
-                    gfx.fill_rect(&rect, curr_color);
+                    draw_cell(*x, *y, LINE_WIDTH * 1.5, gfx, curr_color);
                 } else {
-                    let rect = Rectangle::new(
-                        Vector::new(
-                            *x as f32 * CELL_WIDTH + OFFSET,
-                            *y as f32 * CELL_WIDTH + OFFSET,
-                        ),
-                        Vector::new(CELL_WIDTH, CELL_WIDTH),
-                    );
-                    gfx.fill_rect(&rect, cell_color);
+                    draw_cell(*x, *y, 0.0, gfx, cell_color);
                 }
             }
         }
+
+        // for (j, row) in self.grid.iter().enumerate() {
+        //     for (i, cell) in row.iter().enumerate() {
+        //         if cell.is_some() {
+        //             let (x, y) = center_pixel(i, j);
+        //             let _ = font.draw(
+        //                 gfx,
+        //                 &format!("{:2},{:2}", i, j),
+        //                 COLORS[1],
+        //                 Vector::new(x - 15.0, y + 4.0),
+        //             )?;
+        //         }
+        //     }
+        // }
 
         Ok(())
     }

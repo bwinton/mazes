@@ -73,7 +73,7 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics) -> Result<()> {
+    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
         let elements = draw_board(self.grid)?;
         gfx.draw_mesh(&elements);
 

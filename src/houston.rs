@@ -1,8 +1,11 @@
-use maze_utils::From;
 use crate::aldous_broder::Exports as aldous_broder;
 use crate::util::Algorithm;
 use crate::wilson::Exports as wilson;
-use quicksilver::{graphics::Graphics, log, Result};
+use maze_utils::From;
+use quicksilver::{
+    graphics::{FontRenderer, Graphics},
+    log, Result,
+};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -67,10 +70,10 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics) -> Result<()> {
+    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
         match self.state {
-            State::RunningAldousBroder => self.aldous_broder.draw(gfx),
-            State::RunningWilson | State::Done => self.wilson.draw(gfx),
+            State::RunningAldousBroder => self.aldous_broder.draw(gfx, _font),
+            State::RunningWilson | State::Done => self.wilson.draw(gfx, _font),
             _ => Ok(()),
         }
     }
