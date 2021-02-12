@@ -3,13 +3,8 @@ use crate::util::{
     ROWS,
 };
 use enumset::EnumSet;
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -24,7 +19,6 @@ pub struct Exports {
     curr: (usize, usize),
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     harder: bool,
-    rng: ThreadRng,
     run_start: usize,
     state: State,
 }
@@ -35,14 +29,12 @@ impl Exports {
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let harder = variant;
 
-        let rng = thread_rng();
         let run_start = 0;
         let state = State::Setup;
         Self {
             curr,
             grid,
             harder,
-            rng,
             run_start,
             state,
         }
@@ -89,11 +81,11 @@ impl Algorithm for Exports {
             State::Done => {}
             State::Running => {
                 let proportion = if self.harder {
-                    0.4 + (self.curr.0 as f64 / COLUMNS as f64) * 0.4
+                    (0.4 + (self.curr.0 as f64 / COLUMNS as f64) * 0.4) * 100.0
                 } else {
-                    0.5
-                };
-                if (self.rng.gen_bool(proportion) || self.curr.1 == 0)
+                    50.0
+                } as usize;
+                if (gen_range(0, 100) < proportion || self.curr.1 == 0)
                     && self.curr.0 < COLUMNS as usize - 1
                 {
                     // Carve a path to the east…
@@ -106,7 +98,7 @@ impl Algorithm for Exports {
             State::Carving => {
                 self.curr.0 += 1;
                 if self.curr.1 > 0 {
-                    let north = self.rng.gen_range(self.run_start, self.curr.0);
+                    let north = gen_range(self.run_start, self.curr.0);
                     self.carve((north, self.curr.1), Direction::North);
                     self.run_start = self.curr.0;
                 }
@@ -126,9 +118,8 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         let curr_color = COLORS[1];
         let mut cell_color = COLORS[1];
@@ -136,37 +127,40 @@ impl Algorithm for Exports {
 
         // Draw the field.
         let y = self.curr.1 as f32 + 1.0;
-        let rect = Rectangle::new(
-            Vector::new(0.0 * CELL_WIDTH + OFFSET, y * CELL_WIDTH + OFFSET),
-            Vector::new(COLUMNS * CELL_WIDTH, (ROWS - y) * CELL_WIDTH),
+        draw_rectangle(
+            0.0 * CELL_WIDTH + OFFSET,
+            y * CELL_WIDTH + OFFSET,
+            COLUMNS * CELL_WIDTH,
+            (ROWS - y) * CELL_WIDTH,
+            FIELD_COLOR,
         );
-        gfx.fill_rect(&rect, FIELD_COLOR);
 
         let x = self.curr.0 as f32 + 1.0;
         let y = y - 1.0;
-        let rect = Rectangle::new(
-            Vector::new(x * CELL_WIDTH + OFFSET, y * CELL_WIDTH + OFFSET),
-            Vector::new((COLUMNS - x) * CELL_WIDTH, CELL_WIDTH),
+        draw_rectangle(
+            x * CELL_WIDTH + OFFSET,
+            y * CELL_WIDTH + OFFSET,
+            (COLUMNS - x) * CELL_WIDTH,
+            CELL_WIDTH,
+            FIELD_COLOR,
         );
-        gfx.fill_rect(&rect, FIELD_COLOR);
 
         let start = self.run_start as f32;
-        let rect = Rectangle::new(
-            Vector::new(start * CELL_WIDTH + OFFSET, y * CELL_WIDTH + OFFSET),
-            Vector::new((x - start) * CELL_WIDTH, CELL_WIDTH),
+        draw_rectangle(
+            start * CELL_WIDTH + OFFSET,
+            y * CELL_WIDTH + OFFSET,
+            (x - start) * CELL_WIDTH,
+            CELL_WIDTH,
+            cell_color,
         );
-        gfx.fill_rect(&rect, cell_color);
 
         let x = x - 1.0;
-        let rect = Rectangle::new(
-            Vector::new(
-                x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-            ),
-            Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
+        draw_rectangle(
+            x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+            y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+            CELL_WIDTH - LINE_WIDTH * 2.0,
+            CELL_WIDTH - LINE_WIDTH * 2.0,
+            curr_color,
         );
-        gfx.fill_rect(&rect, curr_color);
-
-        Ok(())
     }
 }

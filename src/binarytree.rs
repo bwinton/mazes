@@ -1,16 +1,12 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, OFFSET, ROWS,
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR,
+    OFFSET, ROWS,
 };
 use derive_more::Display;
 use enumset::EnumSet;
 use itertools::Itertools;
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -33,7 +29,6 @@ pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     random: bool,
     remaining: Vec<(usize, usize)>,
-    rng: ThreadRng,
     state: State,
 }
 
@@ -48,9 +43,8 @@ impl Exports {
             .cartesian_product(0..COLUMNS as usize)
             .map(|(y, x)| (x, y))
             .collect();
-        let mut rng = thread_rng();
         if random {
-            remaining.shuffle(&mut rng);
+            remaining.shuffle();
         } else {
             remaining.reverse();
         }
@@ -67,7 +61,6 @@ impl Exports {
             grid,
             random,
             remaining,
-            rng,
             state,
         }
     }
@@ -126,7 +119,7 @@ impl Algorithm for Exports {
                         Direction::North
                     } else if curr.1 == 0 {
                         Direction::East
-                    } else if self.rng.gen() {
+                    } else if gen_range(0, 2) == 0 {
                         Direction::North
                     } else {
                         Direction::East
@@ -141,7 +134,7 @@ impl Algorithm for Exports {
                         Direction::South
                     } else if curr.1 == ROWS as usize - 1 {
                         Direction::East
-                    } else if self.rng.gen() {
+                    } else if gen_range(0, 2) == 0 {
                         Direction::South
                     } else {
                         Direction::East
@@ -156,7 +149,7 @@ impl Algorithm for Exports {
                         Direction::South
                     } else if curr.1 == ROWS as usize - 1 {
                         Direction::West
-                    } else if self.rng.gen() {
+                    } else if gen_range(0, 2) == 0 {
                         Direction::South
                     } else {
                         Direction::West
@@ -171,7 +164,7 @@ impl Algorithm for Exports {
                         Direction::North
                     } else if curr.1 == 0 {
                         Direction::West
-                    } else if self.rng.gen() {
+                    } else if gen_range(0, 2) == 0 {
                         Direction::North
                     } else {
                         Direction::West
@@ -184,9 +177,8 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         if self.state == State::Running {
             let mut curr_color = COLORS[1];
@@ -194,28 +186,24 @@ impl Algorithm for Exports {
             for x in 0..COLUMNS as usize {
                 for y in 0..ROWS as usize {
                     if self.grid[y][x] == EnumSet::new() {
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                y as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            y as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            FIELD_COLOR,
                         );
-                        gfx.fill_rect(&rect, FIELD_COLOR);
                     } else if self.remaining.contains(&(x, y)) {
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                y as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            y as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            curr_color,
                         );
-                        gfx.fill_rect(&rect, curr_color);
                     }
                 }
             }
         }
-
-        Ok(())
     }
 }

@@ -1,15 +1,11 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH,
+    OFFSET, ROWS,
 };
 use array_init::array_init;
 use enumset::EnumSet;
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -27,7 +23,6 @@ pub struct Exports {
     empty_sets: Vec<usize>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     grid_sets: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
-    rng: ThreadRng,
     sets: Vec<(Vec<usize>, usize)>,
     state: State,
 }
@@ -37,7 +32,6 @@ impl Exports {
         let current_row = 0;
         let current_column = 0;
         let empty_sets = vec![];
-        let rng = thread_rng();
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let grid_sets = [[None; COLUMNS as usize]; ROWS as usize];
         let sets = vec![];
@@ -48,7 +42,6 @@ impl Exports {
             empty_sets,
             grid,
             grid_sets,
-            rng,
             sets,
             state,
         }
@@ -83,7 +76,7 @@ impl Algorithm for Exports {
                     self.grid_sets[self.current_row][self.current_column + 1] =
                         self.empty_sets.pop();
                 }
-                if self.rng.gen() || self.current_row == (ROWS - 1.0) as usize {
+                if gen_range(0, 2) == 0 || self.current_row == (ROWS - 1.0) as usize {
                     // Merge the cells, if they're in different sets.
                     let old_set = self.grid_sets[self.current_row][self.current_column + 1];
                     let new_set = self.grid_sets[self.current_row][self.current_column];
@@ -141,8 +134,8 @@ impl Algorithm for Exports {
                 // Pick 1..n of each set and drop it.
                 if let Some((set, i)) = self.sets.pop() {
                     // print!("{}: {:?}, Dropping: ", i, set);
-                    let count = self.rng.gen_range(1, set.len() + 1);
-                    for &cell in set.choose_multiple(&mut self.rng, count) {
+                    let count = gen_range(1, set.len() + 1);
+                    for &cell in set.choose_multiple(count) {
                         // print!("{}, ", cell);
                         self.grid[self.current_row][cell] |= Direction::South;
                         self.grid[self.current_row + 1][cell] |= Direction::North;
@@ -160,10 +153,9 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
+    fn draw(&self) {
         // Draw code here...
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+        draw_board(self.grid);
 
         for row in self.current_row..self.current_row + 2 {
             if row < ROWS as usize {
@@ -173,36 +165,29 @@ impl Algorithm for Exports {
                         let curr_color = COLORS[i + 1];
                         let mut cell_color = COLORS[i + 1];
                         cell_color.a = 0.5;
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                row as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            row as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            cell_color,
                         );
-                        gfx.fill_rect(&rect, cell_color);
 
                         if row == self.current_row
                             && x == self.current_column
                             && self.state == State::Merging
                         {
-                            let rect = Rectangle::new(
-                                Vector::new(
-                                    x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                                    row as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                                ),
-                                Vector::new(
-                                    CELL_WIDTH - LINE_WIDTH * 2.0,
-                                    CELL_WIDTH - LINE_WIDTH * 2.0,
-                                ),
+                            draw_rectangle(
+                                x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                                row as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                                CELL_WIDTH - LINE_WIDTH * 2.0,
+                                CELL_WIDTH - LINE_WIDTH * 2.0,
+                                curr_color,
                             );
-                            gfx.fill_rect(&rect, curr_color);
                         }
                     }
                 }
             }
         }
-
-        Ok(())
     }
 }

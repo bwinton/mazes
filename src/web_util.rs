@@ -1,9 +1,5 @@
-use quicksilver::Result;
-// use quicksilver::log;
-use crate::stdweb::unstable::TryInto;
 use crate::util::Args;
-use stdweb::web::{document, html_element::OptionElement, IParentNode};
-
+use sapp_jsutils::JsObject;
 pub struct Web {}
 
 impl Web {
@@ -12,99 +8,79 @@ impl Web {
     }
 }
 
+extern "C" {
+    fn get_search() -> JsObject;
+    fn get_value(key: JsObject) -> JsObject;
+    fn get_checked(key: JsObject) -> bool;
+}
+
+#[allow(unused_mut)]
+fn web_get_search() -> String {
+    let mut algorithm = String::new();
+    let js_object = unsafe { get_search() };
+    js_object.to_string(&mut algorithm);
+    algorithm
+}
+
+fn web_get_value(key: &str) -> String {
+    let mut value = String::new();
+    let key = JsObject::string(&(key.to_owned() + " :checked"));
+    let js_object = unsafe { get_value(key) };
+    js_object.to_string(&mut value);
+    value
+}
+
+fn web_get_checked(key: &str) -> bool {
+    let key = JsObject::string(&(key.to_owned() + ":checked"));
+    let rv = unsafe { get_checked(key) };
+    rv
+}
+
 impl Args for Web {
-    fn get_args(&self) -> Result<String> {
-        let mut algorithm = "parallel".to_owned();
-        if let Some(location) = document().location() {
-            match location.search() {
-                Ok(search) => {
-                    if !search.is_empty() {
-                        algorithm = search[1..].to_owned();
-                    }
-                }
-                Err(_) => {}
-            };
-        };
-        Ok(algorithm)
+    fn get_algorithm(&self) -> String {
+        let mut algorithm = web_get_search();
+        if algorithm.is_empty() {
+            algorithm = "?parallel".to_string();
+        }
+        algorithm[1..].to_owned()
     }
 
     fn get_variant(&self) -> String {
-        let mut algorithm = "parallel".to_owned();
-        if let Some(location) = document().location() {
-            match location.search() {
-                Ok(search) => {
-                    if !search.is_empty() {
-                        algorithm = search[1..].to_owned();
-                    }
-                }
-                Err(_) => {}
-            };
-        };
+        let mut algorithm = self.get_algorithm();
         let variant = match algorithm.as_str() {
-            "parallel" => {
-                let element = document()
-                    .query_selector("#parallel :checked")
-                    .unwrap()
-                    .unwrap();
-                let element: OptionElement = element.try_into().unwrap();
-                element.value()
-            }
+            "parallel" => web_get_value("#parallel"),
             "aldousbroder" => {
-                let element = document().query_selector("#aldousbroder:checked").unwrap();
-                if element.is_some() {
+                if web_get_checked("#aldousbroder") {
                     "fast".to_owned()
                 } else {
                     "slow".to_owned()
                 }
             }
             "wilson" => {
-                let element = document().query_selector("#wilson:checked").unwrap();
-                if element.is_some() {
+                if web_get_checked("#wilson") {
                     "slow".to_owned()
                 } else {
                     "fast".to_owned()
                 }
             }
-            "growingtree" => {
-                let element = document()
-                    .query_selector("#growingtree :checked")
-                    .unwrap()
-                    .unwrap();
-                let element: OptionElement = element.try_into().unwrap();
-                element.value()
-            }
+            "growingtree" => web_get_value("#growingtree"),
             "bintree" => {
-                let element = document()
-                    .query_selector("#bintree-random:checked")
-                    .unwrap();
-                let random = if element.is_some() {
+                let random = if web_get_checked("#bintree-random") {
                     "random"
                 } else {
                     "ordered"
                 };
-                let element = document()
-                    .query_selector("#bintree-bias :checked")
-                    .unwrap()
-                    .unwrap();
-                let element: OptionElement = element.try_into().unwrap();
-                format!("{}:{}", random, &element.value()).to_owned()
+                let element = web_get_value("#bintree-bias");
+                format!("{}:{}", random, element).to_owned()
             }
             "sidewinder" => {
-                let element = document().query_selector("#sidewinder:checked").unwrap();
-                if element.is_some() {
+                if web_get_checked("#sidewinder") {
                     "hard".to_owned()
                 } else {
                     "easy".to_owned()
                 }
             }
-            "hexparallel" => {
-                let element = document()
-                    .query_selector("#hexparallel :checked")
-                    .unwrap()
-                    .unwrap();
-                let element: OptionElement = element.try_into().unwrap();
-                element.value()
-            }
+            "hexparallel" => web_get_value("#hexparallel"),
 
             _ => "unused".to_owned(),
         };

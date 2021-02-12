@@ -1,15 +1,10 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
-    ROWS,
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR,
+    LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -24,7 +19,6 @@ pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     prev: (usize, usize),
     remaining: usize,
-    rng: ThreadRng,
     speedup: bool,
     state: State,
 }
@@ -35,7 +29,6 @@ impl Exports {
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let prev = (0, 0);
         let remaining = 0;
-        let rng = thread_rng();
         let speedup = variant;
         let state = State::Setup;
         Self {
@@ -43,7 +36,6 @@ impl Exports {
             grid,
             prev,
             remaining,
-            rng,
             speedup,
             state,
         }
@@ -77,10 +69,7 @@ impl Algorithm for Exports {
     fn update(&mut self) {
         match self.state {
             State::Setup => {
-                self.curr = (
-                    self.rng.gen_range(0, COLUMNS as usize),
-                    self.rng.gen_range(0, ROWS as usize),
-                );
+                self.curr = (gen_range(0, COLUMNS as usize), gen_range(0, ROWS as usize));
                 self.prev = self.curr;
                 self.remaining = (ROWS * COLUMNS) as usize - 1;
                 self.state = State::Running;
@@ -103,7 +92,7 @@ impl Algorithm for Exports {
 
             let (x, y) = self.curr;
             let mut potentials: Vec<Direction> = EnumSet::all().iter().collect();
-            potentials.shuffle(&mut self.rng);
+            potentials.shuffle();
             for direction in potentials {
                 let (new_x, new_y) = match direction {
                     Direction::North => (x as i32, y as i32 - 1),
@@ -133,35 +122,31 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         if self.state == State::Running {
             let curr_color = COLORS[1];
             for x in 0..COLUMNS as usize {
                 for y in 0..ROWS as usize {
                     if self.grid[y][x] == EnumSet::new() {
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                y as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            y as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            FIELD_COLOR,
                         );
-                        gfx.fill_rect(&rect, FIELD_COLOR);
                     }
                 }
             }
-            let rect = Rectangle::new(
-                Vector::new(
-                    self.curr.0 as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                    self.curr.1 as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                ),
-                Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
+            draw_rectangle(
+                self.curr.0 as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                self.curr.1 as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                CELL_WIDTH - LINE_WIDTH * 2.0,
+                CELL_WIDTH - LINE_WIDTH * 2.0,
+                curr_color,
             );
-            gfx.fill_rect(&rect, curr_color);
         }
-        Ok(())
     }
 }

@@ -1,15 +1,10 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
-    ROWS,
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR,
+    LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -24,7 +19,6 @@ pub struct Exports {
     curr: Option<(usize, usize)>,
     first_empty_line: usize,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
-    rng: ThreadRng,
     scan_line: Option<usize>,
     state: State,
 }
@@ -34,14 +28,12 @@ impl Exports {
         let curr = None;
         let first_empty_line = 0;
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
-        let rng = thread_rng();
         let scan_line = None;
         let state = State::Setup;
         Self {
             curr,
             first_empty_line,
             grid,
-            rng,
             scan_line,
             state,
         }
@@ -61,8 +53,8 @@ impl Algorithm for Exports {
     fn update(&mut self) {
         match self.state {
             State::Setup => {
-                let x = self.rng.gen_range(0, COLUMNS as usize);
-                let y = self.rng.gen_range(0, ROWS as usize);
+                let x = gen_range(0, COLUMNS as usize);
+                let y = gen_range(0, ROWS as usize);
                 self.curr = Some((x, y));
 
                 self.state = State::Walking;
@@ -72,7 +64,7 @@ impl Algorithm for Exports {
                 let (x, y) = self.curr.unwrap();
                 let mut potentials: Vec<Direction> = self.grid[y][x].complement().iter().collect();
                 // println!("({},{}) / {:?}", x, y, potentials);
-                potentials.shuffle(&mut self.rng);
+                potentials.shuffle();
                 while !potentials.is_empty() {
                     let direction = potentials.pop().unwrap();
                     let (new_x, new_y) = match direction {
@@ -124,8 +116,8 @@ impl Algorithm for Exports {
                             neighbours.push(Direction::West);
                         }
 
-                        if let Some(direction) = neighbours.choose(&mut self.rng) {
-                            potentials.push((x, *direction));
+                        if let Some(direction) = neighbours.choose() {
+                            potentials.push((x, direction));
                         }
                     }
                 }
@@ -148,7 +140,7 @@ impl Algorithm for Exports {
                 }
 
                 // Otherwise, pick one of the potentials, and go from there!
-                let (x, direction) = *potentials.choose(&mut self.rng).unwrap();
+                let (x, direction) = potentials.choose().unwrap();
 
                 let (new_x, new_y) = match direction {
                     Direction::North => (x as i32, y as i32 - 1),
@@ -168,9 +160,8 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         let curr_color = COLORS[1];
         let mut cell_color = COLORS[1];
@@ -179,43 +170,43 @@ impl Algorithm for Exports {
         for x in 0..COLUMNS as usize {
             for y in 0..ROWS as usize {
                 if self.grid[y][x] == EnumSet::empty() {
-                    let rect = Rectangle::new(
-                        Vector::new(
-                            x as f32 * CELL_WIDTH + OFFSET,
-                            y as f32 * CELL_WIDTH + OFFSET,
-                        ),
-                        Vector::new(CELL_WIDTH, CELL_WIDTH),
+                    draw_rectangle(
+                        x as f32 * CELL_WIDTH + OFFSET,
+                        y as f32 * CELL_WIDTH + OFFSET,
+                        CELL_WIDTH,
+                        CELL_WIDTH,
+                        FIELD_COLOR,
                     );
-                    gfx.fill_rect(&rect, FIELD_COLOR);
                 };
             }
         }
         if let Some((x, y)) = self.curr {
-            let rect = Rectangle::new(
-                Vector::new(
-                    x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                    y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                ),
-                Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
+            draw_rectangle(
+                x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                CELL_WIDTH - LINE_WIDTH * 2.0,
+                CELL_WIDTH - LINE_WIDTH * 2.0,
+                curr_color,
             );
-            gfx.fill_rect(&rect, curr_color);
         }
         if let Some(line) = self.scan_line {
-            let rect = Rectangle::new(
-                Vector::new(OFFSET, line as f32 * CELL_WIDTH + OFFSET),
-                Vector::new(COLUMNS * CELL_WIDTH, CELL_WIDTH),
+            draw_rectangle(
+                OFFSET,
+                line as f32 * CELL_WIDTH + OFFSET,
+                COLUMNS * CELL_WIDTH,
+                CELL_WIDTH,
+                cell_color,
             );
-            gfx.fill_rect(&rect, cell_color);
         }
 
         if self.state != State::Done {
-            let rect = Rectangle::new(
-                Vector::new(OFFSET, self.first_empty_line as f32 * CELL_WIDTH + OFFSET),
-                Vector::new(COLUMNS * CELL_WIDTH, CELL_WIDTH),
+            draw_rectangle(
+                OFFSET,
+                self.first_empty_line as f32 * CELL_WIDTH + OFFSET,
+                COLUMNS * CELL_WIDTH,
+                CELL_WIDTH,
+                cell_color,
             );
-            gfx.fill_rect(&rect, cell_color);
         }
-
-        Ok(())
     }
 }

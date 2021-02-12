@@ -1,9 +1,8 @@
 use crate::util::Args;
-use clap::Arg;
-use quicksilver::{log, Result};
+use clap::{app_from_crate, Arg};
 
 pub struct Desktop {
-    args: String,
+    algorithm: String,
     variant: String,
 }
 
@@ -11,7 +10,7 @@ impl Desktop {
     pub fn new() -> Self {
         let matches = app_from_crate!("\n")
             .arg(
-                Arg::with_name("algorithm")
+                Arg::new("algorithm")
                     .short('a')
                     .about("Which algorithm to run")
                     .long_about("Specify an algorithm to run.")
@@ -37,7 +36,7 @@ impl Desktop {
                     ])
                     .default_value("parallel"),
             )
-            .arg(Arg::with_name("variant").default_value_ifs(&[
+            .arg(Arg::new("variant").default_value_ifs(&[
                 ("algorithm", Some("parallel"), "6"),
                 ("algorithm", Some("aldousbroder"), "slow"),
                 ("algorithm", Some("wilson"), "fast"),
@@ -48,9 +47,8 @@ impl Desktop {
                 ("algorithm", None, "unused"),
             ]))
             .get_matches();
-        log::info!("DT matches {:?}", matches);
-        let args = matches.value_of("algorithm").unwrap().to_owned();
-        let variant = match args.as_str() {
+        let algorithm = matches.value_of("algorithm").unwrap().to_owned();
+        let variant = match algorithm.as_str() {
             "bintree" => {
                 let mut args = matches.value_of("variant").unwrap().splitn(2, ':');
                 let random = args.next().unwrap_or("random");
@@ -66,13 +64,13 @@ impl Desktop {
             }
             _ => matches.value_of("variant").unwrap().to_owned(),
         };
-        Self { args, variant }
+        Self { algorithm, variant }
     }
 }
 
 impl Args for Desktop {
-    fn get_args(&self) -> Result<String> {
-        Ok(self.args.clone())
+    fn get_algorithm(&self) -> String {
+        self.algorithm.clone()
     }
 
     fn get_variant(&self) -> String {

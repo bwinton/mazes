@@ -1,3 +1,4 @@
 **/*.rs.bk
 **/.DS_Store
 /target
+/static/mazes.wasm

@@ -1,15 +1,14 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
-    ROWS,
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR,
+    LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
-use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{Color, FontRenderer, Graphics},
-    log, Result,
+use macroquad::{
+    logging as log,
+    prelude::{draw_line, draw_rectangle, Color},
+    rand::gen_range,
 };
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
+use maze_utils::From;
 
 const UNITS: f32 = CELL_WIDTH / 12.0;
 
@@ -35,7 +34,6 @@ pub struct Exports {
     previous: Option<(usize, usize)>,
     processing: [[Cell; COLUMNS as usize]; ROWS as usize],
     remaining: usize,
-    rng: ThreadRng,
     slowdown: bool,
     start: Option<(usize, usize)>,
     state: State,
@@ -48,7 +46,6 @@ impl Exports {
         let previous = None;
         let processing = [[Cell::Out; COLUMNS as usize]; ROWS as usize];
         let remaining = 0;
-        let rng = thread_rng();
         let slowdown = variant;
         let start = None;
         let state = State::Setup;
@@ -58,7 +55,6 @@ impl Exports {
             previous,
             processing,
             remaining,
-            rng,
             slowdown,
             start,
             state,
@@ -85,41 +81,43 @@ impl Exports {
             }
         }
     }
-    fn draw_arrow(&self, x: f32, y: f32, direction: Direction, color: Color, gfx: &mut Graphics) {
+    fn draw_arrow(&self, x: f32, y: f32, direction: Direction, color: Color) {
         let x = x * CELL_WIDTH + OFFSET;
         let y = y * CELL_WIDTH + OFFSET;
         let mut points = vec![];
         match direction {
             Direction::North => {
-                points.push(Vector::new(x + 3.0 * UNITS, y + 5.0 * UNITS));
-                points.push(Vector::new(x + 6.0 * UNITS, y + 2.0 * UNITS));
-                points.push(Vector::new(x + 6.0 * UNITS, y + 10.0 * UNITS));
-                points.push(Vector::new(x + 6.0 * UNITS, y + 2.0 * UNITS));
-                points.push(Vector::new(x + 9.0 * UNITS, y + 5.0 * UNITS));
+                points.push((x + 3.0 * UNITS, y + 5.0 * UNITS));
+                points.push((x + 6.0 * UNITS, y + 2.0 * UNITS));
+                points.push((x + 6.0 * UNITS, y + 10.0 * UNITS));
+                points.push((x + 6.0 * UNITS, y + 2.0 * UNITS));
+                points.push((x + 9.0 * UNITS, y + 5.0 * UNITS));
             }
             Direction::East => {
-                points.push(Vector::new(x + 7.0 * UNITS, y + 3.0 * UNITS));
-                points.push(Vector::new(x + 10.0 * UNITS, y + 6.0 * UNITS));
-                points.push(Vector::new(x + 2.0 * UNITS, y + 6.0 * UNITS));
-                points.push(Vector::new(x + 10.0 * UNITS, y + 6.0 * UNITS));
-                points.push(Vector::new(x + 7.0 * UNITS, y + 9.0 * UNITS));
+                points.push((x + 7.0 * UNITS, y + 3.0 * UNITS));
+                points.push((x + 10.0 * UNITS, y + 6.0 * UNITS));
+                points.push((x + 2.0 * UNITS, y + 6.0 * UNITS));
+                points.push((x + 10.0 * UNITS, y + 6.0 * UNITS));
+                points.push((x + 7.0 * UNITS, y + 9.0 * UNITS));
             }
             Direction::South => {
-                points.push(Vector::new(x + 3.0 * UNITS, y + 7.0 * UNITS));
-                points.push(Vector::new(x + 6.0 * UNITS, y + 10.0 * UNITS));
-                points.push(Vector::new(x + 6.0 * UNITS, y + 2.0 * UNITS));
-                points.push(Vector::new(x + 6.0 * UNITS, y + 10.0 * UNITS));
-                points.push(Vector::new(x + 9.0 * UNITS, y + 7.0 * UNITS));
+                points.push((x + 3.0 * UNITS, y + 7.0 * UNITS));
+                points.push((x + 6.0 * UNITS, y + 10.0 * UNITS));
+                points.push((x + 6.0 * UNITS, y + 2.0 * UNITS));
+                points.push((x + 6.0 * UNITS, y + 10.0 * UNITS));
+                points.push((x + 9.0 * UNITS, y + 7.0 * UNITS));
             }
             Direction::West => {
-                points.push(Vector::new(x + 5.0 * UNITS, y + 3.0 * UNITS));
-                points.push(Vector::new(x + 2.0 * UNITS, y + 6.0 * UNITS));
-                points.push(Vector::new(x + 10.0 * UNITS, y + 6.0 * UNITS));
-                points.push(Vector::new(x + 2.0 * UNITS, y + 6.0 * UNITS));
-                points.push(Vector::new(x + 5.0 * UNITS, y + 9.0 * UNITS));
+                points.push((x + 5.0 * UNITS, y + 3.0 * UNITS));
+                points.push((x + 2.0 * UNITS, y + 6.0 * UNITS));
+                points.push((x + 10.0 * UNITS, y + 6.0 * UNITS));
+                points.push((x + 2.0 * UNITS, y + 6.0 * UNITS));
+                points.push((x + 5.0 * UNITS, y + 9.0 * UNITS));
             }
         }
-        gfx.stroke_path(&points, color);
+        for (first, second) in points.iter().zip(points.iter().skip(1)) {
+            draw_line(first.0, first.1, second.0, second.1, LINE_WIDTH, color);
+        }
     }
 }
 
@@ -151,8 +149,8 @@ impl Algorithm for Exports {
     fn update(&mut self) {
         match self.state {
             State::Setup => {
-                let x = self.rng.gen_range(0, COLUMNS as usize);
-                let y = self.rng.gen_range(0, ROWS as usize);
+                let x = gen_range(0, COLUMNS as usize);
+                let y = gen_range(0, ROWS as usize);
                 self.processing[y][x] = Cell::In;
                 self.remaining = (ROWS * COLUMNS - 1.0) as usize;
 
@@ -185,7 +183,7 @@ impl Algorithm for Exports {
                             }
                         }
                     }
-                    self.start = potentials.choose(&mut self.rng).copied();
+                    self.start = potentials.choose();
                     if self.start.is_none() {
                         panic!("Couldn't find a random element, but we think we need one!");
                     }
@@ -194,7 +192,7 @@ impl Algorithm for Exports {
                 let (x, y) = self.current.unwrap();
 
                 let mut potentials: Vec<Direction> = EnumSet::all().iter().collect();
-                potentials.shuffle(&mut self.rng);
+                potentials.shuffle();
                 for direction in potentials {
                     let (new_x, new_y) = match direction {
                         Direction::North => (x as i32, y as i32 - 1),
@@ -270,9 +268,8 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         let mut start_color = COLORS[1];
         start_color.a = 0.5;
@@ -280,25 +277,23 @@ impl Algorithm for Exports {
         let curr_color = COLORS[1];
 
         if let Some((x, y)) = self.current {
-            let rect = Rectangle::new(
-                Vector::new(
-                    x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                    y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                ),
-                Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
+            draw_rectangle(
+                x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                CELL_WIDTH - LINE_WIDTH * 2.0,
+                CELL_WIDTH - LINE_WIDTH * 2.0,
+                curr_color,
             );
-            gfx.fill_rect(&rect, curr_color);
         }
 
         if let Some((x, y)) = self.start {
-            let rect = Rectangle::new(
-                Vector::new(
-                    x as f32 * CELL_WIDTH + OFFSET,
-                    y as f32 * CELL_WIDTH + OFFSET,
-                ),
-                Vector::new(CELL_WIDTH, CELL_WIDTH),
+            draw_rectangle(
+                x as f32 * CELL_WIDTH + OFFSET,
+                y as f32 * CELL_WIDTH + OFFSET,
+                CELL_WIDTH,
+                CELL_WIDTH,
+                start_color,
             );
-            gfx.fill_rect(&rect, start_color);
         }
 
         for x in 0..COLUMNS as usize {
@@ -311,31 +306,27 @@ impl Algorithm for Exports {
                         if Some((x, y)) == self.start {
                             continue;
                         }
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                y as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            y as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            FIELD_COLOR,
                         );
-                        gfx.fill_rect(&rect, FIELD_COLOR);
                     }
                     Cell::Direction(direction) => {
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                y as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            y as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            start_color,
                         );
-                        gfx.fill_rect(&rect, start_color);
-                        self.draw_arrow(x as f32, y as f32, direction, arrow_color, gfx);
+                        self.draw_arrow(x as f32, y as f32, direction, arrow_color);
                     }
                     _ => {}
                 }
             }
         }
-
-        Ok(())
     }
 }

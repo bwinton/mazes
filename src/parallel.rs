@@ -1,17 +1,13 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH,
+    OFFSET, ROWS,
 };
 use maze_utils::From;
 use std::collections::{HashSet, VecDeque};
 
 use array_init::array_init;
 use enumset::EnumSet;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 
 const MAX_SEEDS: usize = 6;
 
@@ -25,7 +21,6 @@ enum State {
 pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
-    rng: ThreadRng,
     seeds: usize,
     sets: [HashSet<usize>; MAX_SEEDS],
     stack: [VecDeque<(usize, usize, EnumSet<Direction>)>; MAX_SEEDS],
@@ -39,14 +34,12 @@ impl Exports {
         }
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
-        let rng = thread_rng();
         let sets = array_init(|_| HashSet::new());
         let stack = array_init(|_| VecDeque::new());
         let state = State::Setup;
         Self {
             grid,
             grid_seeds,
-            rng,
             seeds,
             sets,
             stack,
@@ -74,8 +67,8 @@ impl Algorithm for Exports {
         match self.state {
             State::Setup => {
                 for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
-                    let x = self.rng.gen_range(0, COLUMNS as usize);
-                    let y = self.rng.gen_range(0, ROWS as usize);
+                    let x = gen_range(0, COLUMNS as usize);
+                    let y = gen_range(0, ROWS as usize);
                     stack.push_front((x, y, EnumSet::all()));
                     self.sets[i].insert(i);
                 }
@@ -106,7 +99,7 @@ impl Algorithm for Exports {
                 if potentials.is_empty() {
                     continue 'outer;
                 }
-                potentials.shuffle(&mut self.rng);
+                potentials.shuffle();
                 let direction = potentials.pop().unwrap();
                 // println!("({},{}) -> {:?}", x, y, direction);
                 stack.push_front((x, y, directions ^ direction));
@@ -150,9 +143,8 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         for i in 0..self.seeds {
             let curr_color = COLORS[i + 1];
@@ -160,27 +152,23 @@ impl Algorithm for Exports {
             cell_color.a = 0.5;
             for (i, (x, y, _)) in self.stack[i].iter().enumerate() {
                 if i == 0 {
-                    let rect = Rectangle::new(
-                        Vector::new(
-                            *x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                            *y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                        ),
-                        Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
+                    draw_rectangle(
+                        *x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                        *y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                        CELL_WIDTH - LINE_WIDTH * 2.0,
+                        CELL_WIDTH - LINE_WIDTH * 2.0,
+                        curr_color,
                     );
-                    gfx.fill_rect(&rect, curr_color);
                 } else {
-                    let rect = Rectangle::new(
-                        Vector::new(
-                            *x as f32 * CELL_WIDTH + OFFSET,
-                            *y as f32 * CELL_WIDTH + OFFSET,
-                        ),
-                        Vector::new(CELL_WIDTH, CELL_WIDTH),
+                    draw_rectangle(
+                        *x as f32 * CELL_WIDTH + OFFSET,
+                        *y as f32 * CELL_WIDTH + OFFSET,
+                        CELL_WIDTH,
+                        CELL_WIDTH,
+                        cell_color,
                     );
-                    gfx.fill_rect(&rect, cell_color);
                 }
             }
         }
-
-        Ok(())
     }
 }

@@ -1,79 +1,104 @@
-<!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="shortcut icon" href="maze.ico" type="image/x-icon">
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1" name="viewport" />
-    <script>
-        var Module = {};
-        var __cargo_web = {};
-        Object.defineProperty(Module, 'canvas', {
-            get: function () {
-                if (__cargo_web.canvas) {
-                    return __cargo_web.canvas;
-                }
+  <meta charset="utf-8">
+  <title>Mazes</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-                var canvas = document.createElement('canvas');
-                document.querySelector('body').appendChild(canvas);
-                __cargo_web.canvas = canvas;
-
-                return canvas;
-            }
-        });
-    </script>
-    <style type="text/css">
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-    </style>
+    canvas {
+      margin: 0px;
+      padding: 0px;
+      width:  804px;
+      height: 604px;
+    }
+  </style>
 </head>
 
 <body>
-    <p>Tap/Click/Space to pause/unpause. "r" or reload the page to restart.<br>Questions? Comments? Suggestions? Please <a href="https://github.com/bwinton/mazes/issues">file an issue</a>!</p>
-    <script src="mazes.js"></script>
-    <p>
-        <a href="?parallel">Parallel Backtrack</a> <select id="parallel">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6" selected>6</option>
-        </select> <label for="parallel">seeds</label> /
-        <a href="?eller">Eller</a> /
-        <a href="?kruskal">Kruskal</a> /
-        <a href="?prim">Prim</a> /
-        <a href="?recdiv">Recursive Division</a> /
-        <a href="?blobby">Blobby Recursive Subdivision</a> /
-        <a href="?aldousbroder">Aldous-Broder</a> (<input type="checkbox" id="aldousbroder" checked><label for="aldousbroder">faster tweak</label>) /
-        <a href="?wilson">Wilson</a> (<input type="checkbox" id="wilson"><label for="wilson">slower tweak</label>) /
-        <a href="?houston">Houston</a> /
-        <a href="?huntandkill">Hunt and Kill</a> /
-        <a href="?growingtree">Growing Tree</a>
-        (<select id="growingtree">
-            <option value="newest">newest (Recursive Backtracker)</option>
-            <option value="middle" selected>middle</option>
-            <option value="oldest">oldest</option>
-            <option value="random">random (Prim's)</option>
-        </select>) /
-        <a href="?bintree">Binary Tree</a> (<input type="checkbox" id="bintree-random" checked><label for="bintree-random">random order</label> /
-        bias: <select id="bintree-bias">
-            <option value="NorthEast" selected>North East</option>
-            <option value="SouthEast">South East</option>
-            <option value="SouthWest">South West</option>
-            <option value="NorthWest">North West</option>
-        </select>) /
-        <a href="?sidewinder">Sidewinder</a> (<input type="checkbox" id="sidewinder" checked><label for="sidewinder">harder tweak</label>) /
-        <a href="?hexparallel">Parallel Hex Backtrack</a> <select id="hexparallel">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6" selected>6</option>
-        </select> <label for="hexparallel">seeds</label> /
-    </p>
+  <p>Tap/Click/Space to pause/unpause. "r" or reload the page to restart.<br>Questions? Comments? Suggestions? Please <a href="https://github.com/bwinton/mazes/issues">file an issue</a>!</p>
+  <p id="controls">
+    <a href="?parallel">Parallel Backtrack</a> <select id="parallel">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6" selected>6</option>
+    </select> <label for="parallel">seeds</label> /
+    <a href="?eller">Eller</a> /
+    <a href="?kruskal">Kruskal</a> /
+    <a href="?prim">Prim</a> /
+    <a href="?recdiv">Recursive Division</a> /
+    <a href="?blobby">Blobby Recursive Subdivision</a> /
+    <a href="?aldousbroder">Aldous-Broder</a> (<input type="checkbox" id="aldousbroder" checked><label for="aldousbroder">faster tweak</label>) /
+    <a href="?wilson">Wilson</a> (<input type="checkbox" id="wilson"><label for="wilson">slower tweak</label>) /
+    <a href="?houston">Houston</a> /
+    <a href="?huntandkill">Hunt and Kill</a> /
+    <a href="?growingtree">Growing Tree</a>
+    (<select id="growingtree">
+      <option value="newest">newest (Recursive Backtracker)</option>
+      <option value="middle" selected>middle</option>
+      <option value="oldest">oldest</option>
+      <option value="random">random (Prim's)</option>
+    </select>) /
+    <a href="?bintree">Binary Tree</a> (<input type="checkbox" id="bintree-random" checked><label for="bintree-random">random order</label> /
+    bias: <select id="bintree-bias">
+      <option value="NorthEast" selected>North East</option>
+      <option value="SouthEast">South East</option>
+      <option value="SouthWest">South West</option>
+      <option value="NorthWest">North West</option>
+    </select>) /
+    <a href="?sidewinder">Sidewinder</a> (<input type="checkbox" id="sidewinder" checked><label for="sidewinder">harder tweak</label>) /
+    <a href="?hexparallel">Parallel Hex Backtrack</a> <select id="hexparallel">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6" selected>6</option>
+    </select> <label for="hexparallel">seeds</label> /
+  </p>
+  <canvas id="glcanvas" tabindex='1'></canvas>
+  <script src="./gl.js"></script>
+  <script src="./sapp_jsutils.js"></script>
+  <script type="module">
+    let register_plugin = function (importObject) {
+      importObject.env.get_search = function () {
+        return js_object("" + document.location.search);
+      }
+      importObject.env.get_value = function (key) {
+        key = get_js_object(key);
+        let value = document.querySelector(key).value;
+        return js_object(value);
+      }
+      importObject.env.get_checked = function (key) {
+        return document.querySelector(get_js_object(key)) != null;
+      }
+    }
+    let on_init = function() {
+      // console.log("Init!", wasm_exports.key_down);
+    }
+    miniquad_add_plugin({
+      name:"MazeSelectors",
+      version: "0.1",
+      register_plugin,
+      on_init,
+    });
+
+    let canvas = document.querySelector("#glcanvas");
+    document.getElementById("controls").addEventListener("change", (event) => {
+      let algorithm = (document.location.search || "?parallel").substr(1);
+      if (event.target.id.startsWith(algorithm)) {
+        // On change, kick off canvas.onkeypress
+        // console.log("Found it!");
+      }
+    })
+
+    load("./mazes.wasm");
+  </script>
 </body>
+
 </html>

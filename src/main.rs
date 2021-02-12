@@ -12,148 +12,111 @@ mod parallel;
 mod prim;
 mod recdiv;
 mod sidewinder;
-mod util;
 mod wilson;
 
-extern crate maze_utils;
+// extern crate maze_utils;
+extern crate derive_more;
+extern crate itertools;
+
+mod util;
+
+#[cfg(not(target_arch = "wasm32"))]
+mod desktop_util;
+#[cfg(target_arch = "wasm32")]
+mod web_util;
 
 #[macro_use]
 extern crate enumset;
 #[macro_use]
 extern crate lazy_static;
 
-extern crate derive_more;
-extern crate itertools;
-
-#[cfg(cargo_web)]
-mod web_util;
-
-#[cfg(not(cargo_web))]
-mod desktop_util;
-
-#[cfg(not(cargo_web))]
-#[macro_use]
-extern crate clap;
-
-#[cfg(cargo_web)]
-extern crate stdweb;
-
-#[cfg(not(cargo_web))]
-use desktop_util::Desktop as RealArgs;
-
-#[cfg(cargo_web)]
-use web_util::Web as RealArgs;
-
-use crate::util::{Algorithm, Args, CELL_WIDTH, COLUMNS, LINE_WIDTH, ROWS};
-
-use std::fs;
-
-use quicksilver::{
-    geom::Vector,
-    graphics::{Color, FontRenderer, Graphics, VectorFont},
-    input::{Event, Key, MouseButton},
-    log, run, Input, Result, Settings, Timer, Window,
+use macroquad::{
+    logging as log,
+    miniquad::date::now,
+    prelude::{
+        get_frame_time, is_key_down, is_key_pressed, is_mouse_button_pressed, Conf, KeyCode,
+        MouseButton,
+    },
+    rand,
+    window::{clear_background, next_frame},
 };
 
+use util::{Algorithm, Args, RealArgs, WHITE};
+
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Mazes".to_owned(),
+        sample_count: 1,
+        ..Default::default()
+    }
+}
+
 struct MyGame {
-    // Your state here...
     algorithm: Box<dyn Algorithm>,
     args: RealArgs,
-    font: FontRenderer,
-    update_timer: Timer,
-    draw_timer: Timer,
+    update_timer: f32,
     paused: bool,
 }
 
 impl MyGame {
-    pub fn new(algorithm: Box<dyn Algorithm>, args: RealArgs, gfx: &Graphics) -> MyGame {
-        // Load/create resources such as images here.
-        let data = fs::read("/Users/bwinton/Library/Fonts/InputMono-Thin.ttf").unwrap();
-        let font = VectorFont::from_bytes(data).to_renderer(gfx, 12.0).unwrap();
-
+    pub fn new(algorithm: Box<dyn Algorithm>, args: RealArgs) -> MyGame {
         MyGame {
             algorithm,
             args,
-            font,
-            update_timer: Timer::time_per_second(20.0),
-            draw_timer: Timer::time_per_second(60.0),
+            update_timer: 0.0,
             paused: false,
         }
     }
 
-    fn handle_event(&mut self, input: &Input, event: Event) -> bool {
-        if input.key_down(Key::Q) && (input.key_down(Key::LWin) || input.key_down(Key::RWin)) {
+    fn handle_events(&mut self) -> bool {
+        if is_key_down(KeyCode::Q) && is_key_down(KeyCode::LeftSuper)
+            || is_key_down(KeyCode::RightSuper)
+        {
             return true;
         }
-        match event {
-            Event::KeyboardInput(key_event) => {
-                // R was pressed, so restart.
 
-                if key_event.key() == Key::R && key_event.is_down() {
-                    self.paused = false;
-                    log::info!("Refreshing with {}", self.args.get_variant());
-                    self.algorithm.re_init(self.args.get_variant());
-                }
-                // Space was pressed, so pause.
-                if key_event.key() == Key::Space && key_event.is_down() {
-                    self.paused = !self.paused;
-                }
-            }
-            Event::PointerInput(pointer_event) => {
-                // Left button was pressed, so pause.
-                if pointer_event.button() == MouseButton::Left && pointer_event.is_down() {
-                    self.paused = !self.paused;
-                }
-            }
-            _ => {}
+        if is_key_pressed(KeyCode::R) {
+            // R was pressed, so restart.
+            self.paused = false;
+            log::info!("Refreshing with {}", self.args.get_variant());
+            self.algorithm.re_init(self.args.get_variant());
+        }
+
+        if is_key_pressed(KeyCode::Space) || is_mouse_button_pressed(MouseButton::Left) {
+            // Space was pressed, so pause.
+            self.paused = !self.paused;
         }
         false
     }
-    fn update(&mut self, window: &Window, gfx: &mut Graphics) -> bool {
-        while self.update_timer.tick() {
+
+    fn update(&mut self) -> bool {
+        self.update_timer += get_frame_time();
+        let rv = self.handle_events();
+        if self.update_timer > 0.08 {
+            self.update_timer = 0.0;
             if !self.paused {
                 self.algorithm.update();
             }
         }
-
-        if self.draw_timer.exhaust().is_some() && self.draw(window, gfx).is_err() {
-            // Got an error, let's quit the app, and hope they logged.
-            return true;
-        }
-        false
+        rv
     }
 
-    fn draw(&mut self, window: &Window, gfx: &mut Graphics) -> Result<()> {
+    fn draw(&mut self) {
         // Clear the screen to a blank, white color
-        gfx.clear(Color::WHITE);
-
-        self.algorithm.draw(gfx, &mut self.font)?;
-
-        // Send the data to be drawn
-        gfx.present(&window)?;
-        Ok(())
+        clear_background(WHITE);
+        self.algorithm.draw();
     }
 }
 
-fn main() {
-    run(
-        Settings {
-            size: Vector::new(
-                COLUMNS * CELL_WIDTH + LINE_WIDTH,
-                ROWS * CELL_WIDTH + LINE_WIDTH,
-            ),
-            log_level: log::Level::Info,
-            // icon_path: Some("/maze.png"),
-            ..Settings::default()
-        },
-        app,
-    );
-}
+#[macroquad::main(window_conf)]
+async fn main() {
+    rand::srand(now() as u64);
 
-async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> {
     let args = RealArgs::new();
-    let arg = args.get_args()?;
+    let arg = args.get_algorithm();
     let variant = args.get_variant();
+    log::info!("Args: {}, {}", args.get_algorithm(), args.get_variant());
+
     let message = format!("Expected an integer number of seeds. Got {}!", variant);
     let algorithm: Box<dyn Algorithm> = match arg.as_str() {
         "parallel" => Box::new(parallel::Exports::new(variant.parse().expect(&message))),
@@ -170,7 +133,6 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         "bintree" => Box::new(binarytree::Exports::new(variant)),
         "sidewinder" => Box::new(sidewinder::Exports::new(variant == "hard")),
         "hexparallel" => Box::new(hex_parallel::Exports::new(variant.parse().expect(&message))),
-
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")
@@ -181,30 +143,16 @@ async fn app(window: Window, mut gfx: Graphics, mut input: Input) -> Result<()> 
         algorithm.name(),
         algorithm.get_variant()
     );
-    window.set_title(&format!("Some {} mazes…", algorithm.name()));
 
-    let mut game = MyGame::new(algorithm, args, &gfx);
-    game.draw(&window, &mut gfx)?;
+    //     window.set_title(&format!("Some {} mazes…", algorithm.name()));
+    let mut game = MyGame::new(algorithm, args);
+    next_frame().await;
 
-    'outer: loop {
-        while let Some(e) = input.next_event().await {
-            if game.handle_event(&input, e) {
-                break 'outer;
-            }
+    loop {
+        if game.update() {
+            break;
         }
-        let variant = game.args.get_variant();
-        if variant != game.algorithm.get_variant() {
-            log::info!(
-                "Refreshing {:?} with {:?}",
-                game.algorithm.get_variant(),
-                variant
-            );
-            game.algorithm.re_init(variant);
-            window.set_title(&format!("Some {} mazes…", game.algorithm.name()));
-        }
-        if game.update(&window, &mut gfx) {
-            break 'outer;
-        }
+        game.draw();
+        next_frame().await
     }
-    Ok(())
 }

@@ -1,12 +1,9 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
-use enumset::EnumSet;
-use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
+use crate::util::{
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS,
 };
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng};
+use enumset::EnumSet;
+use macroquad::{logging as log, prelude::draw_rectangle};
+use maze_utils::From;
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -20,7 +17,6 @@ pub struct Exports {
     edges: Vec<(usize, usize, Direction)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     parents: [[Option<(usize, usize)>; COLUMNS as usize]; ROWS as usize],
-    rng: ThreadRng,
     roots: Vec<(usize, usize, usize)>,
     state: State,
 }
@@ -30,14 +26,12 @@ impl Exports {
         let edges = vec![];
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let parents = [[None; COLUMNS as usize]; ROWS as usize];
-        let rng = thread_rng();
         let roots = vec![];
         let state = State::Setup;
         Self {
             edges,
             grid,
             parents,
-            rng,
             roots,
             state,
         }
@@ -76,7 +70,7 @@ impl Algorithm for Exports {
                         }
                     }
                 }
-                self.edges.shuffle(&mut self.rng);
+                self.edges.shuffle();
 
                 self.state = State::Running;
                 return;
@@ -156,9 +150,8 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         if self.state == State::Running {
             for x in 0..COLUMNS as usize {
@@ -172,19 +165,16 @@ impl Algorithm for Exports {
                             .unwrap();
                         let mut color = COLORS[index % COLORS.len()];
                         color.a = 0.5;
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                y as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            y as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            color,
                         );
-                        gfx.fill_rect(&rect, color);
                     };
                 }
             }
         }
-
-        Ok(())
     }
 }

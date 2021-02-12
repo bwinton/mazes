@@ -1,15 +1,10 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, EMPTY_COLOR, LINE_WIDTH, OFFSET,
-    ROWS,
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, EMPTY_COLOR,
+    LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -23,7 +18,6 @@ pub struct Exports {
     frontier: Vec<(usize, usize)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     grid_state: [[bool; COLUMNS as usize]; ROWS as usize],
-    rng: ThreadRng,
     state: State,
     debug: Vec<(usize, usize)>,
 }
@@ -33,13 +27,11 @@ impl Exports {
         let frontier = vec![];
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let grid_state = [[false; COLUMNS as usize]; ROWS as usize];
-        let rng = thread_rng();
         let state = State::Setup;
         Self {
             frontier,
             grid,
             grid_state,
-            rng,
             state,
             debug: vec![],
         }
@@ -60,10 +52,8 @@ impl Algorithm for Exports {
         match self.state {
             State::Setup => {
                 // Add an initial cell to the frontier…
-                self.frontier.push((
-                    self.rng.gen_range(0, COLUMNS as usize),
-                    self.rng.gen_range(0, ROWS as usize),
-                ));
+                self.frontier
+                    .push((gen_range(0, COLUMNS as usize), gen_range(0, ROWS as usize)));
                 self.state = State::Running;
                 return;
             }
@@ -97,7 +87,7 @@ impl Algorithm for Exports {
             directions ^= Direction::South;
         }
         let mut directions: Vec<Direction> = directions.iter().collect();
-        directions.shuffle(&mut self.rng);
+        directions.shuffle();
         for direction in directions {
             let (new_x, new_y) = match direction {
                 Direction::North => (x, y - 1),
@@ -121,12 +111,11 @@ impl Algorithm for Exports {
                 }
             }
         }
-        self.frontier.shuffle(&mut self.rng);
+        self.frontier.shuffle();
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         if self.state == State::Running {
             let curr_color = COLORS[1];
@@ -136,40 +125,34 @@ impl Algorithm for Exports {
             for x in 0..COLUMNS as usize {
                 for y in 0..ROWS as usize {
                     if self.grid[y][x] == EnumSet::empty() && !self.frontier.contains(&(x, y)) {
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                y as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            y as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            EMPTY_COLOR,
                         );
-                        gfx.fill_rect(&rect, EMPTY_COLOR);
                     };
                 }
             }
             for (i, (x, y)) in self.frontier.iter().enumerate() {
                 if i == self.frontier.len() - 1 {
-                    let rect = Rectangle::new(
-                        Vector::new(
-                            *x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                            *y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                        ),
-                        Vector::new(CELL_WIDTH - LINE_WIDTH * 2.0, CELL_WIDTH - LINE_WIDTH * 2.0),
+                    draw_rectangle(
+                        *x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                        *y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+                        CELL_WIDTH - LINE_WIDTH * 2.0,
+                        CELL_WIDTH - LINE_WIDTH * 2.0,
+                        curr_color,
                     );
-
-                    gfx.fill_rect(&rect, curr_color);
                 }
-                let rect = Rectangle::new(
-                    Vector::new(
-                        *x as f32 * CELL_WIDTH + OFFSET,
-                        *y as f32 * CELL_WIDTH + OFFSET,
-                    ),
-                    Vector::new(CELL_WIDTH, CELL_WIDTH),
+                draw_rectangle(
+                    *x as f32 * CELL_WIDTH + OFFSET,
+                    *y as f32 * CELL_WIDTH + OFFSET,
+                    CELL_WIDTH,
+                    CELL_WIDTH,
+                    cell_color,
                 );
-                gfx.fill_rect(&rect, cell_color);
             }
         }
-
-        Ok(())
     }
 }

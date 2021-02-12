@@ -1,17 +1,17 @@
 use enumset::EnumSet;
-
-// use ggez::{Context, GameResult};
-// use ggez::graphics::{
-//     Color, DrawMode, LineCap, MeshBuilder, StrokeOptions,
-// };
-
-use quicksilver::{
-    geom::Vector,
-    graphics::{Color, Element, FontRenderer, Graphics, Mesh, Vertex},
-    Result,
+use macroquad::{
+    color::Color,
+    prelude::{color_u8, draw_line},
+    rand::gen_range,
 };
 
-pub const LINE_WIDTH: f32 = 4.0;
+#[cfg(not(target_arch = "wasm32"))]
+pub use crate::desktop_util::Desktop as RealArgs;
+
+#[cfg(target_arch = "wasm32")]
+pub use crate::web_util::Web as RealArgs;
+
+pub const LINE_WIDTH: f32 = 2.0;
 pub const CELL_WIDTH: f32 = 20.0;
 pub const COLUMNS: f32 = 40.0;
 pub const ROWS: f32 = 30.0;
@@ -24,6 +24,13 @@ pub const EMPTY_COLOR: Color = Color {
     a: 0.2,
 };
 
+pub const WHITE: Color = Color {
+    r: 1.0,
+    g: 1.0,
+    b: 1.0,
+    a: 1.0,
+};
+
 pub const FIELD_COLOR: Color = Color {
     r: 0x4D as f32 / 255.0,
     g: 0xAF as f32 / 255.0,
@@ -33,72 +40,72 @@ pub const FIELD_COLOR: Color = Color {
 
 lazy_static! {
     pub static ref COLORS: [Color; 61] = [
-        Color::from_rgba(0xB2, 0x18, 0x2B, 1.0),
-        Color::from_rgba(0x37, 0x7E, 0xB8, 1.0),
-        Color::from_rgba(0x4D, 0xAF, 0x4A, 1.0),
-        Color::from_rgba(0x98, 0x4E, 0xA3, 1.0),
-        Color::from_rgba(0xFF, 0x7F, 0x00, 1.0),
-        Color::from_rgba(0xA6, 0x56, 0x28, 1.0),
-        Color::from_rgba(0xF7, 0x81, 0xBF, 1.0),
-        Color::from_rgba(0x99, 0x33, 0x00, 1.0),
-        Color::from_rgba(0x33, 0x33, 0x00, 1.0),
-        Color::from_rgba(0x00, 0x33, 0x00, 1.0),
-        Color::from_rgba(0x00, 0x33, 0x66, 1.0),
-        Color::from_rgba(0x00, 0x00, 0x80, 1.0),
-        Color::from_rgba(0x33, 0x33, 0x99, 1.0),
-        Color::from_rgba(0x33, 0x33, 0x33, 1.0),
-        Color::from_rgba(0x80, 0x00, 0x00, 1.0),
-        Color::from_rgba(0xFF, 0x66, 0x00, 1.0),
-        Color::from_rgba(0x80, 0x80, 0x00, 1.0),
-        Color::from_rgba(0x00, 0x80, 0x00, 1.0),
-        Color::from_rgba(0x00, 0x80, 0x80, 1.0),
-        Color::from_rgba(0x00, 0x00, 0xFF, 1.0),
-        Color::from_rgba(0x66, 0x66, 0x99, 1.0),
-        Color::from_rgba(0x80, 0x80, 0x80, 1.0),
-        Color::from_rgba(0xFF, 0x00, 0x00, 1.0),
-        Color::from_rgba(0xFF, 0x99, 0x00, 1.0),
-        Color::from_rgba(0x99, 0xCC, 0x00, 1.0),
-        Color::from_rgba(0x33, 0x99, 0x66, 1.0),
-        Color::from_rgba(0x33, 0xCC, 0xCC, 1.0),
-        Color::from_rgba(0x33, 0x66, 0xFF, 1.0),
-        Color::from_rgba(0x80, 0x00, 0x80, 1.0),
-        Color::from_rgba(0x96, 0x96, 0x96, 1.0),
-        Color::from_rgba(0xFF, 0x00, 0xFF, 1.0),
-        Color::from_rgba(0xFF, 0xCC, 0x00, 1.0),
-        Color::from_rgba(0xFF, 0xFF, 0x00, 1.0),
-        Color::from_rgba(0x00, 0xFF, 0x00, 1.0),
-        Color::from_rgba(0x00, 0xFF, 0xFF, 1.0),
-        Color::from_rgba(0x00, 0xCC, 0xFF, 1.0),
-        Color::from_rgba(0x99, 0x33, 0x66, 1.0),
-        Color::from_rgba(0xC0, 0xC0, 0xC0, 1.0),
-        Color::from_rgba(0xFF, 0x99, 0xCC, 1.0),
-        Color::from_rgba(0xFF, 0xCC, 0x99, 1.0),
-        Color::from_rgba(0xFF, 0xFF, 0x99, 1.0),
-        Color::from_rgba(0xCC, 0xFF, 0xCC, 1.0),
-        Color::from_rgba(0xCC, 0xFF, 0xFF, 1.0),
-        Color::from_rgba(0x99, 0xCC, 0xFF, 1.0),
-        Color::from_rgba(0xCC, 0x99, 0xFF, 1.0),
-        Color::from_rgba(0x99, 0x99, 0xFF, 1.0),
-        Color::from_rgba(0x99, 0x33, 0x66, 1.0),
-        Color::from_rgba(0xFF, 0xFF, 0xCC, 1.0),
-        Color::from_rgba(0xCC, 0xFF, 0xFF, 1.0),
-        Color::from_rgba(0x66, 0x00, 0x66, 1.0),
-        Color::from_rgba(0xFF, 0x80, 0x80, 1.0),
-        Color::from_rgba(0x00, 0x66, 0xCC, 1.0),
-        Color::from_rgba(0xCC, 0xCC, 0xFF, 1.0),
-        Color::from_rgba(0x00, 0x00, 0x80, 1.0),
-        Color::from_rgba(0xFF, 0x00, 0xFF, 1.0),
-        Color::from_rgba(0xFF, 0xFF, 0x00, 1.0),
-        Color::from_rgba(0x00, 0xFF, 0xFF, 1.0),
-        Color::from_rgba(0x80, 0x00, 0x80, 1.0),
-        Color::from_rgba(0x80, 0x00, 0x00, 1.0),
-        Color::from_rgba(0x00, 0x80, 0x80, 1.0),
-        Color::from_rgba(0x00, 0x00, 0xFF, 1.0),
+        color_u8!(0xB2, 0x18, 0x2B, 0xFF),
+        color_u8!(0x37, 0x7E, 0xB8, 0xFF),
+        color_u8!(0x4D, 0xAF, 0x4A, 0xFF),
+        color_u8!(0x98, 0x4E, 0xA3, 0xFF),
+        color_u8!(0xFF, 0x7F, 0x00, 0xFF),
+        color_u8!(0xA6, 0x56, 0x28, 0xFF),
+        color_u8!(0xF7, 0x81, 0xBF, 0xFF),
+        color_u8!(0x99, 0x33, 0x00, 0xFF),
+        color_u8!(0x33, 0x33, 0x00, 0xFF),
+        color_u8!(0x00, 0x33, 0x00, 0xFF),
+        color_u8!(0x00, 0x33, 0x66, 0xFF),
+        color_u8!(0x00, 0x00, 0x80, 0xFF),
+        color_u8!(0x33, 0x33, 0x99, 0xFF),
+        color_u8!(0x33, 0x33, 0x33, 0xFF),
+        color_u8!(0x80, 0x00, 0x00, 0xFF),
+        color_u8!(0xFF, 0x66, 0x00, 0xFF),
+        color_u8!(0x80, 0x80, 0x00, 0xFF),
+        color_u8!(0x00, 0x80, 0x00, 0xFF),
+        color_u8!(0x00, 0x80, 0x80, 0xFF),
+        color_u8!(0x00, 0x00, 0xFF, 0xFF),
+        color_u8!(0x66, 0x66, 0x99, 0xFF),
+        color_u8!(0x80, 0x80, 0x80, 0xFF),
+        color_u8!(0xFF, 0x00, 0x00, 0xFF),
+        color_u8!(0xFF, 0x99, 0x00, 0xFF),
+        color_u8!(0x99, 0xCC, 0x00, 0xFF),
+        color_u8!(0x33, 0x99, 0x66, 0xFF),
+        color_u8!(0x33, 0xCC, 0xCC, 0xFF),
+        color_u8!(0x33, 0x66, 0xFF, 0xFF),
+        color_u8!(0x80, 0x00, 0x80, 0xFF),
+        color_u8!(0x96, 0x96, 0x96, 0xFF),
+        color_u8!(0xFF, 0x00, 0xFF, 0xFF),
+        color_u8!(0xFF, 0xCC, 0x00, 0xFF),
+        color_u8!(0xFF, 0xFF, 0x00, 0xFF),
+        color_u8!(0x00, 0xFF, 0x00, 0xFF),
+        color_u8!(0x00, 0xFF, 0xFF, 0xFF),
+        color_u8!(0x00, 0xCC, 0xFF, 0xFF),
+        color_u8!(0x99, 0x33, 0x66, 0xFF),
+        color_u8!(0xC0, 0xC0, 0xC0, 0xFF),
+        color_u8!(0xFF, 0x99, 0xCC, 0xFF),
+        color_u8!(0xFF, 0xCC, 0x99, 0xFF),
+        color_u8!(0xFF, 0xFF, 0x99, 0xFF),
+        color_u8!(0xCC, 0xFF, 0xCC, 0xFF),
+        color_u8!(0xCC, 0xFF, 0xFF, 0xFF),
+        color_u8!(0x99, 0xCC, 0xFF, 0xFF),
+        color_u8!(0xCC, 0x99, 0xFF, 0xFF),
+        color_u8!(0x99, 0x99, 0xFF, 0xFF),
+        color_u8!(0x99, 0x33, 0x66, 0xFF),
+        color_u8!(0xFF, 0xFF, 0xCC, 0xFF),
+        color_u8!(0xCC, 0xFF, 0xFF, 0xFF),
+        color_u8!(0x66, 0x00, 0x66, 0xFF),
+        color_u8!(0xFF, 0x80, 0x80, 0xFF),
+        color_u8!(0x00, 0x66, 0xCC, 0xFF),
+        color_u8!(0xCC, 0xCC, 0xFF, 0xFF),
+        color_u8!(0x00, 0x00, 0x80, 0xFF),
+        color_u8!(0xFF, 0x00, 0xFF, 0xFF),
+        color_u8!(0xFF, 0xFF, 0x00, 0xFF),
+        color_u8!(0x00, 0xFF, 0xFF, 0xFF),
+        color_u8!(0x80, 0x00, 0x80, 0xFF),
+        color_u8!(0x80, 0x00, 0x00, 0xFF),
+        color_u8!(0x00, 0x80, 0x80, 0xFF),
+        color_u8!(0x00, 0x00, 0xFF, 0xFF),
     ];
 }
 
 pub trait Args {
-    fn get_args(&self) -> Result<String>;
+    fn get_algorithm(&self) -> String;
     fn get_variant(&self) -> String;
 }
 
@@ -106,7 +113,7 @@ pub trait Algorithm {
     fn name(&self) -> String;
     fn re_init(&mut self, variant: String);
     fn update(&mut self);
-    fn draw(&self, gfx: &mut Graphics, font: &mut FontRenderer) -> Result<()>;
+    fn draw(&self);
     fn get_variant(&self) -> String;
 }
 
@@ -129,54 +136,79 @@ impl Direction {
     }
 }
 
-pub fn push_vertex(pos: Vector, vertices: &mut Vec<Vertex>) -> u32 {
-    let rv = vertices.len() as u32;
-    vertices.push(Vertex {
-        pos,
-        uv: None,
-        color: COLORS[0],
-    });
-    rv
-}
-
-pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]) -> Result<Mesh> {
-    let mut vertices = vec![];
-    let mut elements = vec![];
+pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]) {
     for (j, row) in grid.iter().enumerate() {
         for (i, cell) in row.iter().enumerate() {
             let x = i as f32;
             let y = j as f32;
-            let ne = Vector::new((x + 1.0) * CELL_WIDTH + OFFSET, y * CELL_WIDTH + OFFSET);
-            let nw = Vector::new(x * CELL_WIDTH + OFFSET, y * CELL_WIDTH + OFFSET);
-            let se = Vector::new(
-                (x + 1.0) * CELL_WIDTH + OFFSET,
-                (y + 1.0) * CELL_WIDTH + OFFSET,
-            );
-            let sw = Vector::new(x * CELL_WIDTH + OFFSET, (y + 1.0) * CELL_WIDTH + OFFSET);
-
-            let ne = push_vertex(ne, &mut vertices);
-            let nw = push_vertex(nw, &mut vertices);
-            let se = push_vertex(se, &mut vertices);
-            let sw = push_vertex(sw, &mut vertices);
+            let north = y * CELL_WIDTH + OFFSET;
+            let east = (x + 1.0) * CELL_WIDTH + OFFSET;
+            let south = (y + 1.0) * CELL_WIDTH + OFFSET;
+            let west = x * CELL_WIDTH + OFFSET;
 
             //Figure out which lines to draw.
             if !cell.contains(Direction::North) {
-                elements.push(Element::Line([ne, nw]));
+                draw_line(east, north, west, north, LINE_WIDTH, COLORS[0]);
             }
             if !cell.contains(Direction::East) && (x, y) != (COLUMNS - 1.0, ROWS - 1.0) {
-                elements.push(Element::Line([ne, se]));
+                draw_line(east, north, east, south, LINE_WIDTH, COLORS[0]);
             }
             if !cell.contains(Direction::South) {
-                elements.push(Element::Line([se, sw]));
+                draw_line(east, south, west, south, LINE_WIDTH, COLORS[0]);
             }
             if !cell.contains(Direction::West) && (x, y) != (0.0, 0.0) {
-                elements.push(Element::Line([nw, sw]));
+                draw_line(west, north, west, south, LINE_WIDTH, COLORS[0]);
             }
         }
     }
-    Ok(Mesh {
-        vertices,
-        elements,
-        image: None,
-    })
+}
+
+pub struct VecChooseIter<'a, T> {
+    source: &'a Vec<T>,
+    indices: std::vec::IntoIter<usize>,
+}
+
+impl<'a, T> Iterator for VecChooseIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+        self.indices.next().map(|ix| &self.source[ix])
+    }
+}
+pub trait ChooseRandom<T> {
+    fn shuffle(&mut self);
+    fn choose(&self) -> Option<T>;
+    fn choose_multiple(&self, amount: usize) -> VecChooseIter<T>;
+}
+
+impl<T: Copy> ChooseRandom<T> for Vec<T> {
+    fn shuffle(&mut self) {
+        for i in (1..self.len()).rev() {
+            let j = gen_range(0, i + 1);
+            self.swap(i, j);
+        }
+    }
+
+    fn choose(&self) -> Option<T> {
+        if self.is_empty() {
+            return None;
+        }
+        let mut indices = (0..self.len()).collect::<Vec<usize>>();
+        indices.shuffle();
+        Some(self[indices[0]])
+    }
+
+    fn choose_multiple(&self, amount: usize) -> VecChooseIter<T> {
+        let mut indices = (0..self.len())
+            .enumerate()
+            .map(|(i, _)| i)
+            .collect::<Vec<usize>>();
+        indices.shuffle();
+        indices.resize(amount, 0);
+
+        VecChooseIter {
+            source: self,
+            indices: indices.into_iter(),
+        }
+    }
 }

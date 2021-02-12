@@ -1,12 +1,7 @@
 use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
 use enumset::EnumSet;
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -24,7 +19,6 @@ enum Orientation {
 #[derive(From)]
 pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
-    rng: ThreadRng,
     stack: Vec<(usize, usize, usize, usize)>,
     state: State,
 }
@@ -40,15 +34,9 @@ impl Exports {
             row[0].remove(Direction::West);
             row[COLUMNS as usize - 1].remove(Direction::East);
         }
-        let rng = thread_rng();
         let stack = vec![];
         let state = State::Setup;
-        Self {
-            grid,
-            rng,
-            stack,
-            state,
-        }
+        Self { grid, stack, state }
     }
 
     fn choose_orientation(&mut self, width: usize, height: usize) -> Orientation {
@@ -56,7 +44,7 @@ impl Exports {
             Orientation::HORIZONTAL
         } else if height < width {
             Orientation::VERTICAL
-        } else if self.rng.gen() {
+        } else if gen_range(0, 2) == 0 {
             Orientation::HORIZONTAL
         } else {
             Orientation::VERTICAL
@@ -99,9 +87,9 @@ impl Algorithm for Exports {
         match orientation {
             Orientation::HORIZONTAL => {
                 // log::info!("GenRange 1 {}-{}", y, y + height);
-                let wall_y = self.rng.gen_range(y, y + height - 1);
+                let wall_y = gen_range(y, y + height - 1);
                 // log::info!("GenRange 2 {}-{}", x, x + width);
-                let passage_x = self.rng.gen_range(x, x + width);
+                let passage_x = gen_range(x, x + width);
                 for i in x..x + width {
                     self.grid[wall_y][i].remove(Direction::South);
                 }
@@ -119,9 +107,9 @@ impl Algorithm for Exports {
             }
             Orientation::VERTICAL => {
                 // log::info!("GenRange 3 {}-{}", x, x + width);
-                let wall_x = self.rng.gen_range(x, x + width - 1);
+                let wall_x = gen_range(x, x + width - 1);
                 // log::info!("GenRange 4 {}-{}", y, y + height);
-                let passage_y = self.rng.gen_range(y, y + height);
+                let passage_y = gen_range(y, y + height);
                 for row in self.grid.iter_mut().skip(y).take(height) {
                     row[wall_x].remove(Direction::East);
                 }
@@ -145,9 +133,8 @@ impl Algorithm for Exports {
         });
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         if self.state == State::Running {
             for (i, (x, y, width, height)) in self.stack.iter().enumerate() {
@@ -155,17 +142,14 @@ impl Algorithm for Exports {
                 if i != self.stack.len() - 1 {
                     cell_color.a = 0.3;
                 }
-                let rect = Rectangle::new(
-                    Vector::new(
-                        *x as f32 * CELL_WIDTH + OFFSET,
-                        *y as f32 * CELL_WIDTH + OFFSET,
-                    ),
-                    Vector::new(*width as f32 * CELL_WIDTH, *height as f32 * CELL_WIDTH),
+                draw_rectangle(
+                    *x as f32 * CELL_WIDTH + OFFSET,
+                    *y as f32 * CELL_WIDTH + OFFSET,
+                    *width as f32 * CELL_WIDTH,
+                    *height as f32 * CELL_WIDTH,
+                    cell_color,
                 );
-                gfx.fill_rect(&rect, cell_color);
             }
         }
-
-        Ok(())
     }
 }

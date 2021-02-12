@@ -1,8 +1,10 @@
-use crate::util::{Algorithm, COLORS};
+use crate::util::{Algorithm, ChooseRandom, COLORS};
 use crate::{
     hex_util::{draw_board, draw_cell, Direction, COLUMNS, ROWS},
     util::LINE_WIDTH,
 };
+
+use macroquad::{logging as log, rand::gen_range};
 
 use maze_utils::From;
 use std::collections::{HashSet, VecDeque};
@@ -10,11 +12,6 @@ use std::collections::{HashSet, VecDeque};
 use array_init::array_init;
 
 use enumset::EnumSet;
-use quicksilver::{
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 const MAX_SEEDS: usize = 6;
 
@@ -29,7 +26,6 @@ enum State {
 pub struct Exports {
     grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
-    rng: ThreadRng,
     seeds: usize,
     sets: [HashSet<usize>; MAX_SEEDS],
     stack: [VecDeque<(usize, usize, EnumSet<Direction>)>; MAX_SEEDS],
@@ -52,14 +48,12 @@ impl Exports {
             }
         }
         let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
-        let rng = thread_rng();
         let sets = array_init(|_| HashSet::new());
         let stack = array_init(|_| VecDeque::new());
         let state = State::Setup;
         Self {
             grid,
             grid_seeds,
-            rng,
             seeds,
             sets,
             stack,
@@ -89,8 +83,8 @@ impl Algorithm for Exports {
                 for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
                     let mut pushed = false;
                     while !pushed {
-                        let x = self.rng.gen_range(0, COLUMNS as usize);
-                        let y = self.rng.gen_range(0, ROWS as usize);
+                        let x = gen_range(0, COLUMNS as usize);
+                        let y = gen_range(0, ROWS as usize);
                         if self.grid[y][x].is_none() {
                             continue;
                         }
@@ -125,7 +119,7 @@ impl Algorithm for Exports {
                 if potentials.is_empty() {
                     continue 'outer;
                 }
-                potentials.shuffle(&mut self.rng);
+                potentials.shuffle();
                 let direction = potentials.pop().unwrap();
                 // println!("{}: ({},{}) -> {:?}", i, x, y, direction);
                 stack.push_front((x, y, directions ^ direction));
@@ -166,7 +160,6 @@ impl Algorithm for Exports {
                     // Otherwise, loop again and see what we can get.
                 }
             }
-            // done = true;
         }
         if done {
             self.state = State::Done;
@@ -174,9 +167,8 @@ impl Algorithm for Exports {
         }
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         for i in 0..self.seeds {
             let curr_color = COLORS[i + 1];
@@ -184,27 +176,11 @@ impl Algorithm for Exports {
             cell_color.a = 0.5;
             for (i, (x, y, _)) in self.stack[i].iter().enumerate() {
                 if i == 0 {
-                    draw_cell(*x, *y, LINE_WIDTH * 1.5, gfx, curr_color);
+                    draw_cell(*x, *y, LINE_WIDTH * 1.5, curr_color);
                 } else {
-                    draw_cell(*x, *y, 0.0, gfx, cell_color);
+                    draw_cell(*x, *y, 0.0, cell_color);
                 }
             }
         }
-
-        // for (j, row) in self.grid.iter().enumerate() {
-        //     for (i, cell) in row.iter().enumerate() {
-        //         if cell.is_some() {
-        //             let (x, y) = center_pixel(i, j);
-        //             let _ = font.draw(
-        //                 gfx,
-        //                 &format!("{:2},{:2}", i, j),
-        //                 COLORS[1],
-        //                 Vector::new(x - 15.0, y + 4.0),
-        //             )?;
-        //         }
-        //     }
-        // }
-
-        Ok(())
     }
 }

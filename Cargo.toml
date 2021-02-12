@@ -1,33 +1,25 @@
 [package]
 name = "mazes"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Blake Winton <bwinton@latte.ca>"]
 edition = "2018"
 
+
 [dependencies]
 array-init = "1.0.0"
-derive_more = "0.99.10"
-enumset = "1.0.1"
-itertools = "0.9.0"
+derive_more = "0.99.11"
+enumset = "1.0.4"
+itertools = "0.10.0"
 lazy_static = "1.4.0"
-quote = "1.0.7"
-syn = "1.0.41"
-thiserror = "1.0.20"
+macroquad = "0.3.0-alpha.14"
+quote = "1.0.8"
+syn = "1.0.60"
 
-[target.'cfg(not(cargo_web))'.dependencies]
-clap = "3.0.0-beta.1"
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+clap = "3.0.0-beta.2"
 
-[target.'cfg(cargo_web)'.dependencies]
-stdweb = "0.4.20"
-# stdweb = { path = "../stdweb", version = "0.4.20" }
-
-[dependencies.rand]
-version = "0.7.3"
-features = ["stdweb"]
-
-[dependencies.quicksilver]
-version = "0.4.0"
-features = ["stdweb"]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+sapp-jsutils = "0.1.4"
 
 [lib]
 name = "maze_utils"

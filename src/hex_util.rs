@@ -1,12 +1,7 @@
 use enumset::EnumSet;
+use macroquad::prelude::{draw_line, draw_poly, Color};
 
-use quicksilver::{
-    geom::Vector,
-    graphics::{Color, Element, Mesh},
-    Graphics, Result,
-};
-
-use crate::util::{push_vertex, CELL_WIDTH, OFFSET};
+use crate::util::{CELL_WIDTH, COLORS, LINE_WIDTH, OFFSET};
 
 pub const ROWS: f32 = 19.0;
 pub const COLUMNS: f32 = 40.0;
@@ -47,29 +42,21 @@ pub fn center_pixel(i: usize, j: usize) -> (f32, f32) {
     (x - CELL_WIDTH + OFFSET, y + CELL_WIDTH + OFFSET)
 }
 
-fn pointy_hex_corner(x: f32, y: f32, i: usize, inset: f32) -> Vector {
+fn pointy_hex_corner(x: f32, y: f32, i: usize, inset: f32) -> (f32, f32) {
     let angle = (60.0 * (i as f32) - 30.0).to_radians();
-    Vector::new(
+    (
         x + (CELL_WIDTH - inset) * angle.cos(),
         y + (CELL_WIDTH - inset) * angle.sin(),
     )
 }
 
-pub fn draw_cell(i: usize, j: usize, inset: f32, gfx: &mut Graphics, color: Color) {
+pub fn draw_cell(i: usize, j: usize, inset: f32, color: Color) {
     let (x, y) = center_pixel(i, j);
-
-    let mut points: Vec<Vector> = vec![];
-    for i in 0..6 {
-        points.push(pointy_hex_corner(x, y, i, inset));
-    }
-    gfx.fill_polygon(&points, color);
+    // This totally feels like cheating…
+    draw_poly(x, y, 6, CELL_WIDTH - inset, 90.0, color);
 }
 
-pub fn draw_board(
-    grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
-) -> Result<Mesh> {
-    let mut vertices = vec![];
-    let mut elements = vec![];
+pub fn draw_board(grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize]) {
     let mut printed_first = false;
     for (j, row) in grid.iter().enumerate() {
         for (i, cell) in row.iter().enumerate() {
@@ -88,40 +75,28 @@ pub fn draw_board(
             let s = pointy_hex_corner(x, y, 2, 0.0);
             let sw = pointy_hex_corner(x, y, 3, 0.0);
 
-            let n = push_vertex(n, &mut vertices);
-            let ne = push_vertex(ne, &mut vertices);
-            let nw = push_vertex(nw, &mut vertices);
-            let s = push_vertex(s, &mut vertices);
-            let se = push_vertex(se, &mut vertices);
-            let sw = push_vertex(sw, &mut vertices);
-
             let skip_last = j + 1 == ROWS as usize && row[i + 1] == None;
 
             //Figure out which lines to draw.
             if !cell.contains(Direction::NorthEast) {
-                elements.push(Element::Line([n, ne]));
+                draw_line(n.0, n.1, ne.0, ne.1, LINE_WIDTH, COLORS[0]);
             }
             if !cell.contains(Direction::East) && !skip_last {
-                elements.push(Element::Line([ne, se]));
+                draw_line(ne.0, ne.1, se.0, se.1, LINE_WIDTH, COLORS[0]);
             }
             if !cell.contains(Direction::SouthEast) {
-                elements.push(Element::Line([se, s]));
+                draw_line(se.0, se.1, s.0, s.1, LINE_WIDTH, COLORS[0]);
             }
             if !cell.contains(Direction::SouthWest) {
-                elements.push(Element::Line([s, sw]));
+                draw_line(s.0, s.1, sw.0, sw.1, LINE_WIDTH, COLORS[0]);
             }
             if !cell.contains(Direction::West) && printed_first {
-                elements.push(Element::Line([sw, nw]));
+                draw_line(sw.0, sw.1, nw.0, nw.1, LINE_WIDTH, COLORS[0]);
             }
             if !cell.contains(Direction::NorthWest) {
-                elements.push(Element::Line([nw, n]));
+                draw_line(nw.0, nw.1, n.0, n.1, LINE_WIDTH, COLORS[0]);
             }
             printed_first = true;
         }
     }
-    Ok(Mesh {
-        vertices,
-        elements,
-        image: None,
-    })
 }

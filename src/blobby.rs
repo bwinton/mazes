@@ -1,14 +1,10 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, EMPTY_COLOR, OFFSET, ROWS,
+    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, EMPTY_COLOR,
+    OFFSET, ROWS,
 };
 use enumset::EnumSet;
+use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-use quicksilver::{
-    geom::{Rectangle, Vector},
-    graphics::{FontRenderer, Graphics},
-    log, Result,
-};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[derive(PartialEq, Eq, Debug)]
 enum State {
@@ -38,7 +34,6 @@ pub enum Expanding {
 pub struct Exports {
     finished: [[bool; COLUMNS as usize]; ROWS as usize],
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
-    rng: ThreadRng,
     stack: Vec<[[Blob; COLUMNS as usize]; ROWS as usize]>,
     state: State,
 }
@@ -56,22 +51,17 @@ impl Exports {
         }
         let finished = [[false; COLUMNS as usize]; ROWS as usize];
 
-        let rng = thread_rng();
         let stack = vec![];
         let state = State::Setup;
         Self {
             finished,
             grid,
-            rng,
             stack,
             state,
         }
     }
 
-    fn choose_starts(
-        rng: &mut ThreadRng,
-        board: &[[Blob; COLUMNS as usize]; ROWS as usize],
-    ) -> [(usize, usize); 2] {
+    fn choose_starts(board: &[[Blob; COLUMNS as usize]; ROWS as usize]) -> [(usize, usize); 2] {
         let mut potentials = vec![];
         for (y, row) in board.iter().enumerate() {
             for (x, cell) in row.iter().enumerate() {
@@ -81,7 +71,7 @@ impl Exports {
             }
         }
         let mut rv = [(0usize, 0usize), (0usize, 0usize)];
-        for (b, slot) in potentials.choose_multiple(rng, rv.len()).zip(rv.iter_mut()) {
+        for (b, slot) in potentials.choose_multiple(rv.len()).zip(rv.iter_mut()) {
             *slot = *b;
         }
         // log::info!("Chose {:?} from {:?}", rv, potentials);
@@ -89,7 +79,6 @@ impl Exports {
     }
 
     fn expand_blobs(
-        rng: &mut ThreadRng,
         board: &[[Blob; COLUMNS as usize]; ROWS as usize],
         blob: Expanding,
     ) -> ([[Blob; COLUMNS as usize]; ROWS as usize], usize) {
@@ -100,7 +89,7 @@ impl Exports {
                 if cell == &Blob::None {
                     let mut potentials: Vec<Direction> = EnumSet::all().iter().collect();
                     if blob == Expanding::Both {
-                        potentials.shuffle(rng);
+                        potentials.shuffle();
                     }
                     for direction in potentials {
                         let (new_x, new_y) = match direction {
@@ -169,25 +158,22 @@ impl Algorithm for Exports {
 
         match self.state {
             State::Choosing => {
-                let rng = &mut self.rng;
                 let board = self.stack.last_mut().unwrap();
-                let [a, b] = Self::choose_starts(rng, board);
+                let [a, b] = Self::choose_starts(board);
                 board[a.1][a.0] = Blob::First;
                 board[b.1][b.0] = Blob::Second;
                 self.state = State::Expanding;
             }
             State::Expanding => {
-                let rng = &mut self.rng;
                 let board = self.stack.last_mut().unwrap();
-                let (mut new_board, mut remaining) =
-                    Self::expand_blobs(rng, board, Expanding::Both);
-                if rng.gen_bool(0.1) {
-                    let blob = if rng.gen() {
+                let (mut new_board, mut remaining) = Self::expand_blobs(board, Expanding::Both);
+                if gen_range(0, 11) == 0 {
+                    let blob = if gen_range(0, 2) == 0 {
                         Expanding::First
                     } else {
                         Expanding::Second
                     };
-                    let next = Self::expand_blobs(rng, board, blob);
+                    let next = Self::expand_blobs(board, blob);
                     new_board = next.0;
                     remaining = next.1;
                 }
@@ -240,7 +226,7 @@ impl Algorithm for Exports {
                     }
                 }
                 // Carve a door in the wall.
-                walls.shuffle(&mut self.rng);
+                walls.shuffle();
                 let (x, y, direction) = walls.pop().unwrap();
                 let (new_x, new_y) = match direction {
                     Direction::North => (x, y - 1),
@@ -317,9 +303,8 @@ impl Algorithm for Exports {
         });
     }
 
-    fn draw(&self, gfx: &mut Graphics, _font: &mut FontRenderer) -> Result<()> {
-        let elements = draw_board(self.grid)?;
-        gfx.draw_mesh(&elements);
+    fn draw(&self) {
+        draw_board(self.grid);
 
         // if self.state != State::Done {
         let mut none_color = COLORS[1];
@@ -333,25 +318,22 @@ impl Algorithm for Exports {
             for (y, row) in board.iter().enumerate() {
                 for (x, cell) in row.iter().enumerate() {
                     if !self.finished[y][x] {
-                        let rect = Rectangle::new(
-                            Vector::new(
-                                x as f32 * CELL_WIDTH + OFFSET,
-                                y as f32 * CELL_WIDTH + OFFSET,
-                            ),
-                            Vector::new(CELL_WIDTH, CELL_WIDTH),
-                        );
                         let color = match cell {
                             Blob::None => none_color,
                             Blob::First => first_color,
                             Blob::Second => second_color,
                             Blob::Outside => EMPTY_COLOR,
                         };
-                        gfx.fill_rect(&rect, color);
+                        draw_rectangle(
+                            x as f32 * CELL_WIDTH + OFFSET,
+                            y as f32 * CELL_WIDTH + OFFSET,
+                            CELL_WIDTH,
+                            CELL_WIDTH,
+                            color,
+                        );
                     }
                 }
             }
         }
-
-        Ok(())
     }
 }
