@@ -46,7 +46,7 @@ impl Args for Web {
     }
 
     fn get_variant(&self) -> String {
-        let mut algorithm = self.get_algorithm();
+        let algorithm = self.get_algorithm();
         let variant = match algorithm.as_str() {
             "parallel" => web_get_value("#parallel"),
             "aldousbroder" => {
