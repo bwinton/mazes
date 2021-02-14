@@ -1,9 +1,14 @@
 use crate::util::Args;
+use macroquad::collections::storage;
 use sapp_jsutils::JsObject;
+
+struct Reset(bool);
+
 pub struct Web {}
 
 impl Web {
     pub fn new() -> Self {
+        storage::store(Reset(false));
         Self {}
     }
 }
@@ -34,6 +39,11 @@ fn web_get_checked(key: &str) -> bool {
     let key = JsObject::string(&(key.to_owned() + ":checked"));
     let rv = unsafe { get_checked(key) };
     rv
+}
+
+#[no_mangle]
+extern "C" fn send_reset() {
+    storage::store(Reset(true));
 }
 
 impl Args for Web {
@@ -85,5 +95,11 @@ impl Args for Web {
             _ => "unused".to_owned(),
         };
         variant
+    }
+
+    fn needs_reset(&self) -> bool {
+        let rv: bool = storage::get::<Reset>().unwrap().0;
+        storage::store(Reset(false));
+        rv
     }
 }

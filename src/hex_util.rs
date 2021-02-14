@@ -1,10 +1,11 @@
 use enumset::EnumSet;
 use macroquad::prelude::{draw_line, draw_poly, Color};
 
-use crate::util::{CELL_WIDTH, COLORS, LINE_WIDTH, OFFSET};
+use crate::util::{COLORS, LINE_WIDTH, OFFSET};
 
-pub const ROWS: f32 = 19.0;
-pub const COLUMNS: f32 = 40.0;
+pub const CELL_WIDTH: f32 = 12.0;
+pub const ROWS: f32 = 32.0;
+pub const COLUMNS: f32 = 68.0;
 
 #[derive(EnumSetType, Debug)]
 pub enum Direction {
@@ -36,7 +37,7 @@ pub fn center_pixel(i: usize, j: usize) -> (f32, f32) {
     let mut x = f32::sqrt(3.0) * i + f32::sqrt(3.0) / 2.0 * j;
     x -= ROWS / 1.5;
     x *= CELL_WIDTH;
-    x -= 10.0;
+    x -= 34.0;
     let mut y = CELL_WIDTH * 3.0 / 2.0 * j;
     y += 12.0;
     (x - CELL_WIDTH + OFFSET, y + CELL_WIDTH + OFFSET)

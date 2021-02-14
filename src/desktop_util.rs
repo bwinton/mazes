@@ -76,4 +76,8 @@ impl Args for Desktop {
     fn get_variant(&self) -> String {
         self.variant.clone()
     }
+
+    fn needs_reset(&self) -> bool {
+        false
+    }
 }

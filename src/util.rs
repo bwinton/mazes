@@ -107,6 +107,7 @@ lazy_static! {
 pub trait Args {
     fn get_algorithm(&self) -> String;
     fn get_variant(&self) -> String;
+    fn needs_reset(&self) -> bool;
 }
 
 pub trait Algorithm {

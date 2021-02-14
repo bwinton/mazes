@@ -90,6 +90,9 @@ impl MyGame {
     }
 
     fn update(&mut self) -> bool {
+        if self.args.needs_reset() {
+            self.algorithm.re_init(self.args.get_variant());
+        }
         self.update_timer += get_frame_time();
         let rv = self.handle_events();
         if self.update_timer > 0.08 {

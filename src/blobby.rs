@@ -23,13 +23,6 @@ enum Blob {
     Outside,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Expanding {
-    First,
-    Second,
-    Both,
-}
-
 #[derive(From)]
 pub struct Exports {
     finished: [[bool; COLUMNS as usize]; ROWS as usize],
@@ -80,7 +73,6 @@ impl Exports {
 
     fn expand_blobs(
         board: &[[Blob; COLUMNS as usize]; ROWS as usize],
-        blob: Expanding,
     ) -> ([[Blob; COLUMNS as usize]; ROWS as usize], usize) {
         let mut remaining = 0;
         let mut new_board = *board;
@@ -88,9 +80,7 @@ impl Exports {
             for (x, cell) in row.iter().enumerate() {
                 if cell == &Blob::None {
                     let mut potentials: Vec<Direction> = EnumSet::all().iter().collect();
-                    if blob == Expanding::Both {
-                        potentials.shuffle();
-                    }
+                    potentials.shuffle();
                     for direction in potentials {
                         let (new_x, new_y) = match direction {
                             Direction::North => (x as i32, y as i32 - 1),
@@ -102,17 +92,12 @@ impl Exports {
                         if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32
                         {
                             let (new_x, new_y) = (new_x as usize, new_y as usize);
-                            match (blob, board[new_y][new_x]) {
-                                (Expanding::First, Blob::First)
-                                | (Expanding::Second, Blob::Second)
-                                | (Expanding::Both, Blob::First)
-                                | (Expanding::Both, Blob::Second) => {
-                                    new_board[y][x] = board[new_y][new_x];
-                                    break;
-                                }
-                                _ => {
-                                    continue;
-                                }
+                            if [Blob::First, Blob::Second].contains(&board[new_y][new_x])
+                                && (gen_range(0, 2) == 0)
+                            {
+                                // Only expand half the time.
+                                new_board[y][x] = board[new_y][new_x];
+                                break;
                             }
                         }
                     }
@@ -166,17 +151,7 @@ impl Algorithm for Exports {
             }
             State::Expanding => {
                 let board = self.stack.last_mut().unwrap();
-                let (mut new_board, mut remaining) = Self::expand_blobs(board, Expanding::Both);
-                if gen_range(0, 11) == 0 {
-                    let blob = if gen_range(0, 2) == 0 {
-                        Expanding::First
-                    } else {
-                        Expanding::Second
-                    };
-                    let next = Self::expand_blobs(board, blob);
-                    new_board = next.0;
-                    remaining = next.1;
-                }
+                let (new_board, remaining) = Self::expand_blobs(board);
                 *board = new_board;
 
                 // log::info!("Expanding: {} remaining…", remaining);
