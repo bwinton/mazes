@@ -73,14 +73,22 @@
       importObject.env.get_value = function (key) {
         key = get_js_object(key);
         let value = document.querySelector(key).value;
+        // console.log("get_value", value);
         return js_object(value);
       }
       importObject.env.get_checked = function (key) {
+        // console.log("get_checked", document.querySelector(get_js_object(key)) != null);
         return document.querySelector(get_js_object(key)) != null;
       }
     }
     let on_init = function() {
-      // console.log("Init!", wasm_exports.key_down);
+      document.getElementById("controls").addEventListener("change", (event) => {
+        let algorithm = (document.location.search || "?parallel").substr(1);
+        if (event.target.id.startsWith(algorithm)) {
+          wasm_exports.send_reset();
+        }
+      });
+
     }
     miniquad_add_plugin({
       name:"MazeSelectors",
@@ -88,15 +96,6 @@
       register_plugin,
       on_init,
     });
-
-    let canvas = document.querySelector("#glcanvas");
-    document.getElementById("controls").addEventListener("change", (event) => {
-      let algorithm = (document.location.search || "?parallel").substr(1);
-      if (event.target.id.startsWith(algorithm)) {
-        // On change, kick off canvas.onkeypress
-        // console.log("Found it!");
-      }
-    })
 
     load("./mazes.wasm");
   </script>
