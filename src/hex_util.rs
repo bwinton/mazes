@@ -29,6 +29,63 @@ impl Direction {
             Direction::SouthWest => Direction::NorthEast,
         }
     }
+
+    pub fn next(self, x: i32, y: i32) -> (i32, i32) {
+        match self {
+            Direction::NorthEast => (x as i32 + 1, y as i32 - 1),
+            Direction::NorthWest => (x as i32, y as i32 - 1),
+            Direction::East => (x as i32 + 1, y as i32),
+            Direction::West => (x as i32 - 1, y as i32),
+            Direction::SouthEast => (x as i32, y as i32 + 1),
+            Direction::SouthWest => (x as i32 - 1, y as i32 + 1),
+        }
+    }
+}
+
+pub fn init_grid<T: Copy>(value: T) -> [[Option<T>; COLUMNS as usize]; ROWS as usize] {
+    let mut grid = [[Some(value); COLUMNS as usize]; ROWS as usize];
+
+    for (j, row) in grid.iter_mut().enumerate() {
+        for (i, cell) in row.iter_mut().enumerate() {
+            let x = i as f32;
+            let y = j as f32;
+            if (x < (ROWS - 1.0 - y) / 2.0) || (x > COLUMNS - (ROWS + y) / 2.0) {
+                *cell = None;
+            }
+        }
+    }
+
+    grid
+}
+
+pub fn set_border(grid: &mut [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize]) {
+    // Make sure the border is filled in.
+    for (j, row) in grid.iter_mut().enumerate() {
+        for (i, cell) in row.iter_mut().enumerate() {
+            if let Some(cell) = cell {
+                if j == 0 {
+                    cell.remove(Direction::NorthEast);
+                    cell.remove(Direction::NorthWest);
+                } else if j == ROWS as usize - 1 {
+                    cell.remove(Direction::SouthEast);
+                    cell.remove(Direction::SouthWest);
+                }
+                if i >= COLUMNS as usize - (ROWS as usize + j + 1) / 2 {
+                    cell.remove(Direction::East);
+                    if j % 2 == 0 {
+                        cell.remove(Direction::NorthEast);
+                        cell.remove(Direction::SouthEast);
+                    }
+                } else if i <= (ROWS as usize - j) / 2 {
+                    cell.remove(Direction::West);
+                    if j % 2 == 1 {
+                        cell.remove(Direction::NorthWest);
+                        cell.remove(Direction::SouthWest);
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub fn center_pixel(i: usize, j: usize) -> (f32, f32) {
@@ -64,7 +121,6 @@ pub fn draw_board(grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as
             if cell.is_none() {
                 continue;
             }
-
             let cell = cell.unwrap();
             let (x, y) = center_pixel(i, j);
 

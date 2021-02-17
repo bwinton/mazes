@@ -1,6 +1,6 @@
 use crate::util::{Algorithm, ChooseRandom, COLORS};
 use crate::{
-    hex_util::{draw_board, draw_cell, Direction, COLUMNS, ROWS},
+    hex_util::{draw_board, draw_cell, init_grid, Direction, COLUMNS, ROWS},
     util::LINE_WIDTH,
 };
 
@@ -37,16 +37,7 @@ impl Exports {
         if !(1..=MAX_SEEDS).contains(&seeds) {
             panic!("Seeds {} must be between {} and {}", seeds, 1, MAX_SEEDS);
         }
-        let mut grid = [[Some(EnumSet::new()); COLUMNS as usize]; ROWS as usize];
-        for (j, row) in grid.iter_mut().enumerate() {
-            for (i, cell) in row.iter_mut().enumerate() {
-                let x = i as f32;
-                let y = j as f32;
-                if (x < (ROWS - 1.0 - y) / 2.0) || (x > COLUMNS - (ROWS + y) / 2.0) {
-                    *cell = None;
-                }
-            }
-        }
+        let grid = init_grid(EnumSet::new());
         let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
         let sets = array_init(|_| HashSet::new());
         let stack = array_init(|_| VecDeque::new());
@@ -124,14 +115,7 @@ impl Algorithm for Exports {
                 // println!("{}: ({},{}) -> {:?}", i, x, y, direction);
                 stack.push_front((x, y, directions ^ direction));
 
-                let (new_x, new_y) = match direction {
-                    Direction::NorthEast => (x as i32 + 1, y as i32 - 1),
-                    Direction::NorthWest => (x as i32, y as i32 - 1),
-                    Direction::East => (x as i32 + 1, y as i32),
-                    Direction::West => (x as i32 - 1, y as i32),
-                    Direction::SouthEast => (x as i32, y as i32 + 1),
-                    Direction::SouthWest => (x as i32 - 1, y as i32 + 1),
-                };
+                let (new_x, new_y) = direction.next(x as i32, y as i32);
                 // println!("{}: ({},{}) / {:?} -> {:?}", i, x,y, direction, (new_x, new_y));
                 if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                     let (new_x, new_y) = (new_x as usize, new_y as usize);

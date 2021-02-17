@@ -33,6 +33,7 @@ impl Desktop {
                         "bintree",
                         "sidewinder",
                         "hexparallel",
+                        "hexblobby",
                     ])
                     .default_value("parallel"),
             )

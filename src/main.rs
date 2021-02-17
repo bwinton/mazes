@@ -3,6 +3,7 @@ mod binarytree;
 mod blobby;
 mod eller;
 mod growingtree;
+mod hex_blobby;
 mod hex_parallel;
 mod hex_util;
 mod houston;
@@ -136,6 +137,7 @@ async fn main() {
         "bintree" => Box::new(binarytree::Exports::new(variant)),
         "sidewinder" => Box::new(sidewinder::Exports::new(variant == "hard")),
         "hexparallel" => Box::new(hex_parallel::Exports::new(variant.parse().expect(&message))),
+        "hexblobby" => Box::new(hex_blobby::Exports::new()),
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")
