@@ -91,21 +91,99 @@ pub fn set_border(grid: &mut [[Option<EnumSet<Direction>>; COLUMNS as usize]; RO
 pub fn center_pixel(i: usize, j: usize) -> (f32, f32) {
     let i = i as f32;
     let j = j as f32;
-    let mut x = f32::sqrt(3.0) * i + f32::sqrt(3.0) / 2.0 * j;
-    x -= ROWS / 1.5;
-    x *= CELL_WIDTH;
-    x -= 34.0;
+    let sqrt_3 = f32::sqrt(3.0);
+    let mut x = CELL_WIDTH * (sqrt_3 * i + sqrt_3 / 2.0 * j);
+    x -= 292.0;
+
     let mut y = CELL_WIDTH * 3.0 / 2.0 * j;
     y += 12.0;
     (x - CELL_WIDTH + OFFSET, y + CELL_WIDTH + OFFSET)
 }
 
-fn pointy_hex_corner(x: f32, y: f32, i: usize, inset: f32) -> (f32, f32) {
+pub fn pointy_hex_corner(x: f32, y: f32, i: usize, inset: f32) -> (f32, f32) {
     let angle = (60.0 * (i as f32) - 30.0).to_radians();
     (
         x + (CELL_WIDTH - inset) * angle.cos(),
         y + (CELL_WIDTH - inset) * angle.sin(),
     )
+}
+
+fn hex_round(x: f32, y: f32) -> (usize, usize) {
+    let z = -x - y;
+    let mut rx = f32::round(x);
+    let mut ry = f32::round(y);
+    let rz = f32::round(z);
+
+    let x_diff = f32::abs(rx - x);
+    let y_diff = f32::abs(ry - y);
+    let z_diff = f32::abs(rz - z);
+
+    if x_diff > y_diff && x_diff > z_diff {
+        rx = -ry - rz;
+    } else if y_diff > z_diff {
+        ry = -rx - rz;
+    }
+
+    (rx as usize, ry as usize)
+}
+
+pub fn cell_from_pos(
+    x: f32,
+    y: f32,
+    grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
+) -> Option<(usize, usize)> {
+    if x < 0.0 || y < 0.0 {
+        return None;
+    }
+
+    let mut x = x;
+    x += CELL_WIDTH + OFFSET;
+    x += 292.0;
+
+    let mut y = y;
+    y -= CELL_WIDTH + OFFSET;
+    y -= 12.0;
+
+    let sqrt_3 = f32::sqrt(3.0);
+    let q = (sqrt_3 / 3.0 * x - 1.0 / 3.0 * y) / CELL_WIDTH;
+    let r = (2.0 / 3.0 * y) / CELL_WIDTH;
+    let (x, y) = hex_round(q, r);
+
+    if x >= COLUMNS as usize || y >= ROWS as usize {
+        return None;
+    }
+    grid[y][x]?;
+    Some((x, y))
+}
+
+pub fn draw_path(path: &[(usize, usize)]) {
+    let mut color = COLORS[10];
+    if let Some((&(x, y), rest)) = path.split_last() {
+        draw_cell(x, y, 3.0, color);
+        color.a = 0.5;
+        for &(x, y) in rest {
+            draw_cell(x, y, 0.0, color)
+        }
+    }
+}
+
+pub fn valid_move(
+    start: Option<&(usize, usize)>,
+    next: Option<(usize, usize)>,
+    grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
+) -> bool {
+    if let Some(&(x1, y1)) = start {
+        if let Some((x2, y2)) = next {
+            if let Some(cell) = grid[y1][x1] {
+                for direction in cell {
+                    if direction.next(x1 as i32, y1 as i32) == (x2 as i32, y2 as i32) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
 }
 
 pub fn draw_cell(i: usize, j: usize, inset: f32, color: Color) {
@@ -156,4 +234,18 @@ pub fn draw_board(grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as
             printed_first = true;
         }
     }
+}
+
+#[test]
+fn a() {
+    let grid = init_grid(EnumSet::new());
+    let (i, j) = (16, 0);
+    let (x, y) = center_pixel(i, j);
+
+    assert_eq!(cell_from_pos(x, y, grid), Some((i, j)));
+
+    let (i, j) = (15, 0);
+    let (x, y) = center_pixel(i, j);
+
+    assert_eq!(cell_from_pos(x, y, grid), None);
 }

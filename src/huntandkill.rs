@@ -16,6 +16,7 @@ enum State {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     curr: Option<(usize, usize)>,
     first_empty_line: usize,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
@@ -25,17 +26,15 @@ pub struct Exports {
 
 impl Exports {
     pub fn new() -> Self {
-        let curr = None;
-        let first_empty_line = 0;
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
-        let scan_line = None;
-        let state = State::Setup;
+
         Self {
-            curr,
-            first_empty_line,
+            path: vec![],
+            curr: None,
+            first_empty_line: 0,
             grid,
-            scan_line,
-            state,
+            scan_line: None,
+            state: State::Setup,
         }
     }
 }

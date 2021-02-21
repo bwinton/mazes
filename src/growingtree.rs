@@ -25,6 +25,7 @@ enum Variant {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     curr: Option<(usize, usize)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     stack: VecDeque<(usize, usize)>,
@@ -41,15 +42,14 @@ impl Exports {
             "random" => Variant::Random,
             _ => panic!("Unknown Variant \"{}\"!", variant),
         };
-        let curr = None;
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
-        let stack = VecDeque::new();
-        let state = State::Setup;
+
         Self {
-            curr,
+            path: vec![],
+            curr: None,
             grid,
-            stack,
-            state,
+            stack: VecDeque::new(),
+            state: State::Setup,
             variant,
         }
     }

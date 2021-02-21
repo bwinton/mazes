@@ -1,7 +1,7 @@
 use enumset::EnumSet;
 use macroquad::{
     color::Color,
-    prelude::{color_u8, draw_line},
+    prelude::{color_u8, draw_line, draw_rectangle},
     rand::gen_range,
 };
 
@@ -137,6 +137,50 @@ impl Direction {
     }
 }
 
+pub fn cell_from_pos(x: f32, y: f32) -> Option<(usize, usize)> {
+    if x < 0.0 || y < 0.0 {
+        return None;
+    }
+    let x = ((x - OFFSET) / CELL_WIDTH) as usize;
+    let y = ((y - OFFSET) / CELL_WIDTH) as usize;
+    if x >= COLUMNS as usize || y >= ROWS as usize {
+        return None;
+    }
+    Some((x, y))
+}
+
+pub fn valid_move(
+    start: Option<&(usize, usize)>,
+    next: Option<(usize, usize)>,
+    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+) -> bool {
+    if let Some(&(x1, y1)) = start {
+        if let Some((x2, y2)) = next {
+            let direction = match (x2 as i32 - x1 as i32, y2 as i32 - y1 as i32) {
+                (0, -1) => Some(Direction::North),
+                (0, 1) => Some(Direction::South),
+                (-1, 0) => Some(Direction::West),
+                (1, 0) => Some(Direction::East),
+                _ => None,
+            };
+            if let Some(direction) = direction {
+                return grid[y1][x1].contains(direction);
+            }
+        }
+    }
+    false
+}
+
+pub fn draw_cell(x: usize, y: usize, inset: f32, color: Color) {
+    draw_rectangle(
+        x as f32 * CELL_WIDTH + inset + OFFSET,
+        y as f32 * CELL_WIDTH + inset + OFFSET,
+        CELL_WIDTH - inset * 2.0,
+        CELL_WIDTH - inset * 2.0,
+        color,
+    );
+}
+
 pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize]) {
     for (j, row) in grid.iter().enumerate() {
         for (i, cell) in row.iter().enumerate() {
@@ -160,6 +204,17 @@ pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize])
             if !cell.contains(Direction::West) && (x, y) != (0.0, 0.0) {
                 draw_line(west, north, west, south, LINE_WIDTH, COLORS[0]);
             }
+        }
+    }
+}
+
+pub fn draw_path(path: &[(usize, usize)]) {
+    let mut color = COLORS[10];
+    if let Some((&(x, y), rest)) = path.split_last() {
+        draw_cell(x, y, 2.0, color);
+        color.a = 0.5;
+        for &(x, y) in rest {
+            draw_cell(x, y, 0.0, color)
         }
     }
 }

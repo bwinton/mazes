@@ -1,13 +1,14 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH,
-    OFFSET, ROWS,
+    cell_from_pos, draw_board, draw_cell, draw_path, valid_move, Algorithm, ChooseRandom,
+    Direction, COLORS, COLUMNS, LINE_WIDTH, ROWS,
 };
+use itertools::Itertools;
 use maze_utils::From;
 use std::collections::{HashSet, VecDeque};
 
 use array_init::array_init;
 use enumset::EnumSet;
-use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
+use macroquad::{logging as log, prelude::mouse_position, rand::gen_range};
 
 const MAX_SEEDS: usize = 6;
 
@@ -19,6 +20,7 @@ enum State {
 }
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     seeds: usize,
@@ -36,14 +38,14 @@ impl Exports {
         let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
         let sets = array_init(|_| HashSet::new());
         let stack = array_init(|_| VecDeque::new());
-        let state = State::Setup;
         Self {
+            path: vec![],
             grid,
             grid_seeds,
             seeds,
             sets,
             stack,
-            state,
+            state: State::Setup,
         }
     }
 }
@@ -77,6 +79,16 @@ impl Algorithm for Exports {
                 return;
             }
             State::Done => {
+                let (x, y) = mouse_position();
+                let cursor = cell_from_pos(x, y);
+                if valid_move(self.path.last(), cursor, self.grid) {
+                    let cursor = cursor.unwrap();
+                    if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
+                        self.path.truncate(index + 1);
+                    } else {
+                        self.path.push(cursor);
+                    }
+                }
                 return;
             }
             _ => {}
@@ -138,6 +150,7 @@ impl Algorithm for Exports {
             }
         }
         if done {
+            self.path.push((0, 0));
             self.state = State::Done;
             log::info!("Done!");
         }
@@ -152,23 +165,13 @@ impl Algorithm for Exports {
             cell_color.a = 0.5;
             for (i, (x, y, _)) in self.stack[i].iter().enumerate() {
                 if i == 0 {
-                    draw_rectangle(
-                        *x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                        *y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-                        CELL_WIDTH - LINE_WIDTH * 2.0,
-                        CELL_WIDTH - LINE_WIDTH * 2.0,
-                        curr_color,
-                    );
+                    draw_cell(*x, *y, LINE_WIDTH, curr_color);
                 } else {
-                    draw_rectangle(
-                        *x as f32 * CELL_WIDTH + OFFSET,
-                        *y as f32 * CELL_WIDTH + OFFSET,
-                        CELL_WIDTH,
-                        CELL_WIDTH,
-                        cell_color,
-                    );
+                    draw_cell(*x, *y, 0.0, cell_color);
                 }
             }
         }
+
+        draw_path(&self.path);
     }
 }

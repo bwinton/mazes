@@ -1,10 +1,14 @@
-use crate::util::{Algorithm, ChooseRandom, COLORS};
+use crate::{
+    hex_util::{cell_from_pos, draw_path, valid_move},
+    util::{Algorithm, ChooseRandom, COLORS},
+};
 use crate::{
     hex_util::{draw_board, draw_cell, init_grid, Direction, COLUMNS, ROWS},
     util::LINE_WIDTH,
 };
 
-use macroquad::{logging as log, rand::gen_range};
+use itertools::Itertools;
+use macroquad::{logging as log, prelude::mouse_position, rand::gen_range};
 
 use maze_utils::From;
 use std::collections::{HashSet, VecDeque};
@@ -24,6 +28,7 @@ enum State {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     seeds: usize,
@@ -41,14 +46,14 @@ impl Exports {
         let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
         let sets = array_init(|_| HashSet::new());
         let stack = array_init(|_| VecDeque::new());
-        let state = State::Setup;
         Self {
+            path: vec![],
             grid,
             grid_seeds,
             seeds,
             sets,
             stack,
-            state,
+            state: State::Setup,
         }
     }
 }
@@ -89,6 +94,17 @@ impl Algorithm for Exports {
                 return;
             }
             State::Done => {
+                let (x, y) = mouse_position();
+                let cursor = cell_from_pos(x, y, self.grid);
+                // log::info!("{:?} => {:?}", (x, y), cursor);
+                if valid_move(self.path.last(), cursor, self.grid) {
+                    let cursor = cursor.unwrap();
+                    if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
+                        self.path.truncate(index + 1);
+                    } else {
+                        self.path.push(cursor);
+                    }
+                }
                 return;
             }
             _ => {}
@@ -146,6 +162,11 @@ impl Algorithm for Exports {
             }
         }
         if done {
+            let (first, _) = self.grid[0]
+                .iter()
+                .find_position(|&&x| x.is_some())
+                .unwrap();
+            self.path.push((first, 0));
             self.state = State::Done;
             log::info!("Done!");
         }
@@ -166,5 +187,7 @@ impl Algorithm for Exports {
                 }
             }
         }
+
+        draw_path(&self.path);
     }
 }

@@ -18,6 +18,7 @@ enum State {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     current_row: usize,
     current_column: usize,
     empty_sets: Vec<usize>,
@@ -29,21 +30,18 @@ pub struct Exports {
 
 impl Exports {
     pub fn new() -> Self {
-        let current_row = 0;
-        let current_column = 0;
-        let empty_sets = vec![];
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let grid_sets = [[None; COLUMNS as usize]; ROWS as usize];
-        let sets = vec![];
-        let state = State::Setup;
+
         Self {
-            current_row,
-            current_column,
-            empty_sets,
+            path: vec![],
+            current_row: 0,
+            current_column: 0,
+            empty_sets: vec![],
             grid,
             grid_sets,
-            sets,
-            state,
+            sets: vec![],
+            state: State::Setup,
         }
     }
 }

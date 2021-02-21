@@ -29,6 +29,7 @@ enum Cell {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     current: Option<(usize, usize)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     previous: Option<(usize, usize)>,
@@ -41,23 +42,19 @@ pub struct Exports {
 
 impl Exports {
     pub fn new(variant: bool) -> Self {
-        let current = None;
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
-        let previous = None;
         let processing = [[Cell::Out; COLUMNS as usize]; ROWS as usize];
-        let remaining = 0;
-        let slowdown = variant;
-        let start = None;
-        let state = State::Setup;
+
         Self {
-            current,
+            path: vec![],
+            current: None,
             grid,
-            previous,
+            previous: None,
             processing,
-            remaining,
-            slowdown,
-            start,
-            state,
+            remaining: 0,
+            slowdown: variant,
+            start: None,
+            state: State::Setup,
         }
     }
     pub fn is_done(&self) -> bool {

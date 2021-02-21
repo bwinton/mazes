@@ -14,6 +14,7 @@ enum State {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     edges: Vec<(usize, usize, Direction)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     parents: [[Option<(usize, usize)>; COLUMNS as usize]; ROWS as usize],
@@ -23,17 +24,16 @@ pub struct Exports {
 
 impl Exports {
     pub fn new() -> Self {
-        let edges = vec![];
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let parents = [[None; COLUMNS as usize]; ROWS as usize];
-        let roots = vec![];
-        let state = State::Setup;
+
         Self {
-            edges,
+            path: vec![],
+            edges: vec![],
             grid,
             parents,
-            roots,
-            state,
+            roots: vec![],
+            state: State::Setup,
         }
     }
 

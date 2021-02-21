@@ -18,6 +18,7 @@ enum Orientation {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     stack: Vec<(usize, usize, usize, usize)>,
     state: State,
@@ -34,9 +35,13 @@ impl Exports {
             row[0].remove(Direction::West);
             row[COLUMNS as usize - 1].remove(Direction::East);
         }
-        let stack = vec![];
-        let state = State::Setup;
-        Self { grid, stack, state }
+
+        Self {
+            path: vec![],
+            grid,
+            stack: vec![],
+            state: State::Setup,
+        }
     }
 
     fn choose_orientation(&mut self, width: usize, height: usize) -> Orientation {

@@ -1,12 +1,13 @@
 use crate::{
-    hex_util::set_border,
+    hex_util::{cell_from_pos, draw_path, set_border, valid_move},
     util::{Algorithm, ChooseRandom, COLORS, EMPTY_COLOR},
 };
 
 use crate::hex_util::{draw_board, draw_cell, init_grid, Direction, COLUMNS, ROWS};
 
 use enumset::EnumSet;
-use macroquad::{logging as log, rand::gen_range};
+use itertools::Itertools;
+use macroquad::{logging as log, prelude::mouse_position, rand::gen_range};
 use maze_utils::From;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -28,6 +29,7 @@ enum Blob {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     finished: [[Option<bool>; COLUMNS as usize]; ROWS as usize],
     grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
     stack: Vec<[[Option<Blob>; COLUMNS as usize]; ROWS as usize]>,
@@ -42,9 +44,10 @@ impl Exports {
 
         let stack = vec![];
         let state = State::Setup;
-        log::info!("Init ({},{}): {:?}", 52, 0, grid[0][52]);
+        // log::info!("Init ({},{}): {:?}", 52, 0, grid[0][52]);
 
         Self {
+            path: vec![],
             finished,
             grid,
             stack,
@@ -125,12 +128,28 @@ impl Algorithm for Exports {
                 return;
             }
             State::Done => {
+                let (x, y) = mouse_position();
+                let cursor = cell_from_pos(x, y, self.grid);
+                // log::info!("{:?} => {:?}", (x, y), cursor);
+                if valid_move(self.path.last(), cursor, self.grid) {
+                    let cursor = cursor.unwrap();
+                    if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
+                        self.path.truncate(index + 1);
+                    } else {
+                        self.path.push(cursor);
+                    }
+                }
                 return;
             }
             _ => {}
         }
 
         if self.stack.is_empty() {
+            let (first, _) = self.grid[0]
+                .iter()
+                .find_position(|&&x| x.is_some())
+                .unwrap();
+            self.path.push((first, 0));
             self.state = State::Done;
             log::info!("Done!");
             return;
@@ -282,10 +301,6 @@ impl Algorithm for Exports {
     fn draw(&self) {
         draw_board(self.grid);
 
-        if self.state == State::Done {
-            return;
-        }
-
         let mut none_color = COLORS[1];
         none_color.a = 0.3;
         let mut first_color = COLORS[2];
@@ -309,5 +324,7 @@ impl Algorithm for Exports {
                 }
             }
         }
+
+        draw_path(&self.path);
     }
 }

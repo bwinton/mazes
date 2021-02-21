@@ -16,6 +16,7 @@ enum State {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     curr: (usize, usize),
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     harder: bool,
@@ -25,18 +26,15 @@ pub struct Exports {
 
 impl Exports {
     pub fn new(variant: bool) -> Self {
-        let curr = (0, 0);
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
-        let harder = variant;
 
-        let run_start = 0;
-        let state = State::Setup;
         Self {
-            curr,
+            path: vec![],
+            curr: (0, 0),
             grid,
-            harder,
-            run_start,
-            state,
+            harder: variant,
+            run_start: 0,
+            state: State::Setup,
         }
     }
 

@@ -25,6 +25,7 @@ enum Blob {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     finished: [[bool; COLUMNS as usize]; ROWS as usize],
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     stack: Vec<[[Blob; COLUMNS as usize]; ROWS as usize]>,
@@ -44,13 +45,12 @@ impl Exports {
         }
         let finished = [[false; COLUMNS as usize]; ROWS as usize];
 
-        let stack = vec![];
-        let state = State::Setup;
         Self {
+            path: vec![],
             finished,
             grid,
-            stack,
-            state,
+            stack: vec![],
+            state: State::Setup,
         }
     }
 

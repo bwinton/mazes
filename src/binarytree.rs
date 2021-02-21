@@ -25,6 +25,7 @@ enum Bias {
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     bias: Bias,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     random: bool,
@@ -48,7 +49,6 @@ impl Exports {
         } else {
             remaining.reverse();
         }
-        let state = State::Setup;
         let bias = match bias {
             "NorthEast" => Bias::NorthEast,
             "SouthEast" => Bias::SouthEast,
@@ -56,12 +56,14 @@ impl Exports {
             "NorthWest" => Bias::NorthWest,
             _ => panic!("Unknown bias {}", bias),
         };
+
         Self {
+            path: vec![],
             bias,
             grid,
             random,
             remaining,
-            state,
+            state: State::Setup,
         }
     }
     fn carve(&mut self, cell: (usize, usize), direction: Direction) {
