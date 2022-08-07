@@ -18,6 +18,16 @@ jobs:
     - name: Add wasm
       run: rustup target add wasm32-unknown-unknown
 
+    - uses: Swatinem/rust-cache@v2
+      with:
+        # An explicit cache key that is stable across jobs.
+        shared-key: ""
+        key: ""
+        env-vars: ""
+        workspaces: ""
+        # Determines if the cache should be saved even when the workflow has failed.
+        cache-on-failure: ""
+        
     - name: Build
       run: cargo build --verbose --release --target=wasm32-unknown-unknown
 
