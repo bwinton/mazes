@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::util::{draw_board, Algorithm, Direction, COLUMNS, ROWS};
 use maze_utils::From;
 
@@ -10,34 +12,72 @@ enum State {
     Running,
     Done,
 }
+
+#[derive(Debug)]
+enum Variant {
+    Sun,
+    Star,
+    Ace,
+    Deuce,
+    Jack,
+    Queen,
+    King,
+}
+
+impl Display for Variant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Variant::Sun => f.write_str("Sun"),
+            Variant::Star => f.write_str("Star"),
+            Variant::Ace => f.write_str("Ace"),
+            Variant::Deuce => f.write_str("Deuce"),
+            Variant::Jack => f.write_str("Jack"),
+            Variant::Queen => f.write_str("Queen"),
+            Variant::King => f.write_str("King"),
+        }
+    }
+}
+
 #[derive(From)]
 pub struct Exports {
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     state: State,
+    variant: Variant,
 }
 
 impl Exports {
-    pub fn new() -> Self {
+    pub fn new(variant: String) -> Self {
+        let variant = match variant.as_str() {
+            "sun" => Variant::Sun,
+            "star" => Variant::Star,
+            "ace" => Variant::Ace,
+            "deuce" => Variant::Deuce,
+            "jack" => Variant::Jack,
+            "queen" => Variant::Queen,
+            "king" => Variant::King,
+            _ => panic!("Unknown Variant \"{}\"!", variant),
+        };
         let grid = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         let grid_seeds = [[None; COLUMNS as usize]; ROWS as usize];
         Self {
             grid,
             grid_seeds,
             state: State::Setup,
+            variant,
         }
     }
 }
 
 impl Algorithm for Exports {
     fn name(&self) -> String {
-        String::from("Penrose")
+        format!("Penrose {}", self.variant)
     }
-    fn re_init(&mut self, _variant: String) {
-        self.from(Exports::new());
+    fn re_init(&mut self, variant: String) {
+        self.from(Exports::new(variant));
     }
     fn get_variant(&self) -> String {
-        "unused".to_owned()
+        self.variant.to_string().to_lowercase()
     }
     fn update(&mut self) {
         // println!("Updating {}", self.name());

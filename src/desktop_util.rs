@@ -46,6 +46,7 @@ impl Desktop {
                 ("algorithm", Some("bintree"), Some("random:NorthWest")),
                 ("algorithm", Some("sidewinder"), Some("hard")),
                 ("algorithm", Some("hexparallel"), Some("3")),
+                ("algorithm", Some("penrose"), Some("king")),
                 ("algorithm", None, Some("unused")),
             ]))
             .get_matches();
