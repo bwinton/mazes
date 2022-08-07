@@ -10,6 +10,7 @@ mod houston;
 mod huntandkill;
 mod kruskal;
 mod parallel;
+mod penrose;
 mod prim;
 mod recdiv;
 mod sidewinder;
@@ -138,6 +139,7 @@ async fn main() {
         "sidewinder" => Box::new(sidewinder::Exports::new(variant == "hard")),
         "hexparallel" => Box::new(hex_parallel::Exports::new(variant.parse().expect(&message))),
         "hexblobby" => Box::new(hex_blobby::Exports::new()),
+        "penrose" => Box::new(penrose::Exports::new()),
         _ => {
             log::error!("Unimplemented algorithm: {:?}!", arg);
             panic!("Unimplemented algorithm.")

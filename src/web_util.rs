@@ -91,6 +91,7 @@ impl Args for Web {
                 }
             }
             "hexparallel" => web_get_value("#hexparallel"),
+            "penrose" => web_get_value("#penrose"),
 
             _ => "unused".to_owned(),
         };

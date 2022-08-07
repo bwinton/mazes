@@ -34,6 +34,7 @@ impl Desktop {
                         "sidewinder",
                         "hexparallel",
                         "hexblobby",
+                        "penrose",
                     ])
                     .default_value("parallel"),
             )
