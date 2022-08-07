@@ -1,0 +1,33 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build --verbose
+
+    - name: Make directory
+      run: mkdir -p target/deploy
+
+    - name: Copy build files
+      run: cp target/wasm32-unknown-unknown/release/mazes.wasm target/deploy
+
+    - name: Copy static files
+      run: cp static/* target/deploy
+ 
+    - name: GitHub Pages action
+      uses: peaceiris/actions-gh-pages@v3.6.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_build/html
