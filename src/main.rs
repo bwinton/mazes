@@ -93,6 +93,7 @@ impl MyGame {
 
     fn update(&mut self) -> bool {
         if self.args.needs_reset() {
+            // log::info!("Needs reset!");
             self.algorithm.re_init(self.args.get_variant());
         }
         self.update_timer += get_frame_time();

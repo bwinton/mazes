@@ -73,7 +73,7 @@ impl Algorithm for Exports {
         self.seeds.to_string()
     }
     fn update(&mut self) {
-        // println!("Updating {}", self.name());
+        // log::info!("Updating {}", self.name());
         match self.state {
             State::Setup => {
                 for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
@@ -128,11 +128,11 @@ impl Algorithm for Exports {
                 }
                 potentials.shuffle();
                 let direction = potentials.pop().unwrap();
-                // println!("{}: ({},{}) -> {:?}", i, x, y, direction);
+                // log::info!("{}: ({},{}) -> {:?}", i, x, y, direction);
                 stack.push_front((x, y, directions ^ direction));
 
                 let (new_x, new_y) = direction.next(x as i32, y as i32);
-                // println!("{}: ({},{}) / {:?} -> {:?}", i, x,y, direction, (new_x, new_y));
+                // log::info!("{}: ({},{}) / {:?} -> {:?}", i, x,y, direction, (new_x, new_y));
                 if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                     let (new_x, new_y) = (new_x as usize, new_y as usize);
                     if self.grid[new_y][new_x] == Some(EnumSet::new())

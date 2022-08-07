@@ -62,7 +62,7 @@ impl Algorithm for Exports {
             State::Walking => {
                 let (x, y) = self.curr.unwrap();
                 let mut potentials: Vec<Direction> = self.grid[y][x].complement().iter().collect();
-                // println!("({},{}) / {:?}", x, y, potentials);
+                // log::info!("({},{}) / {:?}", x, y, potentials);
                 potentials.shuffle();
                 while !potentials.is_empty() {
                     let direction = potentials.pop().unwrap();
@@ -72,7 +72,7 @@ impl Algorithm for Exports {
                         Direction::South => (x as i32, y as i32 + 1),
                         Direction::West => (x as i32 - 1, y as i32),
                     };
-                    // println!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
+                    // log::info!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
                     if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                         let (new_x, new_y) = (new_x as usize, new_y as usize);
                         if self.grid[new_y][new_x] != EnumSet::new() {

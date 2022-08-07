@@ -76,7 +76,7 @@ impl Algorithm for Exports {
         }
     }
     fn update(&mut self) {
-        // println!("Updating {}", self.name());
+        // log::info!("Updating {}", self.name());
         match self.state {
             State::Setup => {
                 self.stack
@@ -107,7 +107,7 @@ impl Algorithm for Exports {
         let (x, y) = self.stack[index];
         self.curr = Some((x, y));
         let directions = self.grid[y][x].complement();
-        // println!("{:?}[{}] => ({},{}) {:?}", self.stack, self.index, x, y, directions);
+        // log::info!("{:?}[{}] => ({},{}) {:?}", self.stack, self.index, x, y, directions);
         let potentials: Vec<(usize, usize, Direction)> = directions
             .iter()
             .filter_map(|direction| {
@@ -117,7 +117,7 @@ impl Algorithm for Exports {
                     Direction::South => (x as i32, y as i32 + 1),
                     Direction::West => (x as i32 - 1, y as i32),
                 };
-                // println!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
+                // log::info!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
                 if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                     let (new_x, new_y) = (new_x as usize, new_y as usize);
                     if self.grid[new_y][new_x] == EnumSet::new()
@@ -133,7 +133,7 @@ impl Algorithm for Exports {
             })
             .collect();
 
-        // println!("{:?} => ({},{}) Potentials: {:?}", self.index, x, y, potentials);
+        // log::info!("{:?} => ({},{}) Potentials: {:?}", self.index, x, y, potentials);
         if potentials.is_empty() {
             self.stack.remove(index);
             return;
@@ -141,7 +141,7 @@ impl Algorithm for Exports {
         let (new_x, new_y, direction) = potentials.choose().unwrap().to_owned();
         self.grid[y][x] |= direction;
         self.grid[new_y][new_x] |= direction.opposite();
-        // println!("  pushing ({},{})", new_x, new_y);
+        // log::info!("  pushing ({},{})", new_x, new_y);
         self.stack.push_front((new_x, new_y));
         self.curr = Some((new_x, new_y));
     }

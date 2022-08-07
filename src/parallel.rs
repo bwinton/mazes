@@ -59,13 +59,14 @@ impl Algorithm for Exports {
         }
     }
     fn re_init(&mut self, variant: String) {
+        // log::info!("Re-initing with {}", variant);
         self.from(Exports::new(variant.parse().unwrap()));
     }
     fn get_variant(&self) -> String {
         self.seeds.to_string()
     }
     fn update(&mut self) {
-        // println!("Updating {}", self.name());
+        // log::info!("Updating {}", self.name());
         match self.state {
             State::Setup => {
                 for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
@@ -113,7 +114,7 @@ impl Algorithm for Exports {
                 }
                 potentials.shuffle();
                 let direction = potentials.pop().unwrap();
-                // println!("({},{}) -> {:?}", x, y, direction);
+                // log::info!("({},{}) -> {:?}", x, y, direction);
                 stack.push_front((x, y, directions ^ direction));
 
                 let (new_x, new_y) = match direction {
@@ -122,7 +123,7 @@ impl Algorithm for Exports {
                     Direction::South => (x as i32, y as i32 + 1),
                     Direction::West => (x as i32 - 1, y as i32),
                 };
-                // println!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
+                // log::info!("{:?} / {:?} -> {:?}", (x,y), direction, (new_x, new_y));
                 if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                     let (new_x, new_y) = (new_x as usize, new_y as usize);
                     if self.grid[new_y][new_x] == EnumSet::new()

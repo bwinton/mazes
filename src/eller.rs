@@ -57,7 +57,7 @@ impl Algorithm for Exports {
         "unused".to_owned()
     }
     fn update(&mut self) {
-        // println!("{}, {:?}", self.current_row, self.state);
+        // log::info!("{}, {:?}", self.current_row, self.state);
         match self.state {
             State::Setup => {
                 for x in 0..COLUMNS as usize {
@@ -79,7 +79,7 @@ impl Algorithm for Exports {
                     let old_set = self.grid_sets[self.current_row][self.current_column + 1];
                     let new_set = self.grid_sets[self.current_row][self.current_column];
                     if new_set != old_set {
-                        // println!(
+                        // log::info!(
                         //     "Merging {}: {:?} and {:?}…",
                         //     x, self.grid[self.current_row][x], self.grid[self.current_row][x]
                         // );
@@ -139,7 +139,7 @@ impl Algorithm for Exports {
                         self.grid[self.current_row + 1][cell] |= Direction::North;
                         self.grid_sets[self.current_row + 1][cell] = Some(i);
                     }
-                    // println!();
+                    // log::info!();
                 }
                 // self.current_column += 1;
 
@@ -158,7 +158,7 @@ impl Algorithm for Exports {
         for row in self.current_row..self.current_row + 2 {
             if row < ROWS as usize {
                 for x in 0..COLUMNS as usize {
-                    // println!("{:?}.", self.grid[self.current_row][x]);
+                    // log::info!("{:?}.", self.grid[self.current_row][x]);
                     if let Some(i) = self.grid_sets[row][x] {
                         let curr_color = COLORS[i + 1];
                         let mut cell_color = COLORS[i + 1];
