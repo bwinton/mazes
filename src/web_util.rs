@@ -1,5 +1,5 @@
 use crate::util::Args;
-use macroquad::collections::storage;
+use macroquad::experimental::collections::storage;
 use sapp_jsutils::JsObject;
 
 struct Reset(bool);
@@ -99,7 +99,7 @@ impl Args for Web {
     }
 
     fn needs_reset(&self) -> bool {
-        let rv: bool = storage::get::<Reset>().unwrap().0;
+        let rv: bool = storage::get::<Reset>().0;
         storage::store(Reset(false));
         rv
     }
