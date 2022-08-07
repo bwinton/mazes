@@ -8,22 +8,16 @@ use macroquad::{
     shapes::{draw_circle, draw_line, draw_rectangle_lines},
 };
 
+const LENGTH: f32 = 50.0;
+lazy_static! {
+    static ref SMALL_LENGTH: f32 = LENGTH * 2.0 / (1.0 + 5.0f32.sqrt());
+}
+
 #[derive(PartialEq, Eq, Debug)]
 enum State {
     Setup,
     Running,
     Done,
-}
-
-#[derive(Debug)]
-enum Variant {
-    Sun,
-    Star,
-    Ace,
-    Deuce,
-    Jack,
-    Queen,
-    King,
 }
 
 #[derive(Debug)]
@@ -56,6 +50,24 @@ impl Tile {
             }
         }
     }
+
+    fn build_kite(i: f32, x_center: f32, y_center: f32) -> Tile {
+        let a = Point(x_center, y_center);
+        let b = Point::polar_to_rect(LENGTH, i * PI / 10.0).offset(x_center, y_center);
+        let c = Point::polar_to_rect(LENGTH, (i + 2.0) * PI / 10.0).offset(x_center, y_center);
+        let d = Point::polar_to_rect(LENGTH, (i + 4.0) * PI / 10.0).offset(x_center, y_center);
+        Tile::Kite(a, b, c, d)
+    }
+
+    fn build_dart(i: f32, x_center: f32, y_center: f32) -> Tile {
+        let small_length = *SMALL_LENGTH;
+        let a = Point(x_center, y_center);
+        let b = Point::polar_to_rect(LENGTH, i * PI / 10.0).offset(x_center, y_center);
+        let c =
+            Point::polar_to_rect(small_length, (i + 2.0) * PI / 10.0).offset(x_center, y_center);
+        let d = Point::polar_to_rect(LENGTH, (i + 4.0) * PI / 10.0).offset(x_center, y_center);
+        Tile::Dart(a, b, c, d)
+    }
 }
 
 impl Display for Variant {
@@ -69,6 +81,98 @@ impl Display for Variant {
             Variant::Queen => f.write_str("Queen"),
             Variant::King => f.write_str("King"),
         }
+    }
+}
+
+#[derive(Debug)]
+enum Variant {
+    Sun,
+    Star,
+    Ace,
+    Deuce,
+    Jack,
+    Queen,
+    King,
+}
+
+impl Variant {
+    fn start_tiles(&self, x_center: f32, y_center: f32) -> Vec<Tile> {
+        let mut tiles = vec![];
+        let small_length = *SMALL_LENGTH;
+
+        match self {
+            Variant::Sun => {
+                // Create wheel of red triangles around the origin
+                for i in 0..5 {
+                    tiles.push(Tile::build_kite(i as f32 * 4.0 + 1.0, x_center, y_center));
+                }
+            }
+            Variant::Star => {
+                for i in 0..5 {
+                    tiles.push(Tile::build_dart(i as f32 * 4.0 - 1.0, x_center, y_center));
+                }
+            }
+            Variant::Ace => {
+                let tile = Tile::build_kite(1.0, x_center, y_center - LENGTH);
+                tiles.push(tile);
+                let tile = Tile::build_kite(5.0, x_center, y_center - LENGTH);
+                tiles.push(tile);
+                let tile = Tile::build_dart(13.0, x_center, y_center + small_length);
+                tiles.push(tile);
+            }
+            Variant::Deuce => {
+                let tile = Tile::build_dart(1.0, x_center, y_center - LENGTH);
+                tiles.push(tile);
+                let tile = Tile::build_dart(5.0, x_center, y_center - LENGTH);
+                tiles.push(tile);
+                let offset = Point::polar_to_rect(LENGTH, 1.0 * PI / 10.0);
+                let tile = Tile::build_kite(17.0, x_center - offset.0, y_center + offset.1);
+                tiles.push(tile);
+                let tile = Tile::build_kite(9.0, x_center + offset.0, y_center + offset.1);
+                tiles.push(tile);
+            }
+            Variant::Jack => {
+                let tile = Tile::build_kite(11.0, x_center, y_center);
+                tiles.push(tile);
+                let tile = Tile::build_kite(15.0, x_center, y_center);
+                tiles.push(tile);
+                let tile = Tile::build_kite(13.0, x_center, y_center + LENGTH);
+                tiles.push(tile);
+
+                let offset = Point::polar_to_rect(LENGTH, 19.0 * PI / 10.0);
+                let tile = Tile::build_dart(5.0, x_center + offset.0, y_center + offset.1);
+                tiles.push(tile);
+                let tile = Tile::build_dart(1.0, x_center - offset.0, y_center + offset.1);
+                tiles.push(tile);
+            }
+            Variant::Queen => {
+                let tile = Tile::build_dart(13.0, x_center, y_center);
+                tiles.push(tile);
+
+                let offset = Point::polar_to_rect(LENGTH, 17.0 * PI / 10.0);
+                let tile = Tile::build_kite(3.0, x_center + offset.0, y_center + offset.1);
+                tiles.push(tile);
+                let tile = Tile::build_kite(3.0, x_center - offset.0, y_center + offset.1);
+                tiles.push(tile);
+
+                let tile = Tile::build_kite(11.0, x_center, y_center + LENGTH);
+                tiles.push(tile);
+                let tile = Tile::build_kite(15.0, x_center, y_center + LENGTH);
+                tiles.push(tile);
+            }
+            Variant::King => {
+                for i in 2..5 {
+                    tiles.push(Tile::build_dart(i as f32 * 4.0 + 1.0, x_center, y_center));
+                }
+
+                let offset = Point::polar_to_rect(LENGTH, 1.0 * PI / 10.0);
+                let tile = Tile::build_kite(7.0, x_center + offset.0, y_center + offset.1);
+                tiles.push(tile);
+                let tile = Tile::build_kite(-1.0, x_center - offset.0, y_center + offset.1);
+                tiles.push(tile);
+            }
+        };
+        tiles
     }
 }
 
@@ -96,43 +200,8 @@ impl Exports {
         let h = ROWS * CELL_WIDTH;
         let x_center = w / 2.0 + OFFSET;
         let y_center = h / 2.0 + OFFSET;
-        let length = 50.0;
-        let small_length = length * 2.0 / (1.0 + 5.0f32.sqrt());
 
-        let tiles = match variant {
-            Variant::Sun => {
-                // Create wheel of red triangles around the origin
-                let mut rv = vec![];
-                for i in 0..5 {
-                    let a = Point(x_center, y_center);
-                    let b = Point::polar_to_rect(length, (i as f32 * 4.0 + 1.0) * PI / 10.0)
-                        .offset(x_center, y_center);
-                    let c = Point::polar_to_rect(length, (i as f32 * 4.0 + 3.0) * PI / 10.0)
-                        .offset(x_center, y_center);
-                    let d = Point::polar_to_rect(length, (i as f32 * 4.0 + 5.0) * PI / 10.0)
-                        .offset(x_center, y_center);
-                    rv.push(Tile::Kite(a, b, c, d));
-                }
-                rv
-            }
-            Variant::Star => {
-                let mut rv = vec![];
-                for i in 0..5 {
-                    let a = Point(x_center, y_center);
-                    let b = Point::polar_to_rect(length, (i as f32 * 4.0 - 1.0) * PI / 10.0)
-                        .offset(x_center, y_center);
-                    let c = Point::polar_to_rect(small_length, (i as f32 * 4.0 + 1.0) * PI / 10.0)
-                        .offset(x_center, y_center);
-                    let d = Point::polar_to_rect(length, (i as f32 * 4.0 + 3.0) * PI / 10.0)
-                        .offset(x_center, y_center);
-                    rv.push(Tile::Dart(a, b, c, d));
-                }
-                rv
-            }
-
-            _ => todo!(),
-        };
-        log::info!("Drawing {}, {:?}", variant, &tiles);
+        let tiles = variant.start_tiles(x_center, y_center);
         Self {
             state: State::Setup,
             variant,
@@ -146,8 +215,6 @@ impl Algorithm for Exports {
         format!("Penrose {}", self.variant)
     }
     fn re_init(&mut self, variant: String) {
-        log::info!("Re-initing with {}", variant);
-
         self.from(Exports::new(variant));
     }
     fn get_variant(&self) -> String {
