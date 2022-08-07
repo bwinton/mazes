@@ -1,5 +1,5 @@
 use crate::util::Args;
-use clap::{app_from_crate, Arg};
+use clap::{command, Arg};
 
 pub struct Desktop {
     algorithm: String,
@@ -8,12 +8,12 @@ pub struct Desktop {
 
 impl Desktop {
     pub fn new() -> Self {
-        let matches = app_from_crate!("\n")
+        let matches = command!("\n")
             .arg(
                 Arg::new("algorithm")
                     .short('a')
-                    .about("Which algorithm to run")
-                    .long_about("Specify an algorithm to run.")
+                    .help("Which algorithm to run")
+                    .long_help("Specify an algorithm to run.")
                     .takes_value(true)
                     .possible_values(&[
                         "parallel",
@@ -39,14 +39,14 @@ impl Desktop {
                     .default_value("parallel"),
             )
             .arg(Arg::new("variant").default_value_ifs(&[
-                ("algorithm", Some("parallel"), "6"),
-                ("algorithm", Some("aldousbroder"), "slow"),
-                ("algorithm", Some("wilson"), "fast"),
-                ("algorithm", Some("growingtree"), "middle"),
-                ("algorithm", Some("bintree"), "random:NorthWest"),
-                ("algorithm", Some("sidewinder"), "hard"),
-                ("algorithm", Some("hexparallel"), "3"),
-                ("algorithm", None, "unused"),
+                ("algorithm", Some("parallel"), Some("6")),
+                ("algorithm", Some("aldousbroder"), Some("slow")),
+                ("algorithm", Some("wilson"), Some("fast")),
+                ("algorithm", Some("growingtree"), Some("middle")),
+                ("algorithm", Some("bintree"), Some("random:NorthWest")),
+                ("algorithm", Some("sidewinder"), Some("hard")),
+                ("algorithm", Some("hexparallel"), Some("3")),
+                ("algorithm", None, Some("unused")),
             ]))
             .get_matches();
         let algorithm = matches.value_of("algorithm").unwrap().to_owned();
