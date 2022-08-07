@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --release --target=wasm32-unknown-unknown
 
     - name: Make directory
       run: mkdir -p target/deploy
