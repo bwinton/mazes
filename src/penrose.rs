@@ -18,7 +18,8 @@ lazy_static! {
 #[derive(PartialEq, Eq, Debug)]
 enum State {
     Setup,
-    Running,
+    Deflating,
+    Growing,
     Done,
 }
 
@@ -40,6 +41,12 @@ impl Point {
         let x = cx + (ax - cx) * ratio;
         let y = cy + (ay - cy) * ratio;
         Point(x, y)
+    }
+
+    fn inside(&self, start: Point, end: Point) -> bool {
+        let Point(x, y) = start;
+        let Point(w, h) = end;
+        (self.0 >= x && self.0 <= w) && (self.1 >= y && self.1 <= h)
     }
 }
 
@@ -100,6 +107,10 @@ impl Tile {
             // [(1, B, P, A), (0, P, C, B)]
             vec![Tile(true, a, p, c), Tile(false, b, c, p)]
         }
+    }
+
+    fn inside(&self, start: Point, end: Point) -> bool {
+        self.1.inside(start, end) || self.2.inside(start, end) || self.3.inside(start, end)
     }
 }
 
@@ -229,7 +240,6 @@ pub struct Exports {
     state: State,
     variant: Variant,
     tiles: Vec<Tile>,
-    iterations: u32,
 }
 
 impl Exports {
@@ -250,14 +260,11 @@ impl Exports {
         let x_center = w / 2.0 + OFFSET;
         let y_center = h / 2.0 + OFFSET;
 
-        let iterations = 5;
-
         let tiles = variant.start_tiles(x_center, y_center);
         Self {
             state: State::Setup,
             variant,
             tiles,
-            iterations,
         }
     }
 }
@@ -276,29 +283,54 @@ impl Algorithm for Exports {
         // log::info!("Updating {}", self.name());
         match self.state {
             State::Setup => {
-                self.state = State::Running;
+                self.state = State::Deflating;
                 return;
             }
             State::Done => {
                 return;
             }
+            State::Growing => {
+                let w = COLUMNS * CELL_WIDTH;
+                let h = ROWS * CELL_WIDTH;
+                let x_center = w / 2.0 + OFFSET;
+                let y_center = h / 2.0 + OFFSET;
+
+                let grow_ratio = -0.03;
+                for tile in self.tiles.iter_mut() {
+                    tile.1 = tile.1.move_to(&Point(x_center, y_center), grow_ratio);
+                    tile.2 = tile.2.move_to(&Point(x_center, y_center), grow_ratio);
+                    tile.3 = tile.3.move_to(&Point(x_center, y_center), grow_ratio);
+                }
+                // Prune out the invisible tiles…
+                // let size = self.tiles.len();
+                self.tiles = self
+                    .tiles
+                    .iter()
+                    .filter_map(|tile| {
+                        if tile.inside(Point(OFFSET, OFFSET), Point(w + OFFSET, h + OFFSET)) {
+                            Some(*tile)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                // log::info!("Shrank from {} to {} tiles.", size, self.tiles.len());
+                if self.tiles.len() < 2000 {
+                    self.state = State::Deflating;
+                }
+                return;
+            }
             _ => {}
         }
-
-        let mut done = false;
 
         let mut next = vec![];
         for tile in &self.tiles {
             next.extend(tile.subdivide());
         }
         self.tiles = next;
-        self.iterations -= 1;
-        if self.iterations == 0 {
-            done = true;
-        }
+        self.state = State::Growing;
 
-        if done {
-            self.state = State::Done;
+        if self.state == State::Done {
             log::info!("Done!");
         }
     }
@@ -317,11 +349,5 @@ impl Algorithm for Exports {
         draw_rectangle(x + w, 0.0, x, h, WHITE);
         draw_rectangle(0.0, y + h, w, y, WHITE);
         draw_rectangle_lines(x, y, w, h, LINE_WIDTH, COLORS[0]);
-
-        // let x_center = w / 2.0 + x;
-        // let y_center = h / 2.0 + y;
-        // draw_circle(x_center, y_center, 3.0, COLORS[1]);
-
-        // if self.state == State::Running {}
     }
 }
