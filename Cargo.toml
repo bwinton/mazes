@@ -2,21 +2,21 @@
 name = "mazes"
 version = "0.2.0"
 authors = ["Blake Winton <bwinton@latte.ca>"]
-edition = "2018"
+edition = "2021"
 
 
 [dependencies]
-array-init = "1.0.0"
+array-init = "2.1.0"
 derive_more = "0.99.11"
 enumset = "1.0.4"
-itertools = "0.10.0"
+itertools = "0.12.1"
 lazy_static = "1.4.0"
-macroquad = "0.3.0-alpha.14"
+macroquad = "0.4.5"
 quote = "1.0.8"
-syn = "1.0.60"
+syn = "2.0.58"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = "3.0.0-beta.2"
+clap = {version="4.5.4", features = ["cargo"]}
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 sapp-jsutils = "0.1.4"

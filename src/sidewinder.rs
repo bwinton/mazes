@@ -154,8 +154,8 @@ impl Algorithm for Exports {
 
         let x = x - 1.0;
         draw_rectangle(
-            x as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
-            y as f32 * CELL_WIDTH + LINE_WIDTH + OFFSET,
+            x * CELL_WIDTH + LINE_WIDTH + OFFSET,
+            y * CELL_WIDTH + LINE_WIDTH + OFFSET,
             CELL_WIDTH - LINE_WIDTH * 2.0,
             CELL_WIDTH - LINE_WIDTH * 2.0,
             curr_color,

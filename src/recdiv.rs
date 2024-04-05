@@ -12,8 +12,8 @@ enum State {
 
 #[derive(PartialEq, Eq, Debug)]
 enum Orientation {
-    HORIZONTAL,
-    VERTICAL,
+    Horizontal,
+    Vertical,
 }
 
 #[derive(From)]
@@ -46,13 +46,13 @@ impl Exports {
 
     fn choose_orientation(&mut self, width: usize, height: usize) -> Orientation {
         if width < height {
-            Orientation::HORIZONTAL
+            Orientation::Horizontal
         } else if height < width {
-            Orientation::VERTICAL
+            Orientation::Vertical
         } else if gen_range(0, 2) == 0 {
-            Orientation::HORIZONTAL
+            Orientation::Horizontal
         } else {
-            Orientation::VERTICAL
+            Orientation::Vertical
         }
     }
 }
@@ -90,7 +90,7 @@ impl Algorithm for Exports {
         let orientation = self.choose_orientation(width, height);
 
         match orientation {
-            Orientation::HORIZONTAL => {
+            Orientation::Horizontal => {
                 // log::info!("GenRange 1 {}-{}", y, y + height);
                 let wall_y = gen_range(y, y + height - 1);
                 // log::info!("GenRange 2 {}-{}", x, x + width);
@@ -110,7 +110,7 @@ impl Algorithm for Exports {
                     self.stack.push((x, wall_y + 1, width, new_height));
                 }
             }
-            Orientation::VERTICAL => {
+            Orientation::Vertical => {
                 // log::info!("GenRange 3 {}-{}", x, x + width);
                 let wall_x = gen_range(x, x + width - 1);
                 // log::info!("GenRange 4 {}-{}", y, y + height);

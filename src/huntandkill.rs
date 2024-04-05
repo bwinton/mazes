@@ -64,8 +64,7 @@ impl Algorithm for Exports {
                 let mut potentials: Vec<Direction> = self.grid[y][x].complement().iter().collect();
                 // println!("({},{}) / {:?}", x, y, potentials);
                 potentials.shuffle();
-                while !potentials.is_empty() {
-                    let direction = potentials.pop().unwrap();
+                while let Some(direction) = potentials.pop() {
                     let (new_x, new_y) = match direction {
                         Direction::North => (x as i32, y as i32 - 1),
                         Direction::East => (x as i32 + 1, y as i32),

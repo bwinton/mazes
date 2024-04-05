@@ -1,5 +1,5 @@
 use crate::util::Args;
-use clap::{app_from_crate, Arg};
+use clap::{command, Arg};
 
 pub struct Desktop {
     algorithm: String,
@@ -8,14 +8,13 @@ pub struct Desktop {
 
 impl Desktop {
     pub fn new() -> Self {
-        let matches = app_from_crate!("\n")
+        let matches = command!("\n")
             .arg(
                 Arg::new("algorithm")
                     .short('a')
-                    .about("Which algorithm to run")
-                    .long_about("Specify an algorithm to run.")
-                    .takes_value(true)
-                    .possible_values(&[
+                    .help("Which algorithm to run")
+                    .long_help("Specify an algorithm to run.")
+                    .value_parser([
                         "parallel",
                         "eller",
                         "kruskal",
@@ -37,21 +36,24 @@ impl Desktop {
                     ])
                     .default_value("parallel"),
             )
-            .arg(Arg::new("variant").default_value_ifs(&[
-                ("algorithm", Some("parallel"), "6"),
-                ("algorithm", Some("aldousbroder"), "slow"),
-                ("algorithm", Some("wilson"), "fast"),
-                ("algorithm", Some("growingtree"), "middle"),
-                ("algorithm", Some("bintree"), "random:NorthWest"),
-                ("algorithm", Some("sidewinder"), "hard"),
-                ("algorithm", Some("hexparallel"), "3"),
-                ("algorithm", None, "unused"),
-            ]))
+            .arg(
+                Arg::new("variant")
+                    .default_value_ifs([
+                        ("algorithm", "parallel", Some("6")),
+                        ("algorithm", "aldousbroder", Some("slow")),
+                        ("algorithm", "wilson", Some("fast")),
+                        ("algorithm", "growingtree", Some("middle")),
+                        ("algorithm", "bintree", Some("random:NorthWest")),
+                        ("algorithm", "sidewinder", Some("hard")),
+                        ("algorithm", "hexparallel", Some("3")),
+                    ])
+                    .default_value("unused"),
+            )
             .get_matches();
-        let algorithm = matches.value_of("algorithm").unwrap().to_owned();
+        let algorithm = matches.get_one::<String>("algorithm").unwrap().to_owned();
         let variant = match algorithm.as_str() {
             "bintree" => {
-                let mut args = matches.value_of("variant").unwrap().splitn(2, ':');
+                let mut args = matches.get_one::<String>("variant").unwrap().splitn(2, ':');
                 let random = args.next().unwrap_or("random");
                 let random = if random.is_empty() || random == "random" {
                     "random"
@@ -63,7 +65,7 @@ impl Desktop {
 
                 format!("{}:{}", random, bias)
             }
-            _ => matches.value_of("variant").unwrap().to_owned(),
+            _ => matches.get_one::<String>("variant").unwrap().to_owned(),
         };
         Self { algorithm, variant }
     }
