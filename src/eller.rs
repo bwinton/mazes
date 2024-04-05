@@ -67,10 +67,10 @@ impl Algorithm for Exports {
             }
             State::Done => {}
             State::Merging => {
-                if self.grid_sets[self.current_row][self.current_column] == None {
+                if self.grid_sets[self.current_row][self.current_column].is_none() {
                     self.grid_sets[self.current_row][self.current_column] = self.empty_sets.pop();
                 }
-                if self.grid_sets[self.current_row][self.current_column + 1] == None {
+                if self.grid_sets[self.current_row][self.current_column + 1].is_none() {
                     self.grid_sets[self.current_row][self.current_column + 1] =
                         self.empty_sets.pop();
                 }

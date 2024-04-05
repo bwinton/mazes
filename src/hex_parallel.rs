@@ -136,7 +136,7 @@ impl Algorithm for Exports {
                 if 0 <= new_x && new_x < COLUMNS as i32 && 0 <= new_y && new_y < ROWS as i32 {
                     let (new_x, new_y) = (new_x as usize, new_y as usize);
                     if self.grid[new_y][new_x] == Some(EnumSet::new())
-                        && self.grid_seeds[new_y][new_x] == None
+                        && self.grid_seeds[new_y][new_x].is_none()
                     {
                         self.grid_seeds[y][x] = Some(i);
                         self.grid[y][x] = self.grid[y][x].map(|cell| cell | direction);

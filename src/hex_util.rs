@@ -32,12 +32,12 @@ impl Direction {
 
     pub fn next(self, x: i32, y: i32) -> (i32, i32) {
         match self {
-            Direction::NorthEast => (x as i32 + 1, y as i32 - 1),
-            Direction::NorthWest => (x as i32, y as i32 - 1),
-            Direction::East => (x as i32 + 1, y as i32),
-            Direction::West => (x as i32 - 1, y as i32),
-            Direction::SouthEast => (x as i32, y as i32 + 1),
-            Direction::SouthWest => (x as i32 - 1, y as i32 + 1),
+            Direction::NorthEast => (x + 1, y - 1),
+            Direction::NorthWest => (x, y - 1),
+            Direction::East => (x + 1, y),
+            Direction::West => (x - 1, y),
+            Direction::SouthEast => (x, y + 1),
+            Direction::SouthWest => (x - 1, y + 1),
         }
     }
 }
@@ -210,7 +210,7 @@ pub fn draw_board(grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as
             let s = pointy_hex_corner(x, y, 2, 0.0);
             let sw = pointy_hex_corner(x, y, 3, 0.0);
 
-            let skip_last = j + 1 == ROWS as usize && row[i + 1] == None;
+            let skip_last = j + 1 == ROWS as usize && row[i + 1].is_none();
 
             //Figure out which lines to draw.
             if !cell.contains(Direction::NorthEast) {

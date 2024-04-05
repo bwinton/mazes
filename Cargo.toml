@@ -6,17 +6,17 @@ edition = "2021"
 
 
 [dependencies]
-array-init = "2.0.1"
+array-init = "2.1.0"
 derive_more = "0.99.17"
 enumset = "1.0.11"
-itertools = "0.10.3"
+itertools = "0.12.1"
 lazy_static = "1.4.0"
-macroquad = "0.3.23"
+macroquad = "0.4.5"
 quote = "1.0.21"
-syn = "1.0.99"
+syn = "2.0.58"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = {version = "3.2.16", features = ["cargo"]}
+clap = {version="4.5.4", features = ["cargo"]}
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 sapp-jsutils = "0.1.5"
