@@ -90,6 +90,7 @@ impl Args for Web {
                     "easy".to_owned()
                 }
             }
+            "originshift" => web_get_value("#originshift"),
             "hexparallel" => web_get_value("#hexparallel"),
             "penrose" => web_get_value("#penrose"),
 

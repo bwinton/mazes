@@ -135,6 +135,24 @@ impl Direction {
             Direction::West => Direction::East,
         }
     }
+
+    pub fn offset(self, start: (usize, usize)) -> Option<(usize, usize)> {
+        let mut new_x = start.0 as isize;
+        let mut new_y = start.1 as isize;
+
+        match self {
+            Direction::North => new_y -= 1,
+            Direction::East => new_x += 1,
+            Direction::South => new_y += 1,
+            Direction::West => new_x -= 1,
+        };
+
+        if 0 <= new_x && new_x < COLUMNS as isize && 0 <= new_y && new_y < ROWS as isize {
+            Some((new_x as usize, new_y as usize))
+        } else {
+            None
+        }
+    }
 }
 
 pub fn cell_from_pos(x: f32, y: f32) -> Option<(usize, usize)> {

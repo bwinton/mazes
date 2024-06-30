@@ -31,25 +31,25 @@ impl Desktop {
                         "growingbintree",
                         "bintree",
                         "sidewinder",
+                        "originshift",
                         "hexparallel",
                         "hexblobby",
                         "penrose",
                     ])
                     .default_value("parallel"),
             )
-            .arg(
-                Arg::new("variant")
-                    .default_value_ifs([
-                        ("algorithm", "parallel", Some("6")),
-                        ("algorithm", "aldousbroder", Some("slow")),
-                        ("algorithm", "wilson", Some("fast")),
-                        ("algorithm", "growingtree", Some("middle")),
-                        ("algorithm", "bintree", Some("random:NorthWest")),
-                        ("algorithm", "sidewinder", Some("hard")),
-                        ("algorithm", "hexparallel", Some("3")),
-                    ])
-                    .default_value("unused"),
-            )
+            .arg(Arg::new("variant").default_value_ifs([
+                ("algorithm", "parallel", Some("6")),
+                ("algorithm", "aldousbroder", Some("slow")),
+                ("algorithm", "wilson", Some("fast")),
+                ("algorithm", "growingtree", Some("middle")),
+                ("algorithm", "bintree", Some("random:NorthWest")),
+                ("algorithm", "sidewinder", Some("hard")),
+                ("algorithm", "originshift", Some("1")),
+                ("algorithm", "hexparallel", Some("3")),
+                ("algorithm", "penrose", Some("king")),
+                // ("algorithm", None, Some("unused")),
+            ]))
             .get_matches();
         let algorithm = matches.get_one::<String>("algorithm").unwrap().to_owned();
         let variant = match algorithm.as_str() {

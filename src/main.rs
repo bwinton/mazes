@@ -9,6 +9,7 @@ mod hex_util;
 mod houston;
 mod huntandkill;
 mod kruskal;
+mod origin_shift;
 mod parallel;
 mod penrose;
 mod prim;
@@ -138,6 +139,7 @@ async fn main() {
         "growingtree" => Box::new(growingtree::Exports::new(variant)),
         "bintree" => Box::new(binarytree::Exports::new(variant)),
         "sidewinder" => Box::new(sidewinder::Exports::new(variant == "hard")),
+        "originshift" => Box::new(origin_shift::Exports::new(variant.parse().expect(&message))),
         "hexparallel" => Box::new(hex_parallel::Exports::new(variant.parse().expect(&message))),
         "hexblobby" => Box::new(hex_blobby::Exports::new()),
         "penrose" => Box::new(penrose::Exports::new(variant)),

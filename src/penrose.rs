@@ -1,6 +1,8 @@
 use std::{f32::consts::PI, fmt::Display};
 
-use crate::util::{Algorithm, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS, WHITE};
+use crate::util::{
+    Algorithm, ChooseRandom, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS, WHITE,
+};
 use maze_utils::From;
 
 use macroquad::{
@@ -240,6 +242,7 @@ pub struct Exports {
     state: State,
     variant: Variant,
     tiles: Vec<Tile>,
+    small_tiles: Vec<Tile>,
 }
 
 impl Exports {
@@ -265,6 +268,7 @@ impl Exports {
             state: State::Setup,
             variant,
             tiles,
+            small_tiles: vec![],
         }
     }
 }
@@ -323,12 +327,17 @@ impl Algorithm for Exports {
             _ => {}
         }
 
-        let mut next = vec![];
-        for tile in &self.tiles {
-            next.extend(tile.subdivide());
+        for _ in 0..(self.tiles.len() + self.small_tiles.len()) / 10 {
+            if let Some(tile) = self.tiles.pop() {
+                self.small_tiles.extend(tile.subdivide());
+            }
         }
-        self.tiles = next;
-        self.state = State::Growing;
+
+        if self.tiles.is_empty() {
+            std::mem::swap(&mut self.tiles, &mut self.small_tiles);
+            self.tiles.shuffle();
+            self.state = State::Growing;
+        }
 
         if self.state == State::Done {
             log::info!("Done!");
@@ -339,13 +348,16 @@ impl Algorithm for Exports {
         for tile in &self.tiles {
             tile.draw();
         }
+        for tile in &self.small_tiles {
+            tile.draw();
+        }
 
         let x = OFFSET;
         let y = OFFSET;
         let w = COLUMNS * CELL_WIDTH;
         let h = ROWS * CELL_WIDTH;
-        draw_rectangle(0.0, 0.0, x, h, WHITE);
-        draw_rectangle(0.0, 0.0, w, y, WHITE);
+        draw_rectangle(0.0, 0.0, x, y + h, WHITE);
+        draw_rectangle(0.0, 0.0, x + w, y, WHITE);
         draw_rectangle(x + w, 0.0, x, h, WHITE);
         draw_rectangle(0.0, y + h, w, y, WHITE);
         draw_rectangle_lines(x, y, w, h, LINE_WIDTH, COLORS[0]);
