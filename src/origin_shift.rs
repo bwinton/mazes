@@ -71,7 +71,7 @@ impl Algorithm for Exports {
     fn update(&mut self) {
         match self.state {
             State::Setup => {
-                self.curr = (COLUMNS as usize - 1, ROWS as usize - 1);
+                self.curr = ((COLUMNS / 2.0) as usize - 1, (ROWS / 2.0) as usize - 1);
                 self.remaining = self.iterations;
                 self.state = State::Running;
                 return;
