@@ -101,6 +101,8 @@ impl Algorithm for Exports {
                 break;
             }
         }
+
+        // Performance optimization: relocate the origin to a new, random point by following the arrows from that new node and reversing them along the way, then setting curr to the new node.
     }
 
     fn draw(&self) {
