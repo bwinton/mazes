@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
-    ROWS,
+    cell_from_pos, draw_board, Algorithm, Direction, State as BaseState, CELL_WIDTH, COLORS,
+    COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
@@ -76,7 +76,6 @@ impl Algorithm for Exports {
                 self.run_start = 0;
                 self.state = State::Running;
             }
-            State::Done => {}
             State::Running => {
                 let proportion = if self.harder {
                     (0.4 + (self.curr.0 as f64 / COLUMNS as f64) * 0.4) * 100.0
@@ -113,6 +112,7 @@ impl Algorithm for Exports {
 
                 self.state = State::Running;
             }
+            _ => {}
         }
     }
 
@@ -160,5 +160,17 @@ impl Algorithm for Exports {
             CELL_WIDTH - LINE_WIDTH * 2.0,
             curr_color,
         );
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y)
     }
 }

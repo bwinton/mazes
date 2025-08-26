@@ -1,6 +1,6 @@
 use crate::{
     hex_util::{cell_from_pos, draw_path, set_border, valid_move},
-    util::{Algorithm, ChooseRandom, COLORS, EMPTY_COLOR},
+    util::{Algorithm, ChooseRandom, State as BaseState, COLORS, EMPTY_COLOR},
 };
 
 use crate::hex_util::{draw_board, draw_cell, init_grid, Direction, COLUMNS, ROWS};
@@ -127,20 +127,7 @@ impl Algorithm for Exports {
                 self.state = State::Choosing;
                 return;
             }
-            State::Done => {
-                let (x, y) = mouse_position();
-                let cursor = cell_from_pos(x, y, self.grid);
-                // log::info!("{:?} => {:?}", (x, y), cursor);
-                if valid_move(self.path.last(), cursor, self.grid) {
-                    let cursor = cursor.unwrap();
-                    if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
-                        self.path.truncate(index + 1);
-                    } else {
-                        self.path.push(cursor);
-                    }
-                }
-                return;
-            }
+            // State::Done => {}
             _ => {}
         }
 
@@ -326,5 +313,17 @@ impl Algorithm for Exports {
         }
 
         draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y, self.grid)
     }
 }

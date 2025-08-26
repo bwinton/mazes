@@ -1,5 +1,5 @@
 use crate::aldous_broder::Exports as aldous_broder;
-use crate::util::Algorithm;
+use crate::util::{cell_from_pos, Algorithm, State as BaseState};
 use crate::wilson::Exports as wilson;
 use macroquad::logging as log;
 use maze_utils::From;
@@ -63,7 +63,7 @@ impl Algorithm for Exports {
                     self.state = State::Done;
                 }
             }
-            State::Done => {}
+            _ => {}
         }
     }
 
@@ -73,5 +73,17 @@ impl Algorithm for Exports {
             State::RunningWilson | State::Done => self.wilson.draw(),
             _ => {}
         }
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y)
     }
 }

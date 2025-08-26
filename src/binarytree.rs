@@ -1,19 +1,12 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR,
-    OFFSET, ROWS,
+    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State, CELL_WIDTH, COLORS,
+    COLUMNS, FIELD_COLOR, OFFSET, ROWS,
 };
 use derive_more::Display;
 use enumset::EnumSet;
 use itertools::Itertools;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
 
 #[derive(Display)]
 enum Bias {
@@ -94,9 +87,6 @@ impl Algorithm for Exports {
         match self.state {
             State::Setup => {
                 self.state = State::Running;
-                return;
-            }
-            State::Done => {
                 return;
             }
             _ => {}
@@ -207,5 +197,13 @@ impl Algorithm for Exports {
                 }
             }
         }
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y)
     }
 }

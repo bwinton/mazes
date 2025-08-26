@@ -66,7 +66,10 @@ impl Desktop {
 
                 format!("{}:{}", random, bias)
             }
-            _ => matches.get_one::<String>("variant").unwrap().to_owned(),
+            _ => matches
+                .get_one::<String>("variant")
+                .unwrap_or(&"unused".to_string())
+                .to_owned(),
         };
         Self { algorithm, variant }
     }

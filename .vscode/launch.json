@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Parallel",
+            "name": "Debug Eller",
             "cargo": {
                 "args": [
                     "build",
@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-a", "parallel"],
+            "args": ["-a", "eller"],
             "cwd": "${workspaceFolder}"
         },
         {

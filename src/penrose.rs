@@ -1,7 +1,8 @@
 use std::{f32::consts::PI, fmt::Display};
 
 use crate::util::{
-    Algorithm, ChooseRandom, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS, WHITE,
+    cell_from_pos, Algorithm, ChooseRandom, State as BaseState, CELL_WIDTH, COLORS, COLUMNS,
+    LINE_WIDTH, OFFSET, ROWS, WHITE,
 };
 use maze_utils::From;
 
@@ -290,9 +291,6 @@ impl Algorithm for Exports {
                 self.state = State::Deflating;
                 return;
             }
-            State::Done => {
-                return;
-            }
             State::Growing => {
                 let w = COLUMNS * CELL_WIDTH;
                 let h = ROWS * CELL_WIDTH;
@@ -361,5 +359,17 @@ impl Algorithm for Exports {
         draw_rectangle(x + w, 0.0, x, h, WHITE);
         draw_rectangle(0.0, y + h, w, y, WHITE);
         draw_rectangle_lines(x, y, w, h, LINE_WIDTH, COLORS[0]);
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        None
     }
 }

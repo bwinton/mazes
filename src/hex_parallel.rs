@@ -1,6 +1,6 @@
 use crate::{
     hex_util::{cell_from_pos, draw_path, valid_move},
-    util::{Algorithm, ChooseRandom, COLORS},
+    util::{Algorithm, ChooseRandom, State, COLORS},
 };
 use crate::{
     hex_util::{draw_board, draw_cell, init_grid, Direction, COLUMNS, ROWS},
@@ -18,13 +18,6 @@ use array_init::array_init;
 use enumset::EnumSet;
 
 const MAX_SEEDS: usize = 6;
-
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
 
 #[derive(From)]
 pub struct Exports {
@@ -93,20 +86,7 @@ impl Algorithm for Exports {
                 self.state = State::Running;
                 return;
             }
-            State::Done => {
-                let (x, y) = mouse_position();
-                let cursor = cell_from_pos(x, y, self.grid);
-                // log::info!("{:?} => {:?}", (x, y), cursor);
-                if valid_move(self.path.last(), cursor, self.grid) {
-                    let cursor = cursor.unwrap();
-                    if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
-                        self.path.truncate(index + 1);
-                    } else {
-                        self.path.push(cursor);
-                    }
-                }
-                return;
-            }
+            // State::Done => {}
             _ => {}
         }
 
@@ -189,5 +169,13 @@ impl Algorithm for Exports {
         }
 
         draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y, self.grid)
     }
 }

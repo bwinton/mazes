@@ -1,17 +1,10 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH,
-    OFFSET, ROWS,
+    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State, CELL_WIDTH, COLORS,
+    COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::shapes::draw_rectangle;
 use maze_utils::From;
-
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
 
 #[derive(From)]
 pub struct Exports {
@@ -76,9 +69,6 @@ impl Algorithm for Exports {
                 self.state = State::Running;
                 return;
             }
-            State::Done => {
-                return;
-            }
             _ => {}
         }
 
@@ -116,5 +106,13 @@ impl Algorithm for Exports {
                 curr_color,
             );
         }
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y)
     }
 }

@@ -31,6 +31,13 @@ pub const WHITE: Color = Color {
     a: 1.0,
 };
 
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+pub enum State {
+    Setup,
+    Running,
+    Done,
+}
+
 pub const FIELD_COLOR: Color = Color {
     r: 0x4D as f32 / 255.0,
     g: 0xAF as f32 / 255.0,
@@ -116,6 +123,9 @@ pub trait Algorithm {
     fn update(&mut self);
     fn draw(&self);
     fn get_variant(&self) -> String;
+    fn get_state(&self) -> State;
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)>;
+    fn move_to(&mut self, cursor: Option<(usize, usize)>);
 }
 
 #[derive(EnumSetType, Debug)]

@@ -1,14 +1,10 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
+use crate::util::{
+    cell_from_pos, draw_board, Algorithm, Direction, State, CELL_WIDTH, COLORS, COLUMNS, OFFSET,
+    ROWS,
+};
 use enumset::EnumSet;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
 
 #[derive(PartialEq, Eq, Debug)]
 enum Orientation {
@@ -72,9 +68,6 @@ impl Algorithm for Exports {
             State::Setup => {
                 self.stack.push((0, 0, COLUMNS as usize, ROWS as usize));
                 self.state = State::Running;
-                return;
-            }
-            State::Done => {
                 return;
             }
             _ => {}
@@ -156,5 +149,13 @@ impl Algorithm for Exports {
                 );
             }
         }
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y)
     }
 }

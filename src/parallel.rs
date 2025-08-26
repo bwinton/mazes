@@ -1,6 +1,6 @@
 use crate::util::{
     cell_from_pos, draw_board, draw_cell, draw_path, valid_move, Algorithm, ChooseRandom,
-    Direction, COLORS, COLUMNS, LINE_WIDTH, ROWS,
+    Direction, State, COLORS, COLUMNS, LINE_WIDTH, ROWS,
 };
 use itertools::Itertools;
 use maze_utils::From;
@@ -8,16 +8,10 @@ use std::collections::{HashSet, VecDeque};
 
 use array_init::array_init;
 use enumset::EnumSet;
-use macroquad::{logging as log, prelude::mouse_position, rand::gen_range};
+use macroquad::{logging as log, rand::gen_range};
 
 const MAX_SEEDS: usize = 6;
 
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
 #[derive(From)]
 pub struct Exports {
     path: Vec<(usize, usize)>,
@@ -79,19 +73,7 @@ impl Algorithm for Exports {
                 self.state = State::Running;
                 return;
             }
-            State::Done => {
-                let (x, y) = mouse_position();
-                let cursor = cell_from_pos(x, y);
-                if valid_move(self.path.last(), cursor, self.grid) {
-                    let cursor = cursor.unwrap();
-                    if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
-                        self.path.truncate(index + 1);
-                    } else {
-                        self.path.push(cursor);
-                    }
-                }
-                return;
-            }
+            // State::Done => {}
             _ => {}
         }
 
@@ -174,5 +156,24 @@ impl Algorithm for Exports {
         }
 
         draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y)
+    }
+
+    fn move_to(&mut self, cursor: Option<(usize, usize)>) {
+        if valid_move(self.path.last(), cursor, self.grid) {
+            let cursor = cursor.unwrap();
+            if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
+                self.path.truncate(index + 1);
+            } else {
+                self.path.push(cursor);
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH,
-    OFFSET, ROWS,
+    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State as BaseState, CELL_WIDTH,
+    COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use array_init::array_init;
 use enumset::EnumSet;
@@ -10,10 +10,10 @@ use maze_utils::From;
 #[derive(PartialEq, Eq, Debug)]
 enum State {
     Setup,
+    Done,
     Merging,
     NextLine,
     Dropping,
-    Done,
 }
 
 #[derive(From)]
@@ -65,7 +65,6 @@ impl Algorithm for Exports {
                 }
                 self.state = State::Merging;
             }
-            State::Done => {}
             State::Merging => {
                 if self.grid_sets[self.current_row][self.current_column].is_none() {
                     self.grid_sets[self.current_row][self.current_column] = self.empty_sets.pop();
@@ -148,6 +147,7 @@ impl Algorithm for Exports {
                     self.state = State::Merging;
                 }
             }
+            _ => {}
         }
     }
 
@@ -187,5 +187,17 @@ impl Algorithm for Exports {
                 }
             }
         }
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y)
     }
 }

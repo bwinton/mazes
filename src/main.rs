@@ -36,6 +36,7 @@ extern crate lazy_static;
 use macroquad::{
     logging as log,
     miniquad::date::now,
+    prelude::mouse_position,
     prelude::{
         get_frame_time, is_key_down, is_key_pressed, is_mouse_button_pressed, Conf, KeyCode,
         MouseButton,
@@ -45,6 +46,8 @@ use macroquad::{
 };
 
 use util::{Algorithm, Args, RealArgs, WHITE};
+
+use crate::util::State;
 
 fn window_conf() -> Conf {
     Conf {
@@ -102,7 +105,17 @@ impl MyGame {
         if self.update_timer > 0.08 {
             self.update_timer = 0.0;
             if !self.paused {
-                self.algorithm.update();
+                match self.algorithm.get_state() {
+                    State::Done => {
+                        let (x, y) = mouse_position();
+                        let cursor = self.algorithm.cell_from_pos(x, y);
+                        log::info!("{:?} => {:?}", (x, y), cursor);
+                        self.algorithm.move_to(cursor);
+                    }
+                    _ => {
+                        self.algorithm.update();
+                    }
+                }
             }
         }
         rv

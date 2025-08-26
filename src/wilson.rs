@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR,
-    LINE_WIDTH, OFFSET, ROWS,
+    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State as BaseState, CELL_WIDTH,
+    COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::{
@@ -152,9 +152,6 @@ impl Algorithm for Exports {
                 self.remaining = (ROWS * COLUMNS - 1.0) as usize;
 
                 self.state = State::Finding;
-                return;
-            }
-            State::Done => {
                 return;
             }
             _ => {}
@@ -325,5 +322,17 @@ impl Algorithm for Exports {
                 }
             }
         }
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
+        cell_from_pos(x, y)
     }
 }
