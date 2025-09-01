@@ -1,5 +1,5 @@
 use crate::util::{
-    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State as BaseState, CELL_WIDTH,
+    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState, CELL_WIDTH,
     COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
@@ -31,7 +31,7 @@ enum Cell {
 pub struct Exports {
     path: Vec<(usize, usize)>,
     current: Option<(usize, usize)>,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     previous: Option<(usize, usize)>,
     processing: [[Cell; COLUMNS as usize]; ROWS as usize],
     remaining: usize,
@@ -60,10 +60,7 @@ impl Exports {
     pub fn is_done(&self) -> bool {
         self.state == State::Done
     }
-    pub fn init_from_grid(
-        &mut self,
-        incoming: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
-    ) {
+    pub fn init_from_grid(&mut self, incoming: Grid) {
         self.state = State::Finding;
         self.remaining = (ROWS * COLUMNS) as usize;
         self.grid = incoming;
@@ -144,17 +141,14 @@ impl Algorithm for Exports {
         }
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                let x = gen_range(0, COLUMNS as usize);
-                let y = gen_range(0, ROWS as usize);
-                self.processing[y][x] = Cell::In;
-                self.remaining = (ROWS * COLUMNS - 1.0) as usize;
+        if self.state == State::Setup {
+            let x = gen_range(0, COLUMNS as usize);
+            let y = gen_range(0, ROWS as usize);
+            self.processing[y][x] = Cell::In;
+            self.remaining = (ROWS * COLUMNS - 1.0) as usize;
 
-                self.state = State::Finding;
-                return;
-            }
-            _ => {}
+            self.state = State::Finding;
+            return;
         }
 
         if self.remaining == 0 {
@@ -332,7 +326,17 @@ impl Algorithm for Exports {
         }
     }
 
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        cell_from_pos(x, y)
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

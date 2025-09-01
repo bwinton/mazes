@@ -1,4 +1,5 @@
 use enumset::EnumSet;
+use itertools::Itertools;
 use macroquad::{
     color::Color,
     prelude::{color_u8, draw_line, draw_rectangle},
@@ -16,6 +17,8 @@ pub const CELL_WIDTH: f32 = 20.0;
 pub const COLUMNS: f32 = 40.0;
 pub const ROWS: f32 = 30.0;
 pub const OFFSET: f32 = 2.0;
+
+pub type Grid = [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize];
 
 pub const EMPTY_COLOR: Color = Color {
     r: 0.0,
@@ -124,8 +127,29 @@ pub trait Algorithm {
     fn draw(&self);
     fn get_variant(&self) -> String;
     fn get_state(&self) -> State;
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)>;
-    fn move_to(&mut self, cursor: Option<(usize, usize)>);
+    fn move_to(&mut self, cursor: (f32, f32));
+}
+
+pub trait Playable: Algorithm {
+    fn get_grid(&self) -> Grid;
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)>;
+    fn cell_from_pos(&self, pos: (f32, f32)) -> Option<(usize, usize)> {
+        cell_from_pos(pos)
+    }
+    fn move_to(&mut self, pos: (f32, f32)) {
+        let cursor = self.cell_from_pos(pos);
+
+        let grid = self.get_grid();
+        let path = self.get_path_mut();
+        if valid_move(path.last(), cursor, grid) {
+            let cursor = cursor.unwrap();
+            if let Some((index, _)) = path.iter().find_position(|&x| x == &cursor) {
+                path.truncate(index + 1);
+            } else {
+                path.push(cursor);
+            }
+        }
+    }
 }
 
 #[derive(EnumSetType, Debug)]
@@ -165,7 +189,8 @@ impl Direction {
     }
 }
 
-pub fn cell_from_pos(x: f32, y: f32) -> Option<(usize, usize)> {
+pub fn cell_from_pos(pos: (f32, f32)) -> Option<(usize, usize)> {
+    let (x, y) = pos;
     if x < 0.0 || y < 0.0 {
         return None;
     }

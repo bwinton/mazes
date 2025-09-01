@@ -1,7 +1,12 @@
 use enumset::EnumSet;
+use itertools::Itertools;
 use macroquad::prelude::{draw_line, draw_poly, Color};
 
 use crate::util::{COLORS, LINE_WIDTH, OFFSET};
+
+pub use crate::util::Algorithm;
+
+pub type Grid = [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize];
 
 pub const CELL_WIDTH: f32 = 12.0;
 pub const ROWS: f32 = 32.0;
@@ -42,6 +47,29 @@ impl Direction {
     }
 }
 
+pub trait Playable: Algorithm {
+    fn get_grid(&self) -> [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize];
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)>;
+    fn cell_from_pos(&self, pos: (f32, f32)) -> Option<(usize, usize)> {
+        let (x, y) = pos;
+        cell_from_pos(x, y, self.get_grid())
+    }
+    fn move_to(&mut self, pos: (f32, f32)) {
+        let cursor = self.cell_from_pos(pos);
+
+        let grid = self.get_grid();
+        let path = self.get_path_mut();
+        if valid_move(path.last(), cursor, grid) {
+            let cursor = cursor.unwrap();
+            if let Some((index, _)) = path.iter().find_position(|&x| x == &cursor) {
+                path.truncate(index + 1);
+            } else {
+                path.push(cursor);
+            }
+        }
+    }
+}
+
 pub fn init_grid<T: Copy>(value: T) -> [[Option<T>; COLUMNS as usize]; ROWS as usize] {
     let mut grid = [[Some(value); COLUMNS as usize]; ROWS as usize];
 
@@ -70,7 +98,7 @@ pub fn set_border(grid: &mut [[Option<EnumSet<Direction>>; COLUMNS as usize]; RO
                     cell.remove(Direction::SouthEast);
                     cell.remove(Direction::SouthWest);
                 }
-                if i >= COLUMNS as usize - (ROWS as usize + j + 1) / 2 {
+                if i >= COLUMNS as usize - (ROWS as usize + j).div_ceil(2) {
                     cell.remove(Direction::East);
                     if j % 2 == 0 {
                         cell.remove(Direction::NorthEast);
@@ -127,11 +155,7 @@ fn hex_round(x: f32, y: f32) -> (usize, usize) {
     (rx as usize, ry as usize)
 }
 
-pub fn cell_from_pos(
-    x: f32,
-    y: f32,
-    grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
-) -> Option<(usize, usize)> {
+pub fn cell_from_pos(x: f32, y: f32, grid: Grid) -> Option<(usize, usize)> {
     if x < 0.0 || y < 0.0 {
         return None;
     }

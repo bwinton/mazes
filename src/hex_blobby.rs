@@ -1,5 +1,5 @@
 use crate::{
-    hex_util::{cell_from_pos, draw_path, set_border, valid_move},
+    hex_util::{draw_path, set_border, Grid, Playable},
     util::{Algorithm, ChooseRandom, State as BaseState, COLORS, EMPTY_COLOR},
 };
 
@@ -7,7 +7,7 @@ use crate::hex_util::{draw_board, draw_cell, init_grid, Direction, COLUMNS, ROWS
 
 use enumset::EnumSet;
 use itertools::Itertools;
-use macroquad::{logging as log, prelude::mouse_position, rand::gen_range};
+use macroquad::{logging as log, rand::gen_range};
 use maze_utils::From;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -121,14 +121,10 @@ impl Algorithm for Exports {
         "unused".to_owned()
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                self.stack.push(init_grid(Blob::None));
-                self.state = State::Choosing;
-                return;
-            }
-            // State::Done => {}
-            _ => {}
+        if self.state == State::Setup {
+            self.stack.push(init_grid(Blob::None));
+            self.state = State::Choosing;
+            return;
         }
 
         if self.stack.is_empty() {
@@ -323,7 +319,17 @@ impl Algorithm for Exports {
         }
     }
 
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        cell_from_pos(x, y, self.grid)
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

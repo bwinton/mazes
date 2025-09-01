@@ -1,5 +1,5 @@
 use crate::util::{
-    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State, CELL_WIDTH, COLORS,
+    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH, COLORS,
     COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
@@ -32,7 +32,7 @@ impl Exports {
             state: State::Setup,
         }
     }
-    pub fn get_grid(&self) -> [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize] {
+    pub fn get_grid(&self) -> Grid {
         let mut rv = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         for y in 0..ROWS as usize {
             for x in 0..COLUMNS as usize {
@@ -62,14 +62,11 @@ impl Algorithm for Exports {
         self.iterations.to_string()
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                self.curr = ((COLUMNS / 2.0) as usize - 1, (ROWS / 2.0) as usize - 1);
-                self.remaining = self.iterations;
-                self.state = State::Running;
-                return;
-            }
-            _ => {}
+        if self.state == State::Setup {
+            self.curr = ((COLUMNS / 2.0) as usize - 1, (ROWS / 2.0) as usize - 1);
+            self.remaining = self.iterations;
+            self.state = State::Running;
+            return;
         }
 
         if self.remaining == 0 {
@@ -112,7 +109,17 @@ impl Algorithm for Exports {
         self.state
     }
 
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        cell_from_pos(x, y)
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.get_grid()
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        todo!()
     }
 }

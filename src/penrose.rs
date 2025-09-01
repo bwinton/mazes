@@ -1,8 +1,8 @@
 use std::{f32::consts::PI, fmt::Display};
 
 use crate::util::{
-    cell_from_pos, Algorithm, ChooseRandom, State as BaseState, CELL_WIDTH, COLORS, COLUMNS,
-    LINE_WIDTH, OFFSET, ROWS, WHITE,
+    Algorithm, ChooseRandom, State as BaseState, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET,
+    ROWS, WHITE,
 };
 use maze_utils::From;
 
@@ -369,7 +369,7 @@ impl Algorithm for Exports {
         }
     }
 
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        None
+    fn move_to(&mut self, _cursor: (f32, f32)) {
+        // pass
     }
 }

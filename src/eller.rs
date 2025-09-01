@@ -1,5 +1,5 @@
 use crate::util::{
-    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State as BaseState, CELL_WIDTH,
+    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState, CELL_WIDTH,
     COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use array_init::array_init;
@@ -22,7 +22,7 @@ pub struct Exports {
     current_row: usize,
     current_column: usize,
     empty_sets: Vec<usize>,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     grid_sets: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     sets: Vec<(Vec<usize>, usize)>,
     state: State,
@@ -197,7 +197,17 @@ impl Algorithm for Exports {
         }
     }
 
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        cell_from_pos(x, y)
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

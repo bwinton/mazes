@@ -1,5 +1,5 @@
 use crate::util::{
-    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State as BaseState, CELL_WIDTH,
+    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState, CELL_WIDTH,
     COLORS, COLUMNS, EMPTY_COLOR, OFFSET, ROWS,
 };
 use enumset::EnumSet;
@@ -27,7 +27,7 @@ enum Blob {
 pub struct Exports {
     path: Vec<(usize, usize)>,
     finished: [[bool; COLUMNS as usize]; ROWS as usize],
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     stack: Vec<[[Blob; COLUMNS as usize]; ROWS as usize]>,
     state: State,
 }
@@ -122,14 +122,11 @@ impl Algorithm for Exports {
         "unused".to_owned()
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                self.stack
-                    .push([[Blob::None; COLUMNS as usize]; ROWS as usize]);
-                self.state = State::Choosing;
-                return;
-            }
-            _ => {}
+        if self.state == State::Setup {
+            self.stack
+                .push([[Blob::None; COLUMNS as usize]; ROWS as usize]);
+            self.state = State::Choosing;
+            return;
         }
 
         if self.stack.is_empty() {
@@ -317,7 +314,17 @@ impl Algorithm for Exports {
         }
     }
 
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        cell_from_pos(x, y)
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

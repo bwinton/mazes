@@ -1,14 +1,12 @@
 use crate::{
-    hex_util::{cell_from_pos, draw_path, valid_move},
-    util::{Algorithm, ChooseRandom, State, COLORS},
-};
-use crate::{
-    hex_util::{draw_board, draw_cell, init_grid, Direction, COLUMNS, ROWS},
-    util::LINE_WIDTH,
+    hex_util::{
+        draw_board, draw_cell, draw_path, init_grid, Direction, Grid, Playable, COLUMNS, ROWS,
+    },
+    util::{Algorithm, ChooseRandom, State, COLORS, LINE_WIDTH},
 };
 
 use itertools::Itertools;
-use macroquad::{logging as log, prelude::mouse_position, rand::gen_range};
+use macroquad::{logging as log, rand::gen_range};
 
 use maze_utils::From;
 use std::collections::{HashSet, VecDeque};
@@ -22,7 +20,7 @@ const MAX_SEEDS: usize = 6;
 #[derive(From)]
 pub struct Exports {
     path: Vec<(usize, usize)>,
-    grid: [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     seeds: usize,
     sets: [HashSet<usize>; MAX_SEEDS],
@@ -67,27 +65,23 @@ impl Algorithm for Exports {
     }
     fn update(&mut self) {
         // log::info!("Updating {}", self.name());
-        match self.state {
-            State::Setup => {
-                for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
-                    let mut pushed = false;
-                    while !pushed {
-                        let x = gen_range(0, COLUMNS as usize);
-                        let y = gen_range(0, ROWS as usize);
-                        if self.grid[y][x].is_none() {
-                            continue;
-                        }
-                        stack.push_front((x, y, EnumSet::all()));
-                        pushed = true;
+        if self.state == State::Setup {
+            for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
+                let mut pushed = false;
+                while !pushed {
+                    let x = gen_range(0, COLUMNS as usize);
+                    let y = gen_range(0, ROWS as usize);
+                    if self.grid[y][x].is_none() {
+                        continue;
                     }
-                    self.sets[i].insert(i);
+                    stack.push_front((x, y, EnumSet::all()));
+                    pushed = true;
                 }
-
-                self.state = State::Running;
-                return;
+                self.sets[i].insert(i);
             }
-            // State::Done => {}
-            _ => {}
+
+            self.state = State::Running;
+            return;
         }
 
         let mut done = true;
@@ -175,7 +169,17 @@ impl Algorithm for Exports {
         self.state
     }
 
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        cell_from_pos(x, y, self.grid)
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

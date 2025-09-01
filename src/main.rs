@@ -107,10 +107,7 @@ impl MyGame {
             if !self.paused {
                 match self.algorithm.get_state() {
                     State::Done => {
-                        let (x, y) = mouse_position();
-                        let cursor = self.algorithm.cell_from_pos(x, y);
-                        log::info!("{:?} => {:?}", (x, y), cursor);
-                        self.algorithm.move_to(cursor);
+                        self.algorithm.move_to(mouse_position());
                     }
                     _ => {
                         self.algorithm.update();

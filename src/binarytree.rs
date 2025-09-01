@@ -1,5 +1,5 @@
 use crate::util::{
-    cell_from_pos, draw_board, Algorithm, ChooseRandom, Direction, State, CELL_WIDTH, COLORS,
+    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH, COLORS,
     COLUMNS, FIELD_COLOR, OFFSET, ROWS,
 };
 use derive_more::Display;
@@ -20,7 +20,7 @@ enum Bias {
 pub struct Exports {
     path: Vec<(usize, usize)>,
     bias: Bias,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     random: bool,
     remaining: Vec<(usize, usize)>,
     state: State,
@@ -84,12 +84,9 @@ impl Algorithm for Exports {
         format!("{}:{}", rv, self.bias)
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                self.state = State::Running;
-                return;
-            }
-            _ => {}
+        if self.state == State::Setup {
+            self.state = State::Running;
+            return;
         }
 
         let mut found = false;
@@ -203,7 +200,17 @@ impl Algorithm for Exports {
         self.state
     }
 
-    fn cell_from_pos(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        cell_from_pos(x, y)
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }
