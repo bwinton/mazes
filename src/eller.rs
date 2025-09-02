@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState, CELL_WIDTH,
-    COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState,
+    CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use array_init::array_init;
 use enumset::EnumSet;
@@ -100,6 +100,7 @@ impl Algorithm for Exports {
                     } else {
                         self.current_row += 1;
                         self.state = State::Done;
+                        self.path.push((0, 0));
                         log::info!("Done!");
                     }
                 }
@@ -187,6 +188,7 @@ impl Algorithm for Exports {
                 }
             }
         }
+        draw_path(&self.path);
     }
 
     fn get_state(&self) -> BaseState {
