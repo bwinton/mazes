@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH, COLORS,
-    COLUMNS, FIELD_COLOR, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH,
+    COLORS, COLUMNS, FIELD_COLOR, OFFSET, ROWS,
 };
 use derive_more::Display;
 use enumset::EnumSet;
@@ -94,6 +94,7 @@ impl Algorithm for Exports {
         while !found {
             if self.remaining.is_empty() {
                 self.state = State::Done;
+                self.path.push((0, 0));
                 log::info!("Done!");
                 return;
             }
@@ -194,6 +195,8 @@ impl Algorithm for Exports {
                 }
             }
         }
+
+        draw_path(&self.path);
     }
 
     fn get_state(&self) -> State {
