@@ -287,7 +287,7 @@ impl<'a, T> Iterator for VecChooseIter<'a, T> {
 pub trait ChooseRandom<T> {
     fn shuffle(&mut self);
     fn choose(&self) -> Option<T>;
-    fn choose_multiple(&self, amount: usize) -> VecChooseIter<T>;
+    fn choose_multiple(&'_ self, amount: usize) -> VecChooseIter<'_, T>;
 }
 
 impl<T: Copy> ChooseRandom<T> for Vec<T> {
@@ -307,7 +307,7 @@ impl<T: Copy> ChooseRandom<T> for Vec<T> {
         Some(self[indices[0]])
     }
 
-    fn choose_multiple(&self, amount: usize) -> VecChooseIter<T> {
+    fn choose_multiple(&'_ self, amount: usize) -> VecChooseIter<'_, T> {
         let mut indices = (0..self.len())
             .enumerate()
             .map(|(i, _)| i)
