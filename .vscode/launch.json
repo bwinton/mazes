@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Eller",
+            "name": "Debug Blobby",
             "cargo": {
                 "args": [
                     "build",
@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-a", "eller"],
+            "args": ["-a", "blobby"],
             "cwd": "${workspaceFolder}"
         },
         {
