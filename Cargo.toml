@@ -7,19 +7,19 @@ edition = "2021"
 
 [dependencies]
 array-init = "2.1.0"
-derive_more = "0.99.18"
-enumset = "1.1.3"
-itertools = "0.13.0"
+derive_more = { version = "2.0.1", features = ["display"] }
+enumset = "1.1.10"
+itertools = "0.14.0"
 lazy_static = "1.5.0"
 macroquad = "0.4.14"
-quote = "1.0.36"
-syn = "2.0.68"
+quote = "1.0.40"
+syn = "2.0.106"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = { version = "4.5.8", features = ["cargo", "string"] }
+clap = { version = "4.5.46", features = ["cargo", "string"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-sapp-jsutils = "0.1.5"
+sapp-jsutils = "0.1.7"
 
 [lib]
 name = "maze_utils"
