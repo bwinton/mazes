@@ -38,7 +38,7 @@ impl Desktop {
                     ])
                     .default_value("parallel"),
             )
-            .arg(Arg::new("variant").default_value_ifs([
+            .arg(Arg::new("variant").short('v').default_value_ifs([
                 ("algorithm", "parallel", Some("6")),
                 ("algorithm", "aldousbroder", Some("slow")),
                 ("algorithm", "wilson", Some("fast")),

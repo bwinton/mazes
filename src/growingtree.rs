@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH, COLORS,
-    COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH,
+    COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use maze_utils::From;
 use std::collections::VecDeque;
@@ -79,6 +79,8 @@ impl Algorithm for Exports {
 
         if self.stack.is_empty() {
             self.state = State::Done;
+            self.curr = None;
+            self.path.push((0, 0));
             log::info!("Done!");
             return;
         }
@@ -173,6 +175,7 @@ impl Algorithm for Exports {
                 curr_color,
             );
         }
+        draw_path(&self.path);
     }
 
     fn get_state(&self) -> State {
