@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState, CELL_WIDTH,
-    COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState,
+    CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::{
@@ -155,6 +155,7 @@ impl Algorithm for Exports {
             self.start = None;
             self.current = None;
             self.state = State::Done;
+            self.path.push((0, 0));
             log::info!("Done!");
             return;
         }
@@ -316,6 +317,8 @@ impl Algorithm for Exports {
                 }
             }
         }
+
+        draw_path(&self.path);
     }
 
     fn get_state(&self) -> BaseState {

@@ -97,6 +97,9 @@ impl Playable for Exports {
     }
 
     fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
-        todo!()
+        match self.state {
+            State::Setup | State::RunningAldousBroder => self.aldous_broder.get_path_mut(),
+            _ => self.wilson.get_path_mut(),
+        }
     }
 }
