@@ -79,6 +79,7 @@ impl Exports {
     ) -> ([[Option<Blob>; COLUMNS as usize]; ROWS as usize], usize) {
         let mut remaining = 0;
         let mut new_board = *board;
+        let mut moved = [false, false];
         for (y, row) in board.iter().enumerate() {
             for (x, cell) in row.iter().enumerate() {
                 if cell == &Some(Blob::None) {
@@ -92,11 +93,18 @@ impl Exports {
                             let (new_x, new_y) = (new_x as usize, new_y as usize);
                             if [Some(Blob::First), Some(Blob::Second)]
                                 .contains(&board[new_y][new_x])
-                                && (gen_range(0, 2) == 0)
                             {
-                                // Only expand half the time.
-                                new_board[y][x] = board[new_y][new_x];
-                                break;
+                                // But keep track of whether we could move.
+                                if board[new_y][new_x] == Some(Blob::First) {
+                                    moved[0] = true;
+                                } else {
+                                    moved[1] = true;
+                                }
+
+                                if gen_range(0, 2) == 0 {
+                                    // Only expand half the time.
+                                    new_board[y][x] = board[new_y][new_x];
+                                }
                             }
                         }
                     }
@@ -106,6 +114,21 @@ impl Exports {
                 }
             }
         }
+        // If only one blob could move, then set the rest of the remaining cells to that blob.
+        if moved != [true, true] {
+            for row in new_board.iter_mut() {
+                for cell in row.iter_mut() {
+                    if cell == &Some(Blob::None) {
+                        *cell = if moved[0] {
+                            Some(Blob::First)
+                        } else {
+                            Some(Blob::Second)
+                        };
+                    }
+                }
+            }
+        }
+
         (new_board, remaining)
     }
 }
