@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH, COLORS,
-    COLUMNS, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH,
+    COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::shapes::draw_rectangle;
@@ -8,6 +8,7 @@ use maze_utils::From;
 
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     curr: (usize, usize),
     grid: [[Option<Direction>; COLUMNS as usize]; ROWS as usize],
     remaining: usize,
@@ -25,6 +26,7 @@ impl Exports {
         grid[ROWS as usize - 1][COLUMNS as usize - 1] = None;
 
         Self {
+            path: vec![],
             curr: (0, 0),
             grid,
             remaining: (ROWS * COLUMNS) as usize * 10 * iterations,
@@ -70,7 +72,9 @@ impl Algorithm for Exports {
         }
 
         if self.remaining == 0 {
+            self.path.push((0, 0));
             self.state = State::Done;
+            return;
         }
         self.remaining -= 1;
 
@@ -103,6 +107,7 @@ impl Algorithm for Exports {
                 curr_color,
             );
         }
+        draw_path(&self.path);
     }
 
     fn get_state(&self) -> State {
@@ -120,6 +125,6 @@ impl Playable for Exports {
     }
 
     fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
-        todo!()
+        &mut self.path
     }
 }
