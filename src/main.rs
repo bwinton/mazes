@@ -52,6 +52,9 @@ use crate::util::State;
 fn window_conf() -> Conf {
     Conf {
         window_title: "Mazes".to_owned(),
+        window_width: 818,
+        window_height: 618,
+        high_dpi: true,
         sample_count: 1,
         ..Default::default()
     }

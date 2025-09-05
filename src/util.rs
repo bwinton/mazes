@@ -16,7 +16,7 @@ pub const LINE_WIDTH: f32 = 2.0;
 pub const CELL_WIDTH: f32 = 20.0;
 pub const COLUMNS: f32 = 40.0;
 pub const ROWS: f32 = 30.0;
-pub const OFFSET: f32 = 2.0;
+pub const OFFSET: f32 = 8.0;
 
 pub type Grid = [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize];
 
