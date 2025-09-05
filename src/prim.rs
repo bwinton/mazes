@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH, COLORS,
-    COLUMNS, EMPTY_COLOR, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH,
+    COLORS, COLUMNS, EMPTY_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
@@ -53,6 +53,7 @@ impl Algorithm for Exports {
 
         if self.frontier.is_empty() {
             self.state = State::Done;
+            self.path.push((0, 0));
             log::info!("Done!");
             return;
         }
@@ -142,6 +143,7 @@ impl Algorithm for Exports {
                 );
             }
         }
+        draw_path(&self.path);
     }
 
     fn get_state(&self) -> State {
