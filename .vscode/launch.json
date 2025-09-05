@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Blobby",
+            "name": "Debug Sidewinder",
             "cargo": {
                 "args": [
                     "build",
@@ -19,7 +19,10 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-a", "blobby"],
+            "args": [
+                "-a",
+                "sidewinder"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {

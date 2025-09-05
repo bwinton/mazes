@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, Grid, Playable, State as BaseState, CELL_WIDTH, COLORS,
-    COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, Direction, Grid, Playable, State as BaseState, CELL_WIDTH,
+    COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
@@ -105,6 +105,8 @@ impl Algorithm for Exports {
                     self.run_start = 0;
                 }
                 if self.curr.1 == ROWS as usize {
+                    self.path.push((0, 0));
+                    self.curr.1 += 1;
                     self.state = State::Done;
                     log::info!("Done!");
                     return;
@@ -125,13 +127,15 @@ impl Algorithm for Exports {
 
         // Draw the field.
         let y = self.curr.1 as f32 + 1.0;
-        draw_rectangle(
-            0.0 * CELL_WIDTH + OFFSET,
-            y * CELL_WIDTH + OFFSET,
-            COLUMNS * CELL_WIDTH,
-            (ROWS - y) * CELL_WIDTH,
-            FIELD_COLOR,
-        );
+        if y <= ROWS {
+            draw_rectangle(
+                0.0 * CELL_WIDTH + OFFSET,
+                y * CELL_WIDTH + OFFSET,
+                COLUMNS * CELL_WIDTH,
+                (ROWS - y) * CELL_WIDTH,
+                FIELD_COLOR,
+            );
+        }
 
         let x = self.curr.0 as f32 + 1.0;
         let y = y - 1.0;
@@ -160,6 +164,8 @@ impl Algorithm for Exports {
             CELL_WIDTH - LINE_WIDTH * 2.0,
             curr_color,
         );
+
+        draw_path(&self.path);
     }
 
     fn get_state(&self) -> BaseState {
