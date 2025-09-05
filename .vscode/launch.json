@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Sidewinder",
+            "name": "Debug Movement",
             "cargo": {
                 "args": [
                     "build",
@@ -21,7 +21,7 @@
             },
             "args": [
                 "-a",
-                "sidewinder"
+                "parallel"
             ],
             "cwd": "${workspaceFolder}"
         },

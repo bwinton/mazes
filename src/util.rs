@@ -141,12 +141,13 @@ pub trait Playable: Algorithm {
 
         let grid = self.get_grid();
         let path = self.get_path_mut();
-        if valid_move(path.last(), cursor, grid) {
-            let cursor = cursor.unwrap();
-            if let Some((index, _)) = path.iter().find_position(|&x| x == &cursor) {
-                path.truncate(index + 1);
-            } else {
-                path.push(cursor);
+        if let Some(moves) = valid_move(path.last(), cursor, grid) {
+            for cursor in moves {
+                if let Some((index, _)) = path.iter().find_position(|&x| x == &cursor) {
+                    path.truncate(index + 1);
+                } else {
+                    path.push(cursor);
+                }
             }
         }
     }
@@ -206,22 +207,40 @@ pub fn valid_move(
     start: Option<&(usize, usize)>,
     next: Option<(usize, usize)>,
     grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
-) -> bool {
+) -> Option<Vec<(usize, usize)>> {
     if let Some(&(x1, y1)) = start {
         if let Some((x2, y2)) = next {
+            print!(
+                "Moving ({}, {})",
+                x2 as i32 - x1 as i32,
+                y2 as i32 - y1 as i32
+            );
             let direction = match (x2 as i32 - x1 as i32, y2 as i32 - y1 as i32) {
-                (0, -1) => Some(Direction::North),
-                (0, 1) => Some(Direction::South),
-                (-1, 0) => Some(Direction::West),
-                (1, 0) => Some(Direction::East),
+                (0, y) if y < 0 => Some(Direction::North),
+                (0, y) if y > 0 => Some(Direction::South),
+                (x, 0) if x < 0 => Some(Direction::West),
+                (x, 0) if x > 0 => Some(Direction::East),
                 _ => None,
             };
+            println!(" => {:?}", direction);
             if let Some(direction) = direction {
-                return grid[y1][x1].contains(direction);
+                let mut start = *start.unwrap();
+                let next = next.unwrap();
+                let mut rv = vec![];
+                while start != next {
+                    if grid[start.1][start.0].contains(direction) {
+                        start = direction.offset(start).unwrap();
+                        rv.push(start);
+                    } else {
+                        return None;
+                    }
+                }
+                rv.push(next);
+                return Some(rv);
             }
         }
     }
-    false
+    None
 }
 
 pub fn draw_cell(x: usize, y: usize, inset: f32, color: Color) {
