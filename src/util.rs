@@ -2,8 +2,11 @@ use enumset::EnumSet;
 use itertools::Itertools;
 use macroquad::{
     color::Color,
-    prelude::{color_u8, draw_line, draw_rectangle},
+    math::vec2,
+    prelude::{color_u8, draw_line, draw_rectangle, ImageFormat},
     rand::gen_range,
+    shapes::draw_rectangle_lines,
+    texture::{draw_texture_ex, DrawTextureParams, Texture2D},
 };
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -215,19 +218,40 @@ pub fn valid_move(
                 x2 as i32 - x1 as i32,
                 y2 as i32 - y1 as i32
             );
-            let direction = match (x2 as i32 - x1 as i32, y2 as i32 - y1 as i32) {
-                (0, y) if y < 0 => Some(Direction::North),
-                (0, y) if y > 0 => Some(Direction::South),
-                (x, 0) if x < 0 => Some(Direction::West),
-                (x, 0) if x > 0 => Some(Direction::East),
-                _ => None,
+            let delta = (x2 as i32 - x1 as i32, y2 as i32 - y1 as i32);
+            let direction = match delta {
+                (-1, y) if y < 0 => (Some(Direction::North), Some(Direction::West)),
+                (0, y) if y < 0 => (Some(Direction::North), None),
+                (1, y) if y < 0 => (Some(Direction::North), Some(Direction::East)),
+
+                (-1, y) if y > 0 => (Some(Direction::South), Some(Direction::West)),
+                (0, y) if y > 0 => (Some(Direction::South), None),
+                (1, y) if y > 0 => (Some(Direction::South), Some(Direction::East)),
+
+                (x, -1) if x < 0 => (Some(Direction::West), Some(Direction::North)),
+                (x, 0) if x < 0 => (Some(Direction::West), None),
+                (x, 1) if x < 0 => (Some(Direction::West), Some(Direction::South)),
+
+                (x, -1) if x > 0 => (Some(Direction::East), Some(Direction::North)),
+                (x, 0) if x > 0 => (Some(Direction::East), None),
+                (x, 1) if x > 0 => (Some(Direction::East), Some(Direction::South)),
+
+                _ => (None, None),
             };
             println!(" => {:?}", direction);
-            if let Some(direction) = direction {
+            let sideways = direction.1;
+            if let Some(direction) = direction.0 {
                 let mut start = *start.unwrap();
                 let next = next.unwrap();
                 let mut rv = vec![];
                 while start != next {
+                    if let Some(sideways) = sideways {
+                        if grid[start.1][start.0].contains(sideways)
+                            && sideways.offset(start).unwrap() == next
+                        {
+                            break;
+                        }
+                    }
                     if grid[start.1][start.0].contains(direction) {
                         start = direction.offset(start).unwrap();
                         rv.push(start);
@@ -238,9 +262,57 @@ pub fn valid_move(
                 rv.push(next);
                 return Some(rv);
             }
+            // If we haven't found it, maybe we went the wrong way at the start…
+            let direction = match delta {
+                (-1, -1) => Some((Direction::East, Direction::North)),
+                (-1, 1) => Some((Direction::East, Direction::South)),
+                (1, -1) => Some((Direction::West, Direction::North)),
+                (1, 1) => Some((Direction::West, Direction::South)),
+                _ => None,
+            };
+            if let Some((first, second)) = direction {
+                let start = *start.unwrap();
+                let mut rv = vec![];
+
+                if grid[start.1][start.0].contains(first) {
+                    rv.push(start);
+                    let start = first.offset(start).unwrap();
+                    if grid[start.1][start.0].contains(second) {
+                        rv.push(start);
+                        return Some(rv);
+                    }
+                }
+            }
         }
     }
     None
+}
+
+fn draw_little_robot(x: usize, y: usize, color: Color) {
+    let x = x as f32 * CELL_WIDTH + OFFSET;
+    let y = y as f32 * CELL_WIDTH + OFFSET;
+    draw_rectangle_lines(x, y, CELL_WIDTH, CELL_WIDTH, 4.0, color);
+
+    let inset = 2.0;
+    let x = x + inset;
+    let y = y + inset;
+    let w = CELL_WIDTH - inset * 2.0;
+    let h = CELL_WIDTH - inset * 2.0;
+
+    let image = Texture2D::from_file_with_format(
+        include_bytes!("../static/little_guy.png"),
+        Some(ImageFormat::Png),
+    );
+    draw_texture_ex(
+        &image,
+        x,
+        y,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(w, h)),
+            ..Default::default()
+        },
+    );
 }
 
 pub fn draw_cell(x: usize, y: usize, inset: f32, color: Color) {
@@ -283,8 +355,9 @@ pub fn draw_board(grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize])
 pub fn draw_path(path: &[(usize, usize)]) {
     let mut color = COLORS[10];
     if let Some((&(x, y), rest)) = path.split_last() {
-        draw_cell(x, y, 2.0, color);
-        color.a = 0.5;
+        color.a = 0.6;
+        draw_little_robot(x, y, color);
+        color.a = 0.3;
         for &(x, y) in rest {
             draw_cell(x, y, 0.0, color)
         }

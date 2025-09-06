@@ -46,7 +46,7 @@ impl Desktop {
                 ("algorithm", "bintree", Some("random:NorthWest")),
                 ("algorithm", "sidewinder", Some("hard")),
                 ("algorithm", "originshift", Some("1")),
-                ("algorithm", "hexparallel", Some("3")),
+                ("algorithm", "hexparallel", Some("6")),
                 ("algorithm", "penrose", Some("king")),
                 // ("algorithm", None, Some("unused")),
             ]))

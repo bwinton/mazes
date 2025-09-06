@@ -1,6 +1,11 @@
 use enumset::EnumSet;
 use itertools::Itertools;
-use macroquad::prelude::{draw_line, draw_poly, Color};
+use macroquad::{
+    math::vec2,
+    prelude::{draw_line, draw_poly, Color, ImageFormat},
+    shapes::draw_poly_lines,
+    texture::{draw_texture_ex, DrawTextureParams, Texture2D},
+};
 
 use crate::util::{COLORS, LINE_WIDTH, OFFSET};
 
@@ -11,6 +16,13 @@ pub type Grid = [[Option<EnumSet<Direction>>; COLUMNS as usize]; ROWS as usize];
 pub const CELL_WIDTH: f32 = 12.0;
 pub const ROWS: f32 = 32.0;
 pub const COLUMNS: f32 = 68.0;
+
+pub const WHITE: Color = Color {
+    r: 1.0,
+    g: 1.0,
+    b: 1.0,
+    a: 1.0,
+};
 
 #[derive(EnumSetType, Debug)]
 pub enum Direction {
@@ -137,6 +149,7 @@ pub fn pointy_hex_corner(x: f32, y: f32, i: usize, inset: f32) -> (f32, f32) {
 }
 
 fn hex_round(x: f32, y: f32) -> (usize, usize) {
+    print!("  hex_round({}, {})", x, y);
     let z = -x - y;
     let mut rx = f32::round(x);
     let mut ry = f32::round(y);
@@ -152,10 +165,12 @@ fn hex_round(x: f32, y: f32) -> (usize, usize) {
         ry = -rx - rz;
     }
 
+    println!(" -> ({}, {})", rx, ry);
     (rx as usize, ry as usize)
 }
 
 pub fn cell_from_pos(x: f32, y: f32, grid: Grid) -> Option<(usize, usize)> {
+    println!("cell_from_pos({}, {})", x, y);
     if x < 0.0 || y < 0.0 {
         return None;
     }
@@ -171,19 +186,21 @@ pub fn cell_from_pos(x: f32, y: f32, grid: Grid) -> Option<(usize, usize)> {
     let sqrt_3 = f32::sqrt(3.0);
     let q = (sqrt_3 / 3.0 * x - 1.0 / 3.0 * y) / CELL_WIDTH;
     let r = (2.0 / 3.0 * y) / CELL_WIDTH;
-    let (x, y) = hex_round(q, r);
+    let (x, y) = hex_round(q - 1.0, r);
 
     if x >= COLUMNS as usize || y >= ROWS as usize {
         return None;
     }
     grid[y][x]?;
+    println!("  -> cell ({}, {})", x, y);
     Some((x, y))
 }
 
 pub fn draw_path(path: &[(usize, usize)]) {
     let mut color = COLORS[10];
     if let Some((&(x, y), rest)) = path.split_last() {
-        draw_cell(x, y, 3.0, color);
+        color.a = 0.6;
+        draw_little_robot(x, y, color);
         color.a = 0.5;
         for &(x, y) in rest {
             draw_cell(x, y, 0.0, color)
@@ -208,6 +225,32 @@ pub fn valid_move(
         }
     }
     false
+}
+
+fn draw_little_robot(i: usize, j: usize, color: Color) {
+    let (x, y) = center_pixel(i, j);
+    draw_poly_lines(x, y, 6, CELL_WIDTH - 4.0, 90.0, 4.0, color);
+
+    let inset = 0.0;
+    let x = x + inset - CELL_WIDTH / 2.0;
+    let y = y + inset - CELL_WIDTH / 2.0;
+    let w = CELL_WIDTH - inset * 2.0;
+    let h = CELL_WIDTH - inset * 2.0;
+
+    let image = Texture2D::from_file_with_format(
+        include_bytes!("../static/little_guy.png"),
+        Some(ImageFormat::Png),
+    );
+    draw_texture_ex(
+        &image,
+        x,
+        y,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(w, h)),
+            ..Default::default()
+        },
+    );
 }
 
 pub fn draw_cell(i: usize, j: usize, inset: f32, color: Color) {

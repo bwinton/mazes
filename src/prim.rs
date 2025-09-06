@@ -52,8 +52,8 @@ impl Algorithm for Exports {
         }
 
         if self.frontier.is_empty() {
-            self.state = State::Done;
             self.path.push((0, 0));
+            self.state = State::Done;
             log::info!("Done!");
             return;
         }
