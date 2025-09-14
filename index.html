@@ -2,6 +2,7 @@
 
 <head>
   <meta charset="utf-8">
+  <link rel="icon" type="image/png" href="little_guy.png">
   <title>Mazes</title>
   <style>
     body {
@@ -11,30 +12,32 @@
     canvas {
       margin: 0px;
       padding: 0px;
-      width:  804px;
-      height: 604px;
+      width: 818px;
+      height: 618px;
       background: black;
     }
   </style>
 </head>
 
 <body>
-  <p>Tap/Click/Space to pause/unpause. "r" or reload the page to restart.<br>Questions? Comments? Suggestions? Please <a href="https://github.com/bwinton/mazes/issues">file an issue</a>!</p>
+  <p>Tap/Click/Space to pause/unpause. "r" or reload the page to restart.<br>Questions? Comments? Suggestions? Please <a
+      href="https://github.com/bwinton/mazes/issues">file an issue</a>!</p>
   <p id="controls">
-    <a href="?parallel">Parallel Backtrack</a> <select id="parallel">
+    <a href="?parallel">Parallel Backtrack</a> (<select id="parallel">
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3">3</option>
       <option value="4">4</option>
       <option value="5">5</option>
       <option value="6" selected>6</option>
-    </select> <label for="parallel">seeds</label> /
+    </select> <label for="parallel">seeds</label>) /
     <a href="?eller">Eller</a> /
     <a href="?kruskal">Kruskal</a> /
     <a href="?prim">Prim</a> /
     <a href="?recdiv">Recursive Division</a> /
     <a href="?blobby">Blobby Recursive Subdivision</a> /
-    <a href="?aldousbroder">Aldous-Broder</a> (<input type="checkbox" id="aldousbroder" checked><label for="aldousbroder">faster tweak</label>) /
+    <a href="?aldousbroder">Aldous-Broder</a> (<input type="checkbox" id="aldousbroder" checked><label
+      for="aldousbroder">faster tweak</label>) /
     <a href="?wilson">Wilson</a> (<input type="checkbox" id="wilson"><label for="wilson">slower tweak</label>) /
     <a href="?houston">Houston</a> /
     <a href="?huntandkill">Hunt and Kill</a> /
@@ -45,30 +48,32 @@
       <option value="oldest">oldest</option>
       <option value="random">random (Prim's)</option>
     </select>) /
-    <a href="?bintree">Binary Tree</a> (<input type="checkbox" id="bintree-random" checked><label for="bintree-random">random order</label> /
+    <a href="?bintree">Binary Tree</a> (<input type="checkbox" id="bintree-random" checked><label
+      for="bintree-random">random order</label> /
     bias: <select id="bintree-bias">
       <option value="NorthEast" selected>North East</option>
       <option value="SouthEast">South East</option>
       <option value="SouthWest">South West</option>
       <option value="NorthWest">North West</option>
     </select>) /
-    <a href="?sidewinder">Sidewinder</a> (<input type="checkbox" id="sidewinder" checked><label for="sidewinder">harder tweak</label>)<br>
-    <a href="?originshift">Origin Shift</a> <select id="originshift">
+    <a href="?sidewinder">Sidewinder</a> (<input type="checkbox" id="sidewinder" checked><label for="sidewinder">harder
+      tweak</label>)<br>
+    <a href="?originshift">Origin Shift</a> (<select id="originshift">
       <option value="0">0 (not interesting)</option>
       <option value="1" selected>Default (width * height * 10)</option>
       <option value="2">Twice Default</option>
-      <option value="3">Thrice Default</option> / 
-    <a href="?hexparallel">Parallel Hex Backtrack</a> <select id="hexparallel">
+      <option value="3">Thrice Default</option>
+    </select>) /
+    <a href="?hexparallel">Parallel Hex Backtrack</a> (<select id="hexparallel">
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3">3</option>
       <option value="4">4</option>
       <option value="5">5</option>
       <option value="6" selected>6</option>
-    </select> <label for="hexparallel">seeds</label> /
-    </select> <label for="parallel">seeds</label> /
-        <a href="?hexblobby">Blobby Hex Recursive Subdivision</a> /
-    <a href="?penrose">Penrose Tiles</a> <select id="penrose">
+    </select> <label for="hexparallel">seeds</label>) /
+    <a href="?hexblobby">Blobby Hex Recursive Subdivision</a> /
+    <a href="?penrose">Penrose Tiles</a> (<select id="penrose">
       <option value="sun">Sun</option>
       <option value="star" selected>Star</option>
       <option value="ace">Ace</option>
@@ -76,7 +81,7 @@
       <option value="jack">Jack</option>
       <option value="queen">Queen</option>
       <option value="king">King</option>
-    </select> <label for="penrose">variant</label>
+    </select> <label for="penrose">variant</label>)
   </p>
   <canvas id="glcanvas" tabindex='1'></canvas>
   <script src="./mq_js_bundle.js"></script>
@@ -96,7 +101,7 @@
         return document.querySelector(get_js_object(key)) != null;
       }
     }
-    let on_init = function() {
+    let on_init = function () {
       document.getElementById("controls").addEventListener("change", (event) => {
         let algorithm = (document.location.search || "?parallel").substr(1);
         if (event.target.id.startsWith(algorithm)) {
@@ -106,7 +111,7 @@
 
     }
     miniquad_add_plugin({
-      name:"MazeSelectors",
+      name: "MazeSelectors",
       version: "0.1",
       register_plugin,
       on_init,
