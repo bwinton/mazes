@@ -1,27 +1,20 @@
 use crate::util::{
-    cell_from_pos, draw_board, draw_cell, draw_path, valid_move, Algorithm, ChooseRandom,
-    Direction, COLORS, COLUMNS, LINE_WIDTH, ROWS,
+    draw_board, draw_cell, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State,
+    COLORS, COLUMNS, LINE_WIDTH, ROWS,
 };
-use itertools::Itertools;
 use maze_utils::From;
 use std::collections::{HashSet, VecDeque};
 
 use array_init::array_init;
 use enumset::EnumSet;
-use macroquad::{logging as log, prelude::mouse_position, rand::gen_range};
+use macroquad::{logging as log, rand::gen_range};
 
 const MAX_SEEDS: usize = 6;
 
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
 #[derive(From)]
 pub struct Exports {
     path: Vec<(usize, usize)>,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     grid_seeds: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     seeds: usize,
     sets: [HashSet<usize>; MAX_SEEDS],
@@ -67,32 +60,16 @@ impl Algorithm for Exports {
     }
     fn update(&mut self) {
         // log::info!("Updating {}", self.name());
-        match self.state {
-            State::Setup => {
-                for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
-                    let x = gen_range(0, COLUMNS as usize);
-                    let y = gen_range(0, ROWS as usize);
-                    stack.push_front((x, y, EnumSet::all()));
-                    self.sets[i].insert(i);
-                }
+        if self.state == State::Setup {
+            for (i, stack) in self.stack.iter_mut().take(self.seeds).enumerate() {
+                let x = gen_range(0, COLUMNS as usize);
+                let y = gen_range(0, ROWS as usize);
+                stack.push_front((x, y, EnumSet::all()));
+                self.sets[i].insert(i);
+            }
 
-                self.state = State::Running;
-                return;
-            }
-            State::Done => {
-                let (x, y) = mouse_position();
-                let cursor = cell_from_pos(x, y);
-                if valid_move(self.path.last(), cursor, self.grid) {
-                    let cursor = cursor.unwrap();
-                    if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
-                        self.path.truncate(index + 1);
-                    } else {
-                        self.path.push(cursor);
-                    }
-                }
-                return;
-            }
-            _ => {}
+            self.state = State::Running;
+            return;
         }
 
         let mut done = true;
@@ -174,5 +151,23 @@ impl Algorithm for Exports {
         }
 
         draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
+    }
+
+    fn get_grid(&self) -> crate::util::Grid {
+        self.grid
     }
 }

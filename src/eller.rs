@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH,
-    OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState,
+    CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use array_init::array_init;
 use enumset::EnumSet;
@@ -10,10 +10,10 @@ use maze_utils::From;
 #[derive(PartialEq, Eq, Debug)]
 enum State {
     Setup,
+    Done,
     Merging,
     NextLine,
     Dropping,
-    Done,
 }
 
 #[derive(From)]
@@ -22,7 +22,7 @@ pub struct Exports {
     current_row: usize,
     current_column: usize,
     empty_sets: Vec<usize>,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     grid_sets: [[Option<usize>; COLUMNS as usize]; ROWS as usize],
     sets: Vec<(Vec<usize>, usize)>,
     state: State,
@@ -65,7 +65,6 @@ impl Algorithm for Exports {
                 }
                 self.state = State::Merging;
             }
-            State::Done => {}
             State::Merging => {
                 if self.grid_sets[self.current_row][self.current_column].is_none() {
                     self.grid_sets[self.current_row][self.current_column] = self.empty_sets.pop();
@@ -101,6 +100,7 @@ impl Algorithm for Exports {
                     } else {
                         self.current_row += 1;
                         self.state = State::Done;
+                        self.path.push((0, 0));
                         log::info!("Done!");
                     }
                 }
@@ -148,6 +148,7 @@ impl Algorithm for Exports {
                     self.state = State::Merging;
                 }
             }
+            _ => {}
         }
     }
 
@@ -187,5 +188,28 @@ impl Algorithm for Exports {
                 }
             }
         }
+        draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

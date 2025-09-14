@@ -1,19 +1,12 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR,
-    OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH,
+    COLORS, COLUMNS, FIELD_COLOR, OFFSET, ROWS,
 };
 use derive_more::Display;
 use enumset::EnumSet;
 use itertools::Itertools;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
 
 #[derive(Display)]
 enum Bias {
@@ -27,7 +20,7 @@ enum Bias {
 pub struct Exports {
     path: Vec<(usize, usize)>,
     bias: Bias,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     random: bool,
     remaining: Vec<(usize, usize)>,
     state: State,
@@ -91,15 +84,9 @@ impl Algorithm for Exports {
         format!("{}:{}", rv, self.bias)
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                self.state = State::Running;
-                return;
-            }
-            State::Done => {
-                return;
-            }
-            _ => {}
+        if self.state == State::Setup {
+            self.state = State::Running;
+            return;
         }
 
         let mut found = false;
@@ -107,6 +94,7 @@ impl Algorithm for Exports {
         while !found {
             if self.remaining.is_empty() {
                 self.state = State::Done;
+                self.path.push((0, 0));
                 log::info!("Done!");
                 return;
             }
@@ -207,5 +195,25 @@ impl Algorithm for Exports {
                 }
             }
         }
+
+        draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

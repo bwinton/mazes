@@ -1,13 +1,13 @@
 use crate::{
-    hex_util::{cell_from_pos, draw_path, set_border, valid_move},
-    util::{Algorithm, ChooseRandom, COLORS, EMPTY_COLOR},
+    hex_util::{draw_path, set_border, Grid, Playable},
+    util::{Algorithm, ChooseRandom, State as BaseState, COLORS, EMPTY_COLOR},
 };
 
 use crate::hex_util::{draw_board, draw_cell, init_grid, Direction, COLUMNS, ROWS};
 
 use enumset::EnumSet;
 use itertools::Itertools;
-use macroquad::{logging as log, prelude::mouse_position, rand::gen_range};
+use macroquad::{logging as log, rand::gen_range};
 use maze_utils::From;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -79,6 +79,7 @@ impl Exports {
     ) -> ([[Option<Blob>; COLUMNS as usize]; ROWS as usize], usize) {
         let mut remaining = 0;
         let mut new_board = *board;
+        let mut moved = [false, false];
         for (y, row) in board.iter().enumerate() {
             for (x, cell) in row.iter().enumerate() {
                 if cell == &Some(Blob::None) {
@@ -92,11 +93,18 @@ impl Exports {
                             let (new_x, new_y) = (new_x as usize, new_y as usize);
                             if [Some(Blob::First), Some(Blob::Second)]
                                 .contains(&board[new_y][new_x])
-                                && (gen_range(0, 2) == 0)
                             {
-                                // Only expand half the time.
-                                new_board[y][x] = board[new_y][new_x];
-                                break;
+                                // But keep track of whether we could move.
+                                if board[new_y][new_x] == Some(Blob::First) {
+                                    moved[0] = true;
+                                } else {
+                                    moved[1] = true;
+                                }
+
+                                if gen_range(0, 2) == 0 {
+                                    // Only expand half the time.
+                                    new_board[y][x] = board[new_y][new_x];
+                                }
                             }
                         }
                     }
@@ -106,6 +114,21 @@ impl Exports {
                 }
             }
         }
+        // If only one blob could move, then set the rest of the remaining cells to that blob.
+        if moved != [true, true] {
+            for row in new_board.iter_mut() {
+                for cell in row.iter_mut() {
+                    if cell == &Some(Blob::None) {
+                        *cell = if moved[0] {
+                            Some(Blob::First)
+                        } else {
+                            Some(Blob::Second)
+                        };
+                    }
+                }
+            }
+        }
+
         (new_board, remaining)
     }
 }
@@ -121,27 +144,10 @@ impl Algorithm for Exports {
         "unused".to_owned()
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                self.stack.push(init_grid(Blob::None));
-                self.state = State::Choosing;
-                return;
-            }
-            State::Done => {
-                let (x, y) = mouse_position();
-                let cursor = cell_from_pos(x, y, self.grid);
-                // log::info!("{:?} => {:?}", (x, y), cursor);
-                if valid_move(self.path.last(), cursor, self.grid) {
-                    let cursor = cursor.unwrap();
-                    if let Some((index, _)) = self.path.iter().find_position(|&x| x == &cursor) {
-                        self.path.truncate(index + 1);
-                    } else {
-                        self.path.push(cursor);
-                    }
-                }
-                return;
-            }
-            _ => {}
+        if self.state == State::Setup {
+            self.stack.push(init_grid(Blob::None));
+            self.state = State::Choosing;
+            return;
         }
 
         if self.stack.is_empty() {
@@ -326,5 +332,27 @@ impl Algorithm for Exports {
         }
 
         draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

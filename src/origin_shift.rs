@@ -1,20 +1,14 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, LINE_WIDTH,
-    OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH,
+    COLORS, COLUMNS, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::shapes::draw_rectangle;
 use maze_utils::From;
 
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
-
 #[derive(From)]
 pub struct Exports {
+    path: Vec<(usize, usize)>,
     curr: (usize, usize),
     grid: [[Option<Direction>; COLUMNS as usize]; ROWS as usize],
     remaining: usize,
@@ -32,6 +26,7 @@ impl Exports {
         grid[ROWS as usize - 1][COLUMNS as usize - 1] = None;
 
         Self {
+            path: vec![],
             curr: (0, 0),
             grid,
             remaining: (ROWS * COLUMNS) as usize * 10 * iterations,
@@ -39,7 +34,7 @@ impl Exports {
             state: State::Setup,
         }
     }
-    pub fn get_grid(&self) -> [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize] {
+    pub fn get_grid(&self) -> Grid {
         let mut rv = [[EnumSet::new(); COLUMNS as usize]; ROWS as usize];
         for y in 0..ROWS as usize {
             for x in 0..COLUMNS as usize {
@@ -69,21 +64,17 @@ impl Algorithm for Exports {
         self.iterations.to_string()
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                self.curr = ((COLUMNS / 2.0) as usize - 1, (ROWS / 2.0) as usize - 1);
-                self.remaining = self.iterations;
-                self.state = State::Running;
-                return;
-            }
-            State::Done => {
-                return;
-            }
-            _ => {}
+        if self.state == State::Setup {
+            self.curr = ((COLUMNS / 2.0) as usize - 1, (ROWS / 2.0) as usize - 1);
+            self.remaining = self.iterations;
+            self.state = State::Running;
+            return;
         }
 
         if self.remaining == 0 {
+            self.path.push((0, 0));
             self.state = State::Done;
+            return;
         }
         self.remaining -= 1;
 
@@ -116,5 +107,24 @@ impl Algorithm for Exports {
                 curr_color,
             );
         }
+        draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.get_grid()
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

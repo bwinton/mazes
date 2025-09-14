@@ -1,22 +1,16 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State, CELL_WIDTH,
+    COLORS, COLUMNS, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::{logging as log, prelude::draw_rectangle};
 use maze_utils::From;
 
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
-
 #[derive(From)]
 pub struct Exports {
     path: Vec<(usize, usize)>,
     edges: Vec<(usize, usize, Direction)>,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     parents: [[Option<(usize, usize)>; COLUMNS as usize]; ROWS as usize],
     roots: Vec<(usize, usize, usize)>,
     state: State,
@@ -58,33 +52,28 @@ impl Algorithm for Exports {
         "unused".to_owned()
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                for x in 0..COLUMNS as usize {
-                    for y in 0..ROWS as usize {
-                        if y > 0 {
-                            self.edges.push((x, y, Direction::North));
-                        }
-                        if x > 0 {
-                            self.edges.push((x, y, Direction::West));
-                        }
+        if self.state == State::Setup {
+            for x in 0..COLUMNS as usize {
+                for y in 0..ROWS as usize {
+                    if y > 0 {
+                        self.edges.push((x, y, Direction::North));
+                    }
+                    if x > 0 {
+                        self.edges.push((x, y, Direction::West));
                     }
                 }
-                self.edges.shuffle();
+            }
+            self.edges.shuffle();
 
-                self.state = State::Running;
-                return;
-            }
-            State::Done => {
-                return;
-            }
-            _ => {}
+            self.state = State::Running;
+            return;
         }
 
         let mut found = false;
 
         while !found {
             if self.edges.is_empty() {
+                self.path.push((0, 0));
                 self.state = State::Done;
                 log::info!("Done!");
                 return;
@@ -176,5 +165,24 @@ impl Algorithm for Exports {
                 }
             }
         }
+        draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

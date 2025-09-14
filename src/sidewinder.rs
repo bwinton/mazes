@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET,
-    ROWS,
+    draw_board, draw_path, Algorithm, Direction, Grid, Playable, State as BaseState, CELL_WIDTH,
+    COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
@@ -18,7 +18,7 @@ enum State {
 pub struct Exports {
     path: Vec<(usize, usize)>,
     curr: (usize, usize),
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     harder: bool,
     run_start: usize,
     state: State,
@@ -76,7 +76,6 @@ impl Algorithm for Exports {
                 self.run_start = 0;
                 self.state = State::Running;
             }
-            State::Done => {}
             State::Running => {
                 let proportion = if self.harder {
                     (0.4 + (self.curr.0 as f64 / COLUMNS as f64) * 0.4) * 100.0
@@ -106,6 +105,8 @@ impl Algorithm for Exports {
                     self.run_start = 0;
                 }
                 if self.curr.1 == ROWS as usize {
+                    self.path.push((0, 0));
+                    self.curr.1 += 1;
                     self.state = State::Done;
                     log::info!("Done!");
                     return;
@@ -113,6 +114,7 @@ impl Algorithm for Exports {
 
                 self.state = State::Running;
             }
+            _ => {}
         }
     }
 
@@ -125,13 +127,15 @@ impl Algorithm for Exports {
 
         // Draw the field.
         let y = self.curr.1 as f32 + 1.0;
-        draw_rectangle(
-            0.0 * CELL_WIDTH + OFFSET,
-            y * CELL_WIDTH + OFFSET,
-            COLUMNS * CELL_WIDTH,
-            (ROWS - y) * CELL_WIDTH,
-            FIELD_COLOR,
-        );
+        if y <= ROWS {
+            draw_rectangle(
+                0.0 * CELL_WIDTH + OFFSET,
+                y * CELL_WIDTH + OFFSET,
+                COLUMNS * CELL_WIDTH,
+                (ROWS - y) * CELL_WIDTH,
+                FIELD_COLOR,
+            );
+        }
 
         let x = self.curr.0 as f32 + 1.0;
         let y = y - 1.0;
@@ -160,5 +164,29 @@ impl Algorithm for Exports {
             CELL_WIDTH - LINE_WIDTH * 2.0,
             curr_color,
         );
+
+        draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

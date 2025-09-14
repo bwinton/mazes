@@ -1,6 +1,6 @@
 use crate::util::{
-    draw_board, Algorithm, ChooseRandom, Direction, CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR,
-    LINE_WIDTH, OFFSET, ROWS,
+    draw_board, draw_path, Algorithm, ChooseRandom, Direction, Grid, Playable, State as BaseState,
+    CELL_WIDTH, COLORS, COLUMNS, FIELD_COLOR, LINE_WIDTH, OFFSET, ROWS,
 };
 use enumset::EnumSet;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
@@ -19,7 +19,7 @@ pub struct Exports {
     path: Vec<(usize, usize)>,
     curr: Option<(usize, usize)>,
     first_empty_line: usize,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     scan_line: Option<usize>,
     state: State,
 }
@@ -131,6 +131,7 @@ impl Algorithm for Exports {
                     } else {
                         // We're done!
                         self.scan_line = None;
+                        self.path.push((0, 0));
                         self.state = State::Done;
                         log::info!("Done!");
                     }
@@ -154,7 +155,7 @@ impl Algorithm for Exports {
                 self.state = State::Walking;
                 // log::info!("Switching to Walking from ({},{})!", x, y);
             }
-            State::Done => {}
+            _ => {}
         }
     }
 
@@ -206,5 +207,29 @@ impl Algorithm for Exports {
                 cell_color,
             );
         }
+
+        draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

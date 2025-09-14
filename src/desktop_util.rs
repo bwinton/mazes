@@ -38,7 +38,7 @@ impl Desktop {
                     ])
                     .default_value("parallel"),
             )
-            .arg(Arg::new("variant").default_value_ifs([
+            .arg(Arg::new("variant").short('v').default_value_ifs([
                 ("algorithm", "parallel", Some("6")),
                 ("algorithm", "aldousbroder", Some("slow")),
                 ("algorithm", "wilson", Some("fast")),
@@ -46,7 +46,7 @@ impl Desktop {
                 ("algorithm", "bintree", Some("random:NorthWest")),
                 ("algorithm", "sidewinder", Some("hard")),
                 ("algorithm", "originshift", Some("1")),
-                ("algorithm", "hexparallel", Some("3")),
+                ("algorithm", "hexparallel", Some("6")),
                 ("algorithm", "penrose", Some("king")),
                 // ("algorithm", None, Some("unused")),
             ]))
@@ -66,7 +66,10 @@ impl Desktop {
 
                 format!("{}:{}", random, bias)
             }
-            _ => matches.get_one::<String>("variant").unwrap().to_owned(),
+            _ => matches
+                .get_one::<String>("variant")
+                .unwrap_or(&"unused".to_string())
+                .to_owned(),
         };
         Self { algorithm, variant }
     }

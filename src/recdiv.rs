@@ -1,14 +1,10 @@
-use crate::util::{draw_board, Algorithm, Direction, CELL_WIDTH, COLORS, COLUMNS, OFFSET, ROWS};
+use crate::util::{
+    draw_board, draw_path, Algorithm, Direction, Grid, Playable, State, CELL_WIDTH, COLORS,
+    COLUMNS, OFFSET, ROWS,
+};
 use enumset::EnumSet;
 use macroquad::{logging as log, prelude::draw_rectangle, rand::gen_range};
 use maze_utils::From;
-
-#[derive(PartialEq, Eq, Debug)]
-enum State {
-    Setup,
-    Running,
-    Done,
-}
 
 #[derive(PartialEq, Eq, Debug)]
 enum Orientation {
@@ -19,7 +15,7 @@ enum Orientation {
 #[derive(From)]
 pub struct Exports {
     path: Vec<(usize, usize)>,
-    grid: [[EnumSet<Direction>; COLUMNS as usize]; ROWS as usize],
+    grid: Grid,
     stack: Vec<(usize, usize, usize, usize)>,
     state: State,
 }
@@ -68,19 +64,14 @@ impl Algorithm for Exports {
         "unused".to_owned()
     }
     fn update(&mut self) {
-        match self.state {
-            State::Setup => {
-                self.stack.push((0, 0, COLUMNS as usize, ROWS as usize));
-                self.state = State::Running;
-                return;
-            }
-            State::Done => {
-                return;
-            }
-            _ => {}
+        if self.state == State::Setup {
+            self.stack.push((0, 0, COLUMNS as usize, ROWS as usize));
+            self.state = State::Running;
+            return;
         }
 
         if self.stack.is_empty() {
+            self.path.push((0, 0));
             self.state = State::Done;
             log::info!("Done!");
             return;
@@ -156,5 +147,24 @@ impl Algorithm for Exports {
                 );
             }
         }
+        draw_path(&self.path);
+    }
+
+    fn get_state(&self) -> State {
+        self.state
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        self.grid
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        &mut self.path
     }
 }

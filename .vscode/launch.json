@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug Parallel",
+            "name": "Debug Movement",
             "cargo": {
                 "args": [
                     "build",
@@ -19,7 +19,10 @@
                     "kind": "bin"
                 }
             },
-            "args": ["-a", "parallel"],
+            "args": [
+                "-a",
+                "parallel"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {

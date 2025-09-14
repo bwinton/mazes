@@ -1,5 +1,5 @@
 use crate::aldous_broder::Exports as aldous_broder;
-use crate::util::Algorithm;
+use crate::util::{Algorithm, Grid, Playable, State as BaseState};
 use crate::wilson::Exports as wilson;
 use macroquad::logging as log;
 use maze_utils::From;
@@ -63,7 +63,7 @@ impl Algorithm for Exports {
                     self.state = State::Done;
                 }
             }
-            State::Done => {}
+            _ => {}
         }
     }
 
@@ -72,6 +72,34 @@ impl Algorithm for Exports {
             State::RunningAldousBroder => self.aldous_broder.draw(),
             State::RunningWilson | State::Done => self.wilson.draw(),
             _ => {}
+        }
+    }
+
+    fn get_state(&self) -> BaseState {
+        match &self.state {
+            State::Setup => BaseState::Setup,
+            State::Done => BaseState::Done,
+            _ => BaseState::Running,
+        }
+    }
+
+    fn move_to(&mut self, pos: (f32, f32)) {
+        Playable::move_to(self, pos);
+    }
+}
+
+impl Playable for Exports {
+    fn get_grid(&self) -> Grid {
+        match self.state {
+            State::Setup | State::RunningAldousBroder => self.aldous_broder.get_grid(),
+            _ => self.wilson.get_grid(),
+        }
+    }
+
+    fn get_path_mut(&mut self) -> &mut Vec<(usize, usize)> {
+        match self.state {
+            State::Setup | State::RunningAldousBroder => self.aldous_broder.get_path_mut(),
+            _ => self.wilson.get_path_mut(),
         }
     }
 }
